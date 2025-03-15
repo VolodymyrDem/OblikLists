@@ -2,8 +2,6 @@ package com.work.oblikpodorojlist.pages;
 
 import com.work.oblikpodorojlist.managers.Alerts;
 import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.Documents.DocumentsManager;
-import com.work.oblikpodorojlist.model._List;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -27,7 +25,7 @@ public class CompanyPage extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.getIcons().add(new javafx.scene.image.Image("/icon.png"));
-        dbManager = new DBManager();
+        dbManager = DBManager.getInstance();
         primaryStage.setTitle("Компанія");
         TableView<String> tableView = new TableView<>();
         tableView.setEditable(false);
@@ -52,7 +50,7 @@ public class CompanyPage extends Application {
                 if (selectedCompany != null) {
                     dbManager.setCompany(selectedCompany.split("\\s+")[0]);
                     AccountPage nextPage = new AccountPage();
-                    nextPage.StartSelectAccountPage(dbManager, primaryStage);
+                    nextPage.StartSelectAccountPage(primaryStage);
                 } else {
                     Alert a = Alerts.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
                     a.showAndWait();
@@ -71,7 +69,7 @@ public class CompanyPage extends Application {
                     if (selectedCompany != null) {
                         dbManager.setCompany(selectedCompany.split("\\s+")[0]);
                         AccountPage nextPage = new AccountPage();
-                        nextPage.StartSelectAccountPage(dbManager, primaryStage);
+                        nextPage.StartSelectAccountPage(primaryStage);
                     } else {
                         Alert a = Alerts.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
                         a.showAndWait();
@@ -89,7 +87,7 @@ public class CompanyPage extends Application {
                 dbManager.setCompany(selectedCompany.split("\\s+")[0]);
                 Stage stage = (Stage) selectDatabaseButton.getScene().getWindow();
                 AccountPage nextPage = new AccountPage();
-                nextPage.StartSelectAccountPage(dbManager, stage);
+                nextPage.StartSelectAccountPage(stage);
             } else {
                 Alert a = Alerts.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
                 a.showAndWait();
@@ -100,7 +98,7 @@ public class CompanyPage extends Application {
             String selectedUsername = "root";
             dbManager.setUsername(selectedUsername);
             LoginPage nextPage = new LoginPage();
-            nextPage.StartLoginPage(dbManager, primaryStage);
+            nextPage.StartLoginPage(primaryStage);
         });
 
         HBox buttonContainer = new HBox(selectDatabaseButton, changeHost, RootLogin);

@@ -32,9 +32,17 @@ public class DBManager {
     private String company;
     private String username;
     private String password;
+    private static DBManager instance;
 
-    public DBManager() {
+    private DBManager() {
         getHost();
+    }
+
+    public static DBManager getInstance() {
+        if(instance == null) {
+            instance = new DBManager();
+        }
+        return instance;
     }
 
     public String getHost() {
@@ -1232,6 +1240,7 @@ public class DBManager {
     }
 
     public List<_Order> getOrders() {
+
         String sql = "SELECT * FROM orders";
         ObservableList<_Order> orders = FXCollections.observableArrayList();
 
@@ -1258,6 +1267,9 @@ public class DBManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+
+
         return orders;
     }
 

@@ -13,7 +13,8 @@ import javafx.stage.Stage;
 public class LoginPage {
     private String selectedCompany;
     private String selectedUsername;
-    public void StartLoginPage(DBManager dbManager, Stage loginStage) {
+    public void StartLoginPage(Stage loginStage) {
+        DBManager dbManager = DBManager.getInstance();
         selectedCompany = dbManager.getCompany();
         selectedUsername = dbManager.getUsername();
 
@@ -26,11 +27,11 @@ public class LoginPage {
             if (event.getCode().equals(javafx.scene.input.KeyCode.ENTER)) {
                 dbManager.setPassword(passwordField.getText());
                 if(dbManager.tryConnection()) {
-                    MainPage mainPage = new MainPage();
-                    mainPage.StartMainPage(dbManager, loginStage);
+                    MainPage mainPage = MainPage.getInstance();
+                    mainPage.StartMainPage(loginStage);
                 }
                 else {
-                    StartLoginPage(dbManager, loginStage);
+                    StartLoginPage(loginStage);
                 }
             }
         });
@@ -40,12 +41,12 @@ public class LoginPage {
             dbManager.setPassword(passwordField.getText());
             if(dbManager.tryConnection()) {
                 Stage stage = (Stage) loginButton.getScene().getWindow();
-                MainPage mainPage = new MainPage();
-                mainPage.StartMainPage(dbManager, stage);
+                MainPage mainPage = MainPage.getInstance();
+                mainPage.StartMainPage(stage);
             }
             else {
                 Alerts.ErrorAlert("Невірний пароль", "Перевірте правильність введеня даних").showAndWait();
-                StartLoginPage(dbManager, loginStage);
+                StartLoginPage(loginStage);
             }
         });
 

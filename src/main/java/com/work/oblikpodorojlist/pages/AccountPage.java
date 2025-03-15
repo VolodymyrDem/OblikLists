@@ -12,7 +12,8 @@ import javafx.stage.Stage;
 import java.util.List;
 
 public class AccountPage {
-    public void StartSelectAccountPage(DBManager dbManager, Stage accountStage) {
+    public void StartSelectAccountPage(Stage accountStage) {
+        DBManager dbManager = DBManager.getInstance();
         String selectedCompany = dbManager.getCompany();
 
         accountStage.setTitle("Оберіть користувача: " + selectedCompany);
@@ -30,7 +31,7 @@ public class AccountPage {
                 }
                 dbManager.setUsername(selectedUsername);
                 LoginPage nextPage = new LoginPage();
-                nextPage.StartLoginPage(dbManager, accountStage);
+                nextPage.StartLoginPage(accountStage);
             }
         });
 
@@ -43,7 +44,7 @@ public class AccountPage {
                     }
                     dbManager.setUsername(selectedUsername);
                     LoginPage nextPage = new LoginPage();
-                    nextPage.StartLoginPage(dbManager, accountStage);
+                    nextPage.StartLoginPage(accountStage);
                 }
             }
         });
@@ -61,7 +62,7 @@ public class AccountPage {
                 dbManager.setUsername(selectedUsername);
                 Stage stage = (Stage) selectAccountButton.getScene().getWindow();
                 LoginPage nextPage = new LoginPage();
-                nextPage.StartLoginPage(dbManager, stage);
+                nextPage.StartLoginPage(stage);
 
             } else {
                 Alert a = Alerts.ErrorAlert("Не обраний користувач", "Оберіть користувача, щоб продовжити");

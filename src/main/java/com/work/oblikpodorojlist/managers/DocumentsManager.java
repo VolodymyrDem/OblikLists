@@ -1,5 +1,4 @@
-package com.work.oblikpodorojlist.managers.Documents;
-import com.work.oblikpodorojlist.managers.DBManager;
+package com.work.oblikpodorojlist.managers;
 import com.work.oblikpodorojlist.model.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Font;
@@ -13,22 +12,30 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.net.URL;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.time.Month;
 import java.time.Period;
 import java.time.format.DateTimeFormatter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Objects;
 
 public class DocumentsManager {
+    private static DocumentsManager instance;
+
+    private DocumentsManager(){}
+
+    public static DocumentsManager getInstance() {
+        if(instance == null){
+            instance = new DocumentsManager();
+        }
+        return instance;
+    }
+
     private String[] folders = {
             "01_Cars",
             "02_Workers",
