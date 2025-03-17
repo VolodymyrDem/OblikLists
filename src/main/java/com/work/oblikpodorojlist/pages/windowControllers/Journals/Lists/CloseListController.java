@@ -129,7 +129,7 @@ public class CloseListController extends WindowController {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            mainPage.openInternalWindow(vbox, windowTitle);
+            mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if (isEmptyOrWhitespace(endFuelField.getText()) || isEmptyOrWhitespace(endMileageField.getText()) || isEmptyOrWhitespace(refuelField.getText()) ) {

@@ -292,7 +292,7 @@ public class FuelRegisterController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 

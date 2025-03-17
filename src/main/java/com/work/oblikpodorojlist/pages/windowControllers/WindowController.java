@@ -3,6 +3,7 @@ package com.work.oblikpodorojlist.pages.windowControllers;
 import com.work.oblikpodorojlist.model.FuelUsage;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.scene.control.TableView;
 
 import java.awt.*;
 import java.io.File;
@@ -53,5 +54,7 @@ public abstract class WindowController {
             return Integer.MAX_VALUE; // Якщо не вдалося розпарсити, відправити в кінець
         }
     }
-
+    protected void moveTableDown(TableView<?> tableView) {
+        tableView.scrollTo(tableView.getItems().size());
+    }
 }

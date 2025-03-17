@@ -35,7 +35,7 @@ public class OrdersJournalController extends WindowController {
     private DocumentsManager documentsManager;
     private AddOrderController addOrderController;
     private EditOrderController editOrderController;
-
+    private TableView<_Order> tableView;
     public OrdersJournalController(){}
 
 
@@ -49,6 +49,7 @@ public class OrdersJournalController extends WindowController {
             }
         }
         else {
+            tableView = new TableView<>();
             addOrderController = new AddOrderController();
             editOrderController = new EditOrderController();
             documentsManager = DocumentsManager.getInstance();
@@ -87,11 +88,6 @@ public class OrdersJournalController extends WindowController {
             updateButton.setGraphic(IconsManager.getUpdateIcon());
 
 
-            TableView<_Order> tableView = new TableView<>();
-
-            TableColumn<_Order, String> idCol = new TableColumn<>("ID");
-            idCol.setCellValueFactory(new PropertyValueFactory<>("idOrder"));
-
             TableColumn<_Order, LocalDate> orderDateCol = new TableColumn<>("Дата наказу");
             orderDateCol.setCellValueFactory(new PropertyValueFactory<>("orderDate"));
             orderDateCol.setCellFactory(column -> new TableCell<>() {
@@ -117,14 +113,12 @@ public class OrdersJournalController extends WindowController {
 
             TableColumn<_Order, String> workerCol = new TableColumn<>("ПІБ працівник");
             workerCol.setCellValueFactory(cellData -> {
-                String Name = dbManager.getWorkerName(true, cellData.getValue().getIdWorker());
-                return new SimpleStringProperty(Name);
+                return new SimpleStringProperty(dbManager.getWorkerName(true, cellData.getValue().getIdWorker()));
             });
 
             TableColumn<_Order, String> positionCol = new TableColumn<>("Посада");
             positionCol.setCellValueFactory(cellData -> {
-                String Name = dbManager.getWorkerPosition(true, cellData.getValue().getIdWorker());
-                return new SimpleStringProperty(Name);
+                return new SimpleStringProperty(dbManager.getWorkerPosition(true, cellData.getValue().getIdWorker()));
             });
 
             TableColumn<_Order, LocalDate> startDateCol = new TableColumn<>("Виїзд: дата");
@@ -169,21 +163,18 @@ public class OrdersJournalController extends WindowController {
 
             TableColumn<_Order, String> validCol = new TableColumn<>("Актуальність");
             validCol.setCellValueFactory(cellData -> {
-                boolean valid = dbManager.isOrderModifiable(cellData.getValue().getIdOrder());
-                return new SimpleStringProperty(valid ? "Невиконаний" : "Виконаний");
+                return new SimpleStringProperty(dbManager.isOrderModifiable(cellData.getValue().getIdOrder()) ? "Невиконаний" : "Виконаний");
             });
 
             tableView.getColumns().addAll( orderDateCol, orderNumberCol, workerCol,positionCol, startDateCol,
                     endDateCol, routeCol, moneyCol, goalCol, headCol, validCol);
-
-
 
             updateValues();
             tableView.setItems(orders);
 
             tableView.getSortOrder().add(orderNumberCol);
             orderNumberCol.setSortType(TableColumn.SortType.ASCENDING);
-            tableView.sort();
+
 
             tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
                 editButton.setDisable(newSelection == null || (!dbManager.isOrderModifiable(newSelection.getIdOrder()) && !dbManager.getUsername().equals("root")));
@@ -191,8 +182,6 @@ public class OrdersJournalController extends WindowController {
                 openFileButton.setDisable(newSelection == null);
                 deleteButton.setDisable(!(newSelection != null && dbManager.getUsername().equals("root")));
             });
-
-            tableView.scrollTo(tableView.getItems().size()-1);
 
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -311,7 +300,7 @@ public class OrdersJournalController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -322,9 +311,14 @@ public class OrdersJournalController extends WindowController {
                 List<_Order> newOrders;
 
                 newOrders = dbManager.getOrders();
-
+                newOrders.sort((o1, o2) -> {
+                    int num1 = extractNumber(o1.getOrderNumber());
+                    int num2 = extractNumber(o2.getOrderNumber());
+                    return Integer.compare(num1, num2);
+                });
                 Platform.runLater(() -> {
                     orders.setAll(newOrders); // Оновлення UI у JavaFX потоці
+                    moveTableDown(tableView);
                 });
                 return null;
             }

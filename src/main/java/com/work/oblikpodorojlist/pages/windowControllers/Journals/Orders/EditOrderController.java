@@ -166,7 +166,7 @@ public class EditOrderController extends WindowController {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            mainPage.openInternalWindow(vbox, windowTitle);
+            mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( datePickerOrderDate.getValue() == null || isEmptyOrWhitespace(orderNumberField.getText()) ||

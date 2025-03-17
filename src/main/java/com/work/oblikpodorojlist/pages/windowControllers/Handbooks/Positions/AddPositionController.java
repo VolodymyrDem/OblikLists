@@ -47,7 +47,7 @@ public class AddPositionController extends WindowController {
             vbox.getChildren().addAll(grid, saveButton);
 
 
-            StackPane internalWindow = mainPage.openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameNField.getText()) || isEmptyOrWhitespace(nameRField.getText())) {

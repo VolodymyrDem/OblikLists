@@ -196,7 +196,7 @@ public class ListPeriodController extends WindowController {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            mainPage.openInternalWindow(vbox, windowTitle);
+            mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(event -> {
 
@@ -247,9 +247,6 @@ public class ListPeriodController extends WindowController {
                 }
                 controller.datePickerStart.setValue(StartDate);
                 controller.datePickerEnd.setValue(EndDate);
-
-                controller.parametersLists.setStartDate(StartDate);
-                controller.parametersLists.setEndDate(EndDate);
 
                 mainPage.closeInternalWindow(windowTitle);
             });

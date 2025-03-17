@@ -26,6 +26,7 @@ import org.controlsfx.control.CheckComboBox;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,6 @@ public class ListsRegisterController extends WindowController {
     private ListPeriodController listPeriodController;
     private List<String> numbersG;
     private ObservableList<_List> FilteredLists = FXCollections.observableArrayList();
-    public PeriodParameters parametersLists = new PeriodParameters();
     public DatePicker datePickerStart;
     public DatePicker datePickerEnd;
 
@@ -312,7 +312,7 @@ public class ListsRegisterController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -333,8 +333,8 @@ public class ListsRegisterController extends WindowController {
                             .map(s -> s.split("\\s+")[0])  // Get the first word from each checked item
                             .collect(Collectors.toList());
                 }
-                List<_List> newLists = dbManager.getListsFiltered(numbersG, parametersLists);
-
+                List<_List> newLists = dbManager.getListsFiltered(numbersG, datePickerStart.getValue(), datePickerEnd.getValue());
+                newLists.sort(Comparator.comparingInt(_List::getNumber));
                 Platform.runLater(() -> {
                     FilteredLists.setAll(newLists);
                 });

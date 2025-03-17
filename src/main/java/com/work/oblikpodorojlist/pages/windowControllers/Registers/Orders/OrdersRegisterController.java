@@ -232,7 +232,7 @@ public class OrdersRegisterController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -244,10 +244,16 @@ public class OrdersRegisterController extends WindowController {
                     datePickerEnd.setValue(LocalDate.now());
                 }
                 String tempWorkerName = (workerField.getValue() == null)?"-1":workerField.getValue();
-                List<_Order> newLists = dbManager.getOrdersFiltered(tempWorkerName, datePickerStart.getValue(), datePickerEnd.getValue());
-                newLists.sort(Comparator.comparing(_Order::getOrderDate));
+                List<_Order> newOrders = dbManager.getOrdersFiltered(tempWorkerName, datePickerStart.getValue(), datePickerEnd.getValue());
+                newOrders.sort(Comparator.comparing(_Order::getOrderDate));
+                newOrders.sort((o1, o2) -> {
+                    int num1 = extractNumber(o1.getOrderNumber());
+                    int num2 = extractNumber(o2.getOrderNumber());
+                    return Integer.compare(num1, num2);
+                });
+
                 Platform.runLater(() -> {
-                    filteredOrders.setAll(newLists);
+                    filteredOrders.setAll(newOrders);
                 });
                 return null;
             }

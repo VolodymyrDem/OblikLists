@@ -83,7 +83,7 @@ public class AddCarController extends WindowController {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow = mainPage.openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(numberField.getText()) || isEmptyOrWhitespace(modelField.getText()) ||

@@ -107,7 +107,7 @@ public class EditWorkerController extends WindowController {
             vbox.getChildren().addAll(grid, saveButton);
 
 
-            StackPane internalWindow =  mainPage.openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow =  mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( (datePickerEnd.getValue() != null && isEmptyOrWhitespace(endOrderNumberField.getText())) ||

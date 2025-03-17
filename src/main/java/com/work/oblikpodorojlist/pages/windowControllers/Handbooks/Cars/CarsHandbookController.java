@@ -20,6 +20,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 public class CarsHandbookController extends WindowController {
@@ -30,6 +31,7 @@ public class CarsHandbookController extends WindowController {
     private AddCarController addCarController;
     private EditCarController editCarController;
     private RemoveCarController removeCarController;
+    private TableView<_Car> tableView;
     ComboBox<String> selectionModel = new ComboBox<>();
 
 
@@ -46,6 +48,7 @@ public class CarsHandbookController extends WindowController {
             }
         }
         else {
+            tableView = new TableView<>();
             addCarController = new AddCarController();
             editCarController = new EditCarController();
             removeCarController = new RemoveCarController();
@@ -89,7 +92,7 @@ public class CarsHandbookController extends WindowController {
 
 
 
-            TableView<_Car> tableView = new TableView<>();
+
 
             TableColumn<_Car, String> idCol = new TableColumn<>("ID");
             idCol.setCellValueFactory(new PropertyValueFactory<>("idCar"));
@@ -229,7 +232,7 @@ public class CarsHandbookController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -246,8 +249,12 @@ public class CarsHandbookController extends WindowController {
                 } else {
                     newCars = dbManager.getCars();
                 }
+
+                newCars.sort(Comparator.comparing(_Car::getNumber));
+
                 Platform.runLater(() -> {
-                    cars.setAll(newCars); // Оновлення UI у JavaFX потоці
+                    cars.setAll(newCars);
+                    moveTableDown(tableView);
                 });
                 return null;
             }

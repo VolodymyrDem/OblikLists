@@ -3,8 +3,10 @@ package com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Positions;
 import com.work.oblikpodorojlist.managers.Alerts;
 import com.work.oblikpodorojlist.managers.DBManager;
 import com.work.oblikpodorojlist.managers.IconsManager;
+import com.work.oblikpodorojlist.model._Car;
 import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.pages.MainPage;
+import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,16 +18,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+import java.util.Comparator;
 import java.util.List;
 
-public class PositionsHandbookController {
+public class PositionsHandbookController extends WindowController {
 
     private ObservableList<_Position> positions = FXCollections.observableArrayList();
     private MainPage mainPage ;
     private DBManager dbManager;
     private EditPositionController editPositionController;
     private AddPositionController addPositionController;
-
+    private TableView<_Position> tableView;
     public PositionsHandbookController(){}
 
     public void openWindow() {
@@ -38,6 +41,7 @@ public class PositionsHandbookController {
             }
         }
         else {
+            tableView = new TableView<>();
             dbManager = DBManager.getInstance();
             editPositionController = new EditPositionController();
             addPositionController = new AddPositionController();
@@ -62,7 +66,7 @@ public class PositionsHandbookController {
             updateButton.getStyleClass().add("grey-button");
             updateButton.setGraphic(IconsManager.getUpdateIcon());
 
-            TableView<_Position> tableView = new TableView<>();
+
 
             TableColumn<_Position, String> idCol = new TableColumn<>("ID");
             idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -115,7 +119,7 @@ public class PositionsHandbookController {
 
             tableView.scrollTo(tableView.getItems().size()-1);
 
-            tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+                tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
             VBox.setVgrow(tableView, Priority.ALWAYS);
 
             VBox table = new VBox();
@@ -126,7 +130,7 @@ public class PositionsHandbookController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -137,7 +141,9 @@ public class PositionsHandbookController {
                 List<_Position> newPositions = dbManager.getPositions(); // Отримання даних у фоновому потоці
                 Platform.runLater(() -> {
                     positions.setAll(newPositions); // Оновлення UI у JavaFX потоці
+                    moveTableDown(tableView);
                 });
+                newPositions.sort(Comparator.comparing(_Position::getNameN));
                 return null;
             }
         };

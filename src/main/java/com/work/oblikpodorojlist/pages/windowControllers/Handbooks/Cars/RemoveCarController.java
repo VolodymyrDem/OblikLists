@@ -63,7 +63,7 @@ public class RemoveCarController extends WindowController {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow =  mainPage.openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow =  mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e -> {
                 try {

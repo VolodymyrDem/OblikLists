@@ -99,7 +99,7 @@ public class EditCarController extends WindowController {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow = mainPage.openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( (datePickerEnd.getValue() != null && isEmptyOrWhitespace(endOrderNumberField.getText())) ||

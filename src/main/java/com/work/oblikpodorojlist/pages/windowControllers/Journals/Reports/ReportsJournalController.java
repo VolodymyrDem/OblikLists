@@ -34,6 +34,7 @@ public class ReportsJournalController extends WindowController {
     private DocumentsManager documentsManager;
     private AddReportController addReportController;
     private EditReportController editReportController;
+    private TableView<_Report> tableView;
 
     public ReportsJournalController(){}
 
@@ -48,6 +49,7 @@ public class ReportsJournalController extends WindowController {
             }
         }
         else {
+            tableView = new TableView<>();
             addReportController = new AddReportController();
             editReportController = new EditReportController();
             documentsManager = DocumentsManager.getInstance();
@@ -91,7 +93,7 @@ public class ReportsJournalController extends WindowController {
             addButton.getStyleClass().add("green-button");
             editButton.getStyleClass().add("yellow-button");
 
-            TableView<_Report> tableView = new TableView<>();
+
 
             TableColumn<_Report, String> idCol = new TableColumn<>("ID");
             idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -211,7 +213,7 @@ public class ReportsJournalController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -221,9 +223,17 @@ public class ReportsJournalController extends WindowController {
             protected Void call() {
                 List<_Report> reportsNew = dbManager.getReports();
 
+                reportsNew.sort((o1, o2) -> {
+                    int num1 = extractNumber(dbManager.getOrderNumber(o1.getOrderId()));
+                    int num2 = extractNumber(dbManager.getOrderNumber(o2.getOrderId()));
+                    return Integer.compare(num1, num2);
+                });
+
                 Platform.runLater(() -> {
                     reports.setAll(reportsNew); // Оновлення UI у JavaFX потоці
+                    moveTableDown(tableView);
                 });
+
                 return null;
             }
         };

@@ -6,6 +6,7 @@ import com.work.oblikpodorojlist.managers.DocumentsManager;
 import com.work.oblikpodorojlist.managers.IconsManager;
 import com.work.oblikpodorojlist.model._List;
 import com.work.oblikpodorojlist.model._Order;
+import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.AddOrderController;
 import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.EditOrderController;
@@ -27,6 +28,7 @@ import org.controlsfx.control.CheckComboBox;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,7 +43,7 @@ public class ListsJournalController extends WindowController {
     private AddListController addListController;
     private EditListController editListController;
     private CloseListController closeListController;
-
+    private TableView<_List> tableView;
     public ListsJournalController(){}
 
 
@@ -55,6 +57,7 @@ public class ListsJournalController extends WindowController {
             }
         }
         else {
+            tableView = new TableView<>();
             addListController = new AddListController();
             editListController = new EditListController();
             closeListController = new CloseListController();
@@ -111,7 +114,7 @@ public class ListsJournalController extends WindowController {
             openFileButton.getStyleClass().add("grey-button");
             openFileButton.setDisable(true);
 
-            TableView<_List> tableView = new TableView<>();
+
 
 
             TableColumn<_List, String> idCol = new TableColumn<>("ID");
@@ -348,7 +351,7 @@ public class ListsJournalController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -367,9 +370,10 @@ public class ListsJournalController extends WindowController {
                 }
 
                 List<_List> newLists = dbManager.getListsForCars(numbersGL);
-
+                newLists.sort(Comparator.comparing(_List::getNumber));
                 Platform.runLater(() -> {
                     lists.setAll(newLists); // Оновлення UI у JavaFX потоці
+                    moveTableDown(tableView);
                 });
                 return null;
             }

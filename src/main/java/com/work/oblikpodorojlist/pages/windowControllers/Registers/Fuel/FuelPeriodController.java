@@ -196,7 +196,7 @@ public class FuelPeriodController extends WindowController {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            mainPage.openInternalWindow(vbox, windowTitle);
+            mainPage.openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(event -> {
 

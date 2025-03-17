@@ -756,7 +756,7 @@ public class DBManager {
 
     //----------------------------------
 
-    public List<_List> getListsFiltered(List<String> Numbers, PeriodParameters params) {
+    public List<_List> getListsFiltered(List<String> Numbers, LocalDate startDate, LocalDate endDate) {
         List<_List> listsAll = new ArrayList<>();
 
         String sql = "SELECT l.*, c.number, c.`id-car` "
@@ -771,8 +771,8 @@ public class DBManager {
             try (Connection connection = Connect();
                  PreparedStatement statement = connection.prepareStatement(sql)) {
                 statement.setString(1, carNumber);
-                statement.setDate(2, Date.valueOf(params.getStartDate()));
-                statement.setDate(3, Date.valueOf(params.getEndDate()));
+                statement.setDate(2, Date.valueOf(startDate));
+                statement.setDate(3, Date.valueOf(endDate));
 
                 ResultSet resultSet = statement.executeQuery();
                 while (resultSet.next()) {

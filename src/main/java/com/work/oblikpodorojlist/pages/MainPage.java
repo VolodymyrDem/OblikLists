@@ -297,7 +297,7 @@ public class MainPage {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow = openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText())) {
@@ -351,7 +351,7 @@ public class MainPage {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow = openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText())) {
@@ -417,7 +417,7 @@ public class MainPage {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow = openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText()) || isEmptyOrWhitespace(addressField.getText()) || isEmptyOrWhitespace(codeField.getText()) || isEmptyOrWhitespace(ceoField.getText()) ||
@@ -491,7 +491,7 @@ public class MainPage {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow = openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText()) || isEmptyOrWhitespace(addressField.getText()) || isEmptyOrWhitespace(ceoField.getText()) ||
@@ -605,7 +605,7 @@ public class MainPage {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            openInternalWindow(table, windowTitle);
+            openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -635,7 +635,7 @@ public class MainPage {
             VBox vbox = new VBox();
             vbox.getChildren().addAll(grid, saveButton);
 
-            StackPane internalWindow = openInternalWindow(vbox, windowTitle);
+            StackPane internalWindow = openInternalWindow(vbox, windowTitle, false);
 
             saveButton.setOnAction(e ->{
                     try {
@@ -719,7 +719,7 @@ public class MainPage {
 
     //----------------------------------
 
-    public StackPane openInternalWindow(VBox content, String windowTitle) {
+    public StackPane openInternalWindow(VBox content, String windowTitle, boolean full) {
         windowCount++;
 
         StackPane internalWindow = new StackPane();
@@ -929,26 +929,29 @@ public class MainPage {
         internalWindow.setLayoutY(yPosition);
 
         internalWindow.toFront();
-        if (maximizedWindow != null && maximizedWindow != internalWindow) {
-            maximizedWindow.setVisible(true);
-        }
-        if (internalWindow.getPrefWidth() == workspace.getWidth() && internalWindow.getPrefHeight() == workspace.getHeight()) {
-            internalWindow.setPrefSize(previousSize[0], previousSize[1]);
-            internalWindow.setLayoutX(previousSize[2]);
-            internalWindow.setLayoutY(previousSize[3]);
-            maximizedWindow = null;
-            internalWindow.setVisible(true);
-        } else {
-            maximizedWindow = internalWindow;
-            previousSize[0] = internalWindow.getPrefWidth();
-            previousSize[1] = internalWindow.getPrefHeight();
-            previousSize[2] = internalWindow.getLayoutX();
-            previousSize[3] = internalWindow.getLayoutY();
+        if(full) {
+            if (maximizedWindow != null && maximizedWindow != internalWindow) {
+                maximizedWindow.setVisible(true);
+            }
+            if (internalWindow.getPrefWidth() == workspace.getWidth() && internalWindow.getPrefHeight() == workspace.getHeight()) {
+                internalWindow.setPrefSize(previousSize[0], previousSize[1]);
+                internalWindow.setLayoutX(previousSize[2]);
+                internalWindow.setLayoutY(previousSize[3]);
+                maximizedWindow = null;
+                internalWindow.setVisible(true);
+            } else {
+                maximizedWindow = internalWindow;
+                previousSize[0] = internalWindow.getPrefWidth();
+                previousSize[1] = internalWindow.getPrefHeight();
+                previousSize[2] = internalWindow.getLayoutX();
+                previousSize[3] = internalWindow.getLayoutY();
 
-            internalWindow.setLayoutX(0);
-            internalWindow.setLayoutY(0);
-            internalWindow.setPrefSize(workspace.getWidth(), workspace.getHeight());
-            internalWindow.setVisible(true);
+                internalWindow.setLayoutX(0);
+                internalWindow.setLayoutY(0);
+                internalWindow.setPrefSize(workspace.getWidth(), workspace.getHeight());
+                internalWindow.setVisible(true);
+            }
+
         }
 
         updateNavigationBar();

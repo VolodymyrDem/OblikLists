@@ -4,6 +4,7 @@ import com.work.oblikpodorojlist.managers.Alerts;
 import com.work.oblikpodorojlist.managers.DBManager;
 import com.work.oblikpodorojlist.managers.DocumentsManager;
 import com.work.oblikpodorojlist.managers.IconsManager;
+import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -20,6 +21,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 public class WorkersHandbookController extends WindowController {
@@ -30,8 +32,8 @@ public class WorkersHandbookController extends WindowController {
     private AddWorkerController addWorkerController;
     private EditWorkerController editWorkerController;
     private RemoveWorkerController removeWorkerController;
-    ComboBox<String> selectionModel = new ComboBox<>();
-
+    private ComboBox<String> selectionModel;
+    private TableView<_Worker> tableView;
     public WorkersHandbookController(){}
 
     public void openWindow() {
@@ -44,6 +46,8 @@ public class WorkersHandbookController extends WindowController {
             }
         }
         else {
+            tableView = new TableView<>();
+            selectionModel = new ComboBox<>();
             dbManager = DBManager.getInstance();
             documentsManager = DocumentsManager.getInstance();
             addWorkerController = new AddWorkerController();
@@ -86,7 +90,7 @@ public class WorkersHandbookController extends WindowController {
             updateButton.getStyleClass().add("grey-button");
             updateButton.setGraphic(IconsManager.getUpdateIcon());
 
-            TableView<_Worker> tableView = new TableView<>();
+
 
             TableColumn<_Worker, Integer> idCol = new TableColumn<>("ID");
             idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -210,7 +214,7 @@ public class WorkersHandbookController extends WindowController {
 
             table.getChildren().addAll(buttonBox,tableView);
 
-            mainPage.openInternalWindow(table, windowTitle);
+            mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
@@ -227,8 +231,10 @@ public class WorkersHandbookController extends WindowController {
                 } else {
                     newWorkers = dbManager.getWorkers();
                 }
+                newWorkers.sort(Comparator.comparing(_Worker::getNameN));
                 Platform.runLater(() -> {
                     workers.setAll(newWorkers); // Оновлення UI у JavaFX потоці
+                    moveTableDown(tableView);
                 });
                 return null;
             }
