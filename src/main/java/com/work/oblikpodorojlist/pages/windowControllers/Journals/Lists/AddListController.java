@@ -40,7 +40,7 @@ public class AddListController extends WindowController {
         return validWorkers;
     }
 
-    public void openWindow() {
+    public void openWindow(ListsJournalController controller) {
         String windowTitle = "Додати лист";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -220,8 +220,8 @@ public class AddListController extends WindowController {
                             if (response == ButtonType.OK) {
                                 if(dbManager.addList(newList)) {
                                     mainPage.closeInternalWindow(windowTitle);
-
                                 }
+                                controller.updateValues();
                             }
                         });
 

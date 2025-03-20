@@ -19,7 +19,7 @@ public class EditCarController extends WindowController {
 
     public EditCarController(){}
 
-    public void openWindow(_Car selectedCar) {
+    public void openWindow(_Car selectedCar,CarsHandbookController controller) {
         String windowTitle = "Редагувати авто";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -135,7 +135,9 @@ public class EditCarController extends WindowController {
                             if (response == ButtonType.OK) {
                                 dbManager.changeCar(car);
                                 mainPage.closeInternalWindow(windowTitle);
+                                controller.updateValues();
                             }
+
                         });
                     } catch (NumberFormatException ex) {
                         Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");

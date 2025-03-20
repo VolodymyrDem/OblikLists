@@ -21,7 +21,7 @@ public class AddCarController extends WindowController {
 
 
 
-    public void openWindow() {
+    public void openWindow(CarsHandbookController controller) {
         String windowTitle = "Додати авто";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -116,7 +116,9 @@ public class AddCarController extends WindowController {
                             if (response == ButtonType.OK) {
                                 dbManager.addCar(car);
                                 mainPage.closeInternalWindow(windowTitle);
+                                controller.updateValues();
                             }
+
                         });
                     } catch (NumberFormatException ex) {
                         Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");

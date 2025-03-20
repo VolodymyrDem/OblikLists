@@ -111,7 +111,7 @@ public class DocumentsManager {
         String[] words = fullname.split(" ");
         String newString = "";
         if (words.length >= 2) {
-            newString = words[0] + " " + words[1];
+            newString = words[1] + " " + words[0];
         }
         return newString;
     }
@@ -124,7 +124,50 @@ public class DocumentsManager {
         }
         return newString;
     }
+    public static String capitalizeFirstLetter(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+    public static void addWrappedText(XWPFParagraph paragraph, String text, int maxLineLength) {
+        XWPFRun run = paragraph.createRun();
+        run.setFontFamily("Times New Roman");
+        run.setFontSize(12);
 
+        String[] words = text.split(" ");
+        StringBuilder line = new StringBuilder();
+
+        for (String word : words) {
+            // Якщо додавання слова перевищить ліміт або воно вже занадто довге, переносимо рядок
+            if (!line.isEmpty() && (line.length() + word.length() + 1 > maxLineLength)) {
+                run.setText(line.toString()); // Додаємо попередній рядок
+                run.addBreak(); // Переносимо на новий рядок
+                line.setLength(0); // Очищаємо буфер
+            }
+
+            // Якщо слово довше за maxLineLength, виводимо його окремо
+            if (word.length() > maxLineLength) {
+                if (line.length() > 0) {
+                    run.setText(line.toString());
+                    run.addBreak();
+                    line.setLength(0);
+                }
+                run.setText(word);
+                run.addBreak();
+            } else {
+                if (!line.isEmpty()) {
+                    line.append(" "); // Додаємо пробіл між словами
+                }
+                line.append(word);
+            }
+        }
+
+        // Додаємо залишковий рядок, якщо є
+        if (!line.isEmpty()) {
+            run.setText(line.toString());
+        }
+    }
     // Method to create and save a Word document
     public void createOrderDocument(DBManager dbManager, _Order order) {
         try {
@@ -285,9 +328,6 @@ public class DocumentsManager {
                 separator = document.createParagraph();
                 setParagraphSpacing(separator);
                 separator.createRun();
-                separator = document.createParagraph();
-                setParagraphSpacing(separator);
-                separator.createRun();
 
                 XWPFParagraph text = document.createParagraph();
                 text.setAlignment(ParagraphAlignment.LEFT);
@@ -373,9 +413,6 @@ public class DocumentsManager {
                 separator = document.createParagraph();
                 setParagraphSpacing(separator);
                 separator.createRun();
-                separator = document.createParagraph();
-                setParagraphSpacing(separator);
-                separator.createRun();
 
                 XWPFParagraph director = document.createParagraph();
                 director.setAlignment(ParagraphAlignment.LEFT);
@@ -435,9 +472,6 @@ public class DocumentsManager {
                 separator = document.createParagraph();
                 setParagraphSpacing(separator);
                 separator.createRun();
-                separator = document.createParagraph();
-                setParagraphSpacing(separator);
-                separator.createRun();
 
                 // Create another paragraph for the next field (like the accountant)
                 XWPFParagraph accountant = document.createParagraph();
@@ -470,9 +504,6 @@ public class DocumentsManager {
                 separator = document.createParagraph();
                 setParagraphSpacing(separator);
                 separator.createRun();
-                separator = document.createParagraph();
-                setParagraphSpacing(separator);
-                separator.createRun();
 
                 // Repeat for other fields (e.g., worker)
                 XWPFParagraph worker = document.createParagraph();
@@ -490,11 +521,11 @@ public class DocumentsManager {
                 rightTab = tabs.addNewTab();
                 rightTab.setVal(STTabJc.RIGHT);
                 rightTab.setPos(BigInteger.valueOf(9000)); // Right-aligned tab stop
+                addWrappedText(worker, capitalizeFirstLetter(dbManager.getWorkerPosition(true, _worker.getId())), 31);
 
                 XWPFRun workerRun = worker.createRun();
                 workerRun.setFontFamily("Times New Roman");
                 workerRun.setFontSize(12);
-                workerRun.setText(dbManager.getWorkerPosition(true, _worker.getId()));
                 workerRun.addTab();  // Move to the next tab position (right)
                 workerRun.setText("_________________");
                 workerRun.addTab();  // Move to the next tab position (right)
@@ -1657,7 +1688,7 @@ public class DocumentsManager {
                 TOV1Run.addTab();  // Move to the next tab position (right)
                 TOV1Run.setText("_________________");
                 TOV1Run.addTab();  // Move to the next tab position (right)
-                TOV1Run.setText(head);
+                TOV1Run.setText(getNameSurname(head));
 
 
                 try (FileOutputStream out = new FileOutputStream(fileToSave)) {

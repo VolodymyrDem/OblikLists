@@ -944,7 +944,7 @@ public class DBManager {
                     } else {
                         list.setIdOrder(idOrder);
                         list.setStartDate(getStartOrderDate(idOrder));
-                        list.setEndDate(getStartOrderDate(idOrder));  // Fix if needed to set correct dates
+                        list.setEndDate(getEndOrderDate(idOrder));  // Fix if needed to set correct dates
                         list.setRoute(getOrderRoute(idOrder));
                         list.setGoal(getOrderGoal(idOrder));
                         list.setIdWorker(getOrderIdWorker(idOrder));

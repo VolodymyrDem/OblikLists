@@ -17,7 +17,7 @@ public class EditPositionController {
 
     public EditPositionController(){}
 
-    public void openWindow(_Position selectedPosition) {
+    public void openWindow(_Position selectedPosition, PositionsHandbookController controller) {
         String windowTitle = "Редагувати посаду";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -62,6 +62,7 @@ public class EditPositionController {
                                 if(dbManager.changePosition(position)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
+                                controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {

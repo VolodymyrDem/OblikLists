@@ -26,7 +26,7 @@ public class EditWorkerController extends WindowController {
 
 
 
-    public void openWindow(_Worker selectedWorker) {
+    public void openWindow(_Worker selectedWorker, WorkersHandbookController controller) {
         String windowTitle = "Редагувати працівника";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -144,6 +144,7 @@ public class EditWorkerController extends WindowController {
                                 if(dbManager.changeWorker(worker)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
+                                controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {

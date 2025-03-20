@@ -31,7 +31,7 @@ public class CloseListController extends WindowController {
 
 
 
-    public void openWindow(_List selectedList)  {
+    public void openWindow(_List selectedList, ListsJournalController controller)  {
         String windowTitle = "Закрити лист";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -153,11 +153,12 @@ public class CloseListController extends WindowController {
                                         Alert CreateReportAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Створити звіт про завершення виконання за наказом");
                                         CreateReportAlert.showAndWait().ifPresent(response2 -> {
                                             if (response2 == ButtonType.OK){
-                                                addReportController.openWindow(selectedList.getIdOrder());
+                                                addReportController.openWindow(selectedList.getIdOrder(), null);
                                             }
                                         });
                                     }
                                 }
+                                controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {

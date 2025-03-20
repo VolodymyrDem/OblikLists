@@ -23,7 +23,7 @@ public class EditReportController extends WindowController {
 
     public EditReportController(){}
 
-    public void openWindow(_Report selectedReport) {
+    public void openWindow(_Report selectedReport, ReportsJournalController controller) {
         String windowTitle = "Редагувати звіт";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -98,6 +98,7 @@ public class EditReportController extends WindowController {
                         if(dbManager.changeReport(selectedReport)) {
                             mainPage.closeInternalWindow(windowTitle);
                         }
+                        controller.updateValues();
                     }
                 });
             });

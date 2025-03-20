@@ -28,7 +28,7 @@ public class AddReportController extends WindowController {
 
 
 
-    public void openWindow(int idOrder) {
+    public void openWindow(int idOrder, ReportsJournalController controller) {
         String windowTitle = "Додати звіт";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -133,6 +133,9 @@ public class AddReportController extends WindowController {
                             _Report rep = new _Report(ordersT.get(order.getValue()), commentsField.getText(), datePicker.getValue());
                             if(dbManager.addReport(rep)) {
                                 mainPage.closeInternalWindow(windowTitle);
+                            }
+                            if(controller != null) {
+                                controller.updateValues();
                             }
                         }
                     });

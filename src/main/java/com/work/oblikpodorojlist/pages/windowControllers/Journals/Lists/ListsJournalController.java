@@ -66,7 +66,7 @@ public class ListsJournalController extends WindowController {
 
             Button addButton = new Button("Додати лист");
             addButton.setGraphic(IconsManager.getPlusIcon());
-            addButton.setOnAction(e -> addListController.openWindow());
+            addButton.setOnAction(e -> addListController.openWindow(this));
 
             validCars = dbManager.getUniqueCarsNumbers();
 
@@ -238,7 +238,7 @@ public class ListsJournalController extends WindowController {
             removeButton.setOnAction(e -> {
                 _List selectedList = tableView.getSelectionModel().getSelectedItem();
                 if (selectedList != null && !selectedList.isDone()) {
-                    closeListController.openWindow(selectedList);
+                    closeListController.openWindow(selectedList, this);
                 }
             });
 
@@ -280,7 +280,7 @@ public class ListsJournalController extends WindowController {
                 removeItem.setOnAction(event -> {
                     _List selectedList = row.getItem();
                     if (selectedList != null && !selectedList.isDone()) {
-                        closeListController.openWindow(selectedList);
+                        closeListController.openWindow(selectedList, this);
                     }
                 });
 
@@ -368,6 +368,7 @@ public class ListsJournalController extends WindowController {
                             .map(s -> s.split("\\s+")[0])  // Get the first word from each checked item
                             .collect(Collectors.toList());
                 }
+                System.out.println(numbersGL);
 
                 List<_List> newLists = dbManager.getListsForCars(numbersGL);
                 newLists.sort(Comparator.comparing(_List::getNumber));

@@ -21,7 +21,7 @@ public class RemoveCarController extends WindowController {
 
 
 
-    public void openWindow(_Car selectedCar) {
+    public void openWindow(_Car selectedCar, CarsHandbookController controller) {
         String windowTitle = "Зняти з експулатації авто";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -80,7 +80,9 @@ public class RemoveCarController extends WindowController {
                             if (response == ButtonType.OK) {
                                 dbManager.removeCar(selectedCar);
                                 mainPage.closeInternalWindow(windowTitle);
+                                controller.updateValues();
                             }
+
                         });
                     }
                 } catch (NumberFormatException ex) {

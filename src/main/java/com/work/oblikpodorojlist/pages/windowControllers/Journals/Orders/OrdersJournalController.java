@@ -193,7 +193,7 @@ public class OrdersJournalController extends WindowController {
                 editItem.setOnAction(event -> {
                     _Order selectedOrder = row.getItem();
                     if (selectedOrder != null && dbManager.isOrderModifiable(selectedOrder.getIdOrder())) {
-                        editOrderController.openWindow(selectedOrder);
+                        editOrderController.openWindow(selectedOrder, this);
                     }
                 });
 
@@ -237,7 +237,7 @@ public class OrdersJournalController extends WindowController {
             });
 
             addButton.setOnAction(e -> {
-                addOrderController.openWindow(null);
+                addOrderController.openWindow(null, this);
             });
 
             openFolderButton.setOnAction(e -> {
@@ -259,14 +259,14 @@ public class OrdersJournalController extends WindowController {
             editButton.setOnAction(e -> {
                 _Order selectedOrder = tableView.getSelectionModel().getSelectedItem();
                 if (selectedOrder != null) {
-                    editOrderController.openWindow(selectedOrder);
+                    editOrderController.openWindow(selectedOrder, this);
                 }
             });
 
             copyButton.setOnAction(e -> {
                 _Order selectedOrder = tableView.getSelectionModel().getSelectedItem();
                 if (selectedOrder != null) {
-                    addOrderController.openWindow(selectedOrder);
+                    addOrderController.openWindow(selectedOrder, this);
                 }
             });
 

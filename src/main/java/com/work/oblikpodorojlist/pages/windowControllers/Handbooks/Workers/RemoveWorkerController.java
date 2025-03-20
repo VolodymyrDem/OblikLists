@@ -19,7 +19,7 @@ public class RemoveWorkerController extends WindowController {
 
     public RemoveWorkerController(){}
 
-    public void openWindow(_Worker selectedWorker) {
+    public void openWindow(_Worker selectedWorker, WorkersHandbookController controller) {
         String windowTitle = "Звільнити працівника";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -77,6 +77,7 @@ public class RemoveWorkerController extends WindowController {
                             if (response == ButtonType.OK) {
                                 if (dbManager.removeWorker(selectedWorker)) {
                                     mainPage.closeInternalWindow(windowTitle);
+                                    controller.updateValues();
                                 }
                             }
                         });

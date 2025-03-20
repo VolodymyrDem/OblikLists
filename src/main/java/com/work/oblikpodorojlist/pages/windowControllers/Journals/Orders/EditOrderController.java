@@ -25,7 +25,7 @@ public class EditOrderController extends WindowController {
 
     public EditOrderController(){}
 
-    public void openWindow(_Order selectedOrder) {
+    public void openWindow(_Order selectedOrder, OrdersJournalController controller) {
         String windowTitle = "Редагувати наказ";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -197,6 +197,7 @@ public class EditOrderController extends WindowController {
                                 if(dbManager.changeOrder(newOrder)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
+                                controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {

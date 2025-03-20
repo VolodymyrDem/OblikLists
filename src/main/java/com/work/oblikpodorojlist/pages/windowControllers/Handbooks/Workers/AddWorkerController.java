@@ -25,7 +25,7 @@ public class AddWorkerController extends WindowController {
     public AddWorkerController(){}
 
 
-    public void openWindow() {
+    public void openWindow(WorkersHandbookController controller) {
         String windowTitle = "Додати працівника";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -115,6 +115,7 @@ public class AddWorkerController extends WindowController {
                                 if(dbManager.addWorker(worker)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
+                                controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {

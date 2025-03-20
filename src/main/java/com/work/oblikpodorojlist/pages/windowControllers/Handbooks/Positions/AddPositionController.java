@@ -18,7 +18,7 @@ public class AddPositionController extends WindowController {
 
 
 
-    public void openWindow() {
+    public void openWindow(PositionsHandbookController controller) {
         String windowTitle = "Додати посаду";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -63,6 +63,7 @@ public class AddPositionController extends WindowController {
                                 if(dbManager.addPosition(position)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
+                                controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {

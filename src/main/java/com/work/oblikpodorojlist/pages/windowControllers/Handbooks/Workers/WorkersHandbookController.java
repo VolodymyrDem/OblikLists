@@ -155,13 +155,13 @@ public class WorkersHandbookController extends WindowController {
             editButton.setOnAction(e -> {
                 _Worker selectedWorker = tableView.getSelectionModel().getSelectedItem();
                 if (selectedWorker != null) {
-                    editWorkerController.openWindow(selectedWorker);
+                    editWorkerController.openWindow(selectedWorker, this);
                 }
             });
             removeButton.setOnAction(e -> {
                 _Worker selectedWorker = tableView.getSelectionModel().getSelectedItem();
                 if (selectedWorker != null) {
-                    removeWorkerController.openWindow(selectedWorker);
+                    removeWorkerController.openWindow(selectedWorker, this);
                 }
             });
             updateButton.setOnAction(e->{
@@ -171,7 +171,7 @@ public class WorkersHandbookController extends WindowController {
                 openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[1] + "\\");
             });
             addButton.setOnAction(e -> {
-                addWorkerController.openWindow();
+                addWorkerController.openWindow(this);
             });
             createFileButton.setOnAction(e -> {
                 documentsManager.createWorkersHandbook(dbManager, workers);

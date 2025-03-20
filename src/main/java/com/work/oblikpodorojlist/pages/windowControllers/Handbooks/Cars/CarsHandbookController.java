@@ -168,14 +168,14 @@ public class CarsHandbookController extends WindowController {
             editButton.setOnAction(e -> {
                 _Car selectedCar = tableView.getSelectionModel().getSelectedItem();
                 if (selectedCar != null) {
-                    editCarController.openWindow(selectedCar);
+                    editCarController.openWindow(selectedCar, this);
                 }
             });
 
             removeButton.setOnAction(e -> {
                 _Car selectedCar = tableView.getSelectionModel().getSelectedItem();
                 if (selectedCar != null) {
-                    removeCarController.openWindow(selectedCar);
+                    removeCarController.openWindow(selectedCar, this);
                 }
             });
 
@@ -192,7 +192,7 @@ public class CarsHandbookController extends WindowController {
             });
 
             addButton.setOnAction(e -> {
-                addCarController.openWindow();
+                addCarController.openWindow(this);
             });
 
             HBox buttonBox = new HBox(10,updateButton, addButton, editButton, new Label("Фільтрувати актуальність"),

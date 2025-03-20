@@ -27,7 +27,7 @@ public class AddOrderController extends WindowController {
 
     public AddOrderController(){}
 
-    public void openWindow(_Order selectedOrder) {
+    public void openWindow(_Order selectedOrder, OrdersJournalController controller) {
         String windowTitle = "Додати наказ";
         mainPage = MainPage.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
@@ -199,6 +199,7 @@ public class AddOrderController extends WindowController {
                                 if(dbManager.addOrder(newOrder)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
+                                controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {

@@ -58,7 +58,7 @@ public class ReportsJournalController extends WindowController {
             Button addButton = new Button("Додати звіт");
             addButton.setGraphic(IconsManager.getPlusIcon());
             addButton.setOnAction(e -> {
-                addReportController.openWindow(-1);
+                addReportController.openWindow(-1, this);
             });
 
             Button editButton = new Button("Редагувати звіт");
@@ -168,7 +168,7 @@ public class ReportsJournalController extends WindowController {
             editButton.setOnAction(e -> {
                 _Report rep = tableView.getSelectionModel().getSelectedItem();
                 if (rep != null) {
-                    editReportController.openWindow(rep);
+                    editReportController.openWindow(rep, this);
                 }
             });
 

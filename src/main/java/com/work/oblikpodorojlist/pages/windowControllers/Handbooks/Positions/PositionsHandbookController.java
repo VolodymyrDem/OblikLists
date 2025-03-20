@@ -103,7 +103,7 @@ public class PositionsHandbookController extends WindowController {
             editButton.setOnAction(e -> {
                 _Position selectedPosition = tableView.getSelectionModel().getSelectedItem();
                 if (selectedPosition != null) {
-                    editPositionController.openWindow(selectedPosition);
+                    editPositionController.openWindow(selectedPosition, this);
                 }
             });
 
@@ -111,7 +111,7 @@ public class PositionsHandbookController extends WindowController {
                 updateValues();
             });
 
-            addButton.setOnAction(e -> addPositionController.openWindow());
+            addButton.setOnAction(e -> addPositionController.openWindow(this));
 
             tableView.getColumns().addAll(nameNCol, nameRCol);
 
