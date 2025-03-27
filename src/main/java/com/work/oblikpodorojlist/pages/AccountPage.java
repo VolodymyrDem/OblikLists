@@ -70,12 +70,10 @@ public class AccountPage {
             }
         });
 
-        // Контейнер кнопки
         HBox buttonContainer = new HBox(selectAccountButton);
         buttonContainer.setSpacing(10);
         buttonContainer.setStyle("-fx-alignment: center;");
 
-        // Основний контейнер
         VBox mainLayout = new VBox(15, accountListView, buttonContainer);
         mainLayout.setStyle("-fx-background-color: #F8F9FA; -fx-padding: 20px;");
         mainLayout.setPrefSize(400, 350);

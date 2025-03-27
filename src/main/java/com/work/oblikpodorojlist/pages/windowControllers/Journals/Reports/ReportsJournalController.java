@@ -157,7 +157,6 @@ public class ReportsJournalController extends WindowController {
                 return new SimpleStringProperty(comments);
             });
 
-            // Активуємо кнопку "Редагувати авто" при виборі рядка
             tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
                 boolean isItemSelected = newSelection != null;
                 editButton.setDisable(!isItemSelected);
@@ -230,7 +229,7 @@ public class ReportsJournalController extends WindowController {
                 });
 
                 Platform.runLater(() -> {
-                    reports.setAll(reportsNew); // Оновлення UI у JavaFX потоці
+                    reports.setAll(reportsNew); 
                     moveTableDown(tableView);
                 });
 

@@ -117,7 +117,7 @@ public class FuelPeriodController extends WindowController {
 
 
             group.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-                // Оновлюємо доступність елементів в залежності від вибору
+
                 if (year.isSelected()) {
                     yearSpinner.setDisable(false);
                     quarterYearSpinner.setDisable(true);
@@ -213,11 +213,11 @@ public class FuelPeriodController extends WindowController {
                     int initialQuarter = valueFactory.getQuarter();
                     int initialYear = valueFactory.getYear();
                     if (fromStartOfYear.isSelected()) {
-                        StartDate = LocalDate.of(initialYear, 1, 1);  // Початок року
+                        StartDate = LocalDate.of(initialYear, 1, 1);
                     } else {
-                        StartDate = valueFactory.getQuarterStartDate(initialQuarter, initialYear);  // Початок кварталу
+                        StartDate = valueFactory.getQuarterStartDate(initialQuarter, initialYear);
                     }
-                    EndDate = valueFactory.getQuarterStartDate(initialQuarter, initialYear).plusMonths(3).minusDays(1);  // Кінець кварталу
+                    EndDate = valueFactory.getQuarterStartDate(initialQuarter, initialYear).plusMonths(3).minusDays(1);
 
                     fromStart = fromStartOfYear.isSelected();
 
@@ -228,16 +228,16 @@ public class FuelPeriodController extends WindowController {
 
                     if (fromStartOfQuarter.isSelected()) {
                         int monthOfYear = StartDate.getMonthValue();
-                        int quarterI = (monthOfYear - 1) / 3 + 1;  // Визначення кварталу (1 - січень-березень, 2 - квітень-червень тощо)
-                        StartDate = valueFactoryMY.getStartDate();  // Початок місяця
-                        LocalDate quarterStart = valueFactory.getQuarterStartDate(quarterI, StartDate.getYear()); // Початок кварталу
+                        int quarterI = (monthOfYear - 1) / 3 + 1;
+                        StartDate = valueFactoryMY.getStartDate();
+                        LocalDate quarterStart = valueFactory.getQuarterStartDate(quarterI, StartDate.getYear());
                         StartDate = quarterStart;
                     }
 
                 } else if (day.isSelected()) {
                     StartDate = datePickerDay.getValue();
                     if (fromStartOfMonth.isSelected()) {
-                        StartDate = LocalDate.of(StartDate.getYear(), StartDate.getMonth(), 1);  // Початок місяця
+                        StartDate = LocalDate.of(StartDate.getYear(), StartDate.getMonth(), 1);
                     }
                     EndDate = StartDate;
 

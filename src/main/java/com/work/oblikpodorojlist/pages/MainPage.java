@@ -118,7 +118,7 @@ public class MainPage {
 
         lightTheme.setToggleGroup(themeGroup);
         darkTheme.setToggleGroup(themeGroup);
-        lightTheme.setSelected(true); // За замовчуванням світла тема
+        lightTheme.setSelected(true);
 
         menuTheme.getItems().addAll(lightTheme, darkTheme);
         menuFile.getItems().addAll(menuTheme, changeUser, closeApp);
@@ -253,7 +253,6 @@ public class MainPage {
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
-                // Тут можна виконати необхідні дії перед закриттям вікна
                 Alert al= Alerts.ConfirmAlert("Створити резервну копію?","Підвердіть створення резервної копії");
                 al.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
@@ -261,8 +260,6 @@ public class MainPage {
                         dbManager.deleteOldBackups();
                     }
                 });
-                // Можна відмінити закриття вікна, якщо це потрібно
-                // event.consume();  // Закоментуйте, якщо не хочете скасувати закриття
             }
         });
 
@@ -270,7 +267,7 @@ public class MainPage {
 
     private void resizeWorkspace(Stage stage) {
         workspace.setPrefWidth(stage.getWidth());
-        workspace.setPrefHeight(stage.getHeight() - navigationBar.getHeight() - 25); // Adjust for menu bar
+        workspace.setPrefHeight(stage.getHeight() - navigationBar.getHeight() - 25);
     }
 
     private void openChangeHostWindow() {
@@ -429,7 +426,6 @@ public class MainPage {
                         Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Додати компанію");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                //todo: add password
                                 dbManager.createCompany(nameField.getText(),addressField.getText(), codeField.getText(), ceoField.getText(), accountantField.getText(), typeFullField.getText(), typeShortField.getText());
                                 workspace.getChildren().remove(internalWindow);
                                 openWindows.remove(windowTitle);
@@ -661,7 +657,6 @@ public class MainPage {
         }
     }
 
-    //----------------------------------
 
     private void openOrdersRegister() {
         OrdersRegisterController controller = new OrdersRegisterController();
@@ -678,14 +673,12 @@ public class MainPage {
         controller.openWindow();
     }
 
-    //----------------------------------
 
     private void openListJournal() {
         ListsJournalController controller = new ListsJournalController();
         controller.openWindow();
     }
 
-    //----------------------------------
 
 
     private void openOrderJournal() {
@@ -693,7 +686,6 @@ public class MainPage {
         controller.openWindow();
     }
 
-    //----------------------------------
 
     private void openPositionsHandbookWindow() {
         PositionsHandbookController controller = new PositionsHandbookController();
@@ -710,14 +702,12 @@ public class MainPage {
         controller.openWindow();
     }
 
-    //----------------------------------
 
     private void openWorkersHandbookWindow() {
         WorkersHandbookController controller = new WorkersHandbookController();
         controller.openWindow();
     }
 
-    //----------------------------------
 
     public StackPane openInternalWindow(VBox content, String windowTitle, boolean full) {
         windowCount++;
@@ -739,7 +729,6 @@ public class MainPage {
             }
         });
 
-        // Create Header Bar
         Rectangle header = new Rectangle(300, 30, Color.LIGHTGRAY);
         HBox headerBar = new HBox();
         headerBar.setPrefSize(300, 30);
@@ -794,7 +783,6 @@ public class MainPage {
 
         openWindows.put(windowTitle, internalWindow);
 
-        // Create a Label to display the window's title
         Label windowTitleLabel = new Label(windowTitle);
         windowTitleLabel.getStyleClass().add("window-title");
 
@@ -817,13 +805,11 @@ public class MainPage {
             double newX = event.getSceneX() - offset[0];
             double newY = event.getSceneY() - offset[1];
 
-            // Restrict the window's position to the workspace bounds
             double workspaceWidth = workspace.getWidth();
             double workspaceHeight = workspace.getHeight();
             double windowWidth = internalWindow.getWidth();
             double windowHeight = internalWindow.getHeight();
 
-            // Prevent the window from going beyond the workspace
             newX = Math.max(0, Math.min(newX, workspaceWidth - windowWidth));
             newY = Math.max(0, Math.min(newY, workspaceHeight - windowHeight));
 
@@ -837,7 +823,6 @@ public class MainPage {
             double width = internalWindow.getWidth();
             double height = internalWindow.getHeight();
 
-            // Prevent resizing when the pointer is over the header bar
             if (y > headerBar.getHeight()) {
                 if (x >= width - RESIZE_MARGIN && y >= height - RESIZE_MARGIN) {
                     internalWindow.setCursor(Cursor.SE_RESIZE);
@@ -849,12 +834,12 @@ public class MainPage {
                     internalWindow.setCursor(Cursor.DEFAULT);
                 }
             } else {
-                internalWindow.setCursor(Cursor.DEFAULT);  // Default cursor over header bar
+                internalWindow.setCursor(Cursor.DEFAULT);
             }
         });
 
         internalWindow.setOnMousePressed(event -> {
-            if (event.getY() > headerBar.getHeight()) {  // Prevent resizing logic near the header
+            if (event.getY() > headerBar.getHeight()) {
                 Cursor cursor = internalWindow.getCursor();
                 if (cursor == Cursor.SE_RESIZE) {
                     internalWindow.setUserData(new double[]{event.getSceneX(), event.getSceneY(), internalWindow.getWidth(), internalWindow.getHeight()});
@@ -868,11 +853,10 @@ public class MainPage {
         });
 
         internalWindow.setOnMouseDragged(event -> {
-            if (event.getY() > headerBar.getHeight()) {  // Prevent resizing near the header
+            if (event.getY() > headerBar.getHeight()) {
                 Cursor cursor = internalWindow.getCursor();
                 double[] data = (double[]) internalWindow.getUserData();
 
-                // Отримуємо розміри робочої області
                 double workspaceWidth = workspace.getWidth();
                 double workspaceHeight = workspace.getHeight();
 
@@ -880,20 +864,17 @@ public class MainPage {
                     double deltaX = event.getSceneX() - data[0];
                     double deltaY = event.getSceneY() - data[1];
 
-                    // Обмежуємо розміри вікна, щоб вони не виходили за межі робочої області
                     double newWidth = Math.max(100, data[2] + deltaX);
                     double newHeight = Math.max(100, data[3] + deltaY);
 
-                    // Перевіряємо, щоб нові розміри не перевищували розміри робочої області
                     internalWindow.setPrefSize(
-                            Math.min(newWidth, workspaceWidth - internalWindow.getLayoutX()),  // Ширина
-                            Math.min(newHeight, workspaceHeight - internalWindow.getLayoutY())  // Висота
+                            Math.min(newWidth, workspaceWidth - internalWindow.getLayoutX()),
+                            Math.min(newHeight, workspaceHeight - internalWindow.getLayoutY())
                     );
                 } else if (cursor == Cursor.E_RESIZE) {
                     double deltaX = event.getSceneX() - data[0];
                     double newWidth = Math.max(100, data[1] + deltaX);
 
-                    // Перевірка ширини
                     internalWindow.setPrefSize(
                             Math.min(newWidth, workspaceWidth - internalWindow.getLayoutX()),
                             internalWindow.getHeight()
@@ -902,7 +883,6 @@ public class MainPage {
                     double deltaY = event.getSceneY() - data[0];
                     double newHeight = Math.max(100, data[1] + deltaY);
 
-                    // Перевірка висоти
                     internalWindow.setPrefSize(
                             internalWindow.getWidth(),
                             Math.min(newHeight, workspaceHeight - internalWindow.getLayoutY())

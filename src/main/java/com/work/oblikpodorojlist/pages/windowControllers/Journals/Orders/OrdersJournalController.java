@@ -205,7 +205,6 @@ public class OrdersJournalController extends WindowController {
                     }
                 });
 
-                // Double-click event handler
                 row.setOnMouseClicked(event -> {
                     if (event.getClickCount() == 2 && !row.isEmpty()) {
                         _Order selectedOrder = row.getItem();
@@ -215,9 +214,8 @@ public class OrdersJournalController extends WindowController {
                     }
                 });
 
-                // Оновлення контекстного меню залежно від значення valid
                 row.itemProperty().addListener((obs, oldItem, newItem) -> {
-                    rowMenu.getItems().clear(); // Очищуємо попередні пункти
+                    rowMenu.getItems().clear();
                     if (newItem != null ) {
                         rowMenu.getItems().add(openItem);
                         if(dbManager.isOrderModifiable(newItem.getIdOrder())) {
@@ -227,7 +225,6 @@ public class OrdersJournalController extends WindowController {
 
                 });
 
-                // Прив'язка контекстного меню до рядка лише, коли він не порожній
                 row.contextMenuProperty().bind(
                         Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                 .then(rowMenu)
@@ -317,7 +314,7 @@ public class OrdersJournalController extends WindowController {
                     return Integer.compare(num1, num2);
                 });
                 Platform.runLater(() -> {
-                    orders.setAll(newOrders); // Оновлення UI у JavaFX потоці
+                    orders.setAll(newOrders);
                     moveTableDown(tableView);
                 });
                 return null;

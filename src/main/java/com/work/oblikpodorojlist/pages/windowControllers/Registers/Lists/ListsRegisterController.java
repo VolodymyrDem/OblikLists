@@ -1,9 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Lists;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
+import com.work.oblikpodorojlist.managers.*;
 import com.work.oblikpodorojlist.model.PeriodParameters;
 import com.work.oblikpodorojlist.model._List;
 import com.work.oblikpodorojlist.pages.MainPage;
@@ -28,6 +25,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 public class ListsRegisterController extends WindowController {
@@ -41,6 +39,8 @@ public class ListsRegisterController extends WindowController {
     private ObservableList<_List> FilteredLists = FXCollections.observableArrayList();
     public DatePicker datePickerStart;
     public DatePicker datePickerEnd;
+    private static final Logger logger = LoggerUtil.getLogger();
+
 
     public ListsRegisterController(){
         datePickerStart = new DatePicker();
@@ -87,14 +87,14 @@ public class ListsRegisterController extends WindowController {
                 }
             });
 
-            carField = new CheckComboBox<>();
+            carField.setPrefWidth(200);
+            carField.setMaxWidth(200);
+            carField.setMinWidth(200);
 
             GridPane grid = new GridPane();
 
             grid.setHgap(10);
             grid.setVgap(10);
-
-            List<String> validCars = dbManager.getUniqueCarsNumbers();
 
             datePickerStart.setConverter(new StringConverter<LocalDate>() {
                 @Override
@@ -119,8 +119,6 @@ public class ListsRegisterController extends WindowController {
                     return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
                 }
             });
-
-            CheckComboBox<String> carField = new CheckComboBox<>();
 
             Label carLabel = new Label("Авто:");
             Label timeLabel = new Label("Період: з ");
@@ -154,7 +152,6 @@ public class ListsRegisterController extends WindowController {
             updateButton.setGraphic(IconsManager.getUpdateIcon());
 
             updateButton.setOnAction(e->{
-
                 updateValues();
             });
 
@@ -178,8 +175,8 @@ public class ListsRegisterController extends WindowController {
                     updateButton.setDisable(true);
                     Alerts.ErrorAlert("Помилка вводу", "Введіть усі дані").showAndWait();
                 } else {
-                    updateButton.setDisable(false);
                     updateValues();
+                    updateButton.setDisable(false);
                     saveButton.setDisable(false);
                 }
 
@@ -325,13 +322,15 @@ public class ListsRegisterController extends WindowController {
                 }
 
                 if (carField.getCheckModel().getCheckedItems().isEmpty()) {
+                    System.out.println("empty");
                     numbersG = validCars.stream()
-                            .map(s -> s.split("\\s+")[0])  // Get the first word from each string
+                            .map(s -> s.split("\\s+")[0])
                             .collect(Collectors.toList());
                 } else {
                     numbersG = carField.getCheckModel().getCheckedItems().stream()
-                            .map(s -> s.split("\\s+")[0])  // Get the first word from each checked item
+                            .map(s -> s.split("\\s+")[0])
                             .collect(Collectors.toList());
+                    System.out.println(numbersG);
                 }
                 List<_List> newLists = dbManager.getListsFiltered(numbersG, datePickerStart.getValue(), datePickerEnd.getValue());
                 newLists.sort(Comparator.comparingInt(_List::getNumber));

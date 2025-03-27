@@ -48,25 +48,19 @@ public class MonthYearSpinnerValueFactory extends SpinnerValueFactory<String> {
         return formatValue();
     }
 
-    /**
-     * Повертає початкову дату у форматі LocalDate.
-     */
+
     public LocalDate getStartDate() {
-        return LocalDate.of(year, month, 1);  // Перший день місяця
+        return LocalDate.of(year, month, 1);
     }
 
-    /**
-     * Повертає кінцеву дату у форматі LocalDate.
-     */
+
     public LocalDate getEndDate() {
-        int lastDay = YearMonth.of(year, month).lengthOfMonth();  // Отримуємо останній день місяця
-        return LocalDate.of(year, month, lastDay);  // Останній день місяця
+        int lastDay = YearMonth.of(year, month).lengthOfMonth();
+        return LocalDate.of(year, month, lastDay);
     }
 
-    /**
-     * Отримує назву місяця за його номером.
-     */
+
     private String getMonthName(int month) {
-        return Month.of(month).toString().toLowerCase(); // Назви місяців англійською
+        return Month.of(month).toString().toLowerCase();
     }
 }

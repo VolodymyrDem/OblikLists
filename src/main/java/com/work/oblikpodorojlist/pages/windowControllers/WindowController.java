@@ -44,14 +44,13 @@ public abstract class WindowController {
     }
     protected int extractNumber(String orderNumber) {
         if (orderNumber == null || orderNumber.isEmpty()) {
-            return Integer.MAX_VALUE; // Якщо порожнє значення, відправити в кінець
+            return Integer.MAX_VALUE;
         }
-        // Виділяємо початкове число з наказу
         String numPart = orderNumber.replaceAll("^(\\d+).*", "$1");
         try {
             return Integer.parseInt(numPart);
         } catch (NumberFormatException e) {
-            return Integer.MAX_VALUE; // Якщо не вдалося розпарсити, відправити в кінець
+            return Integer.MAX_VALUE;
         }
     }
     protected void moveTableDown(TableView<?> tableView) {

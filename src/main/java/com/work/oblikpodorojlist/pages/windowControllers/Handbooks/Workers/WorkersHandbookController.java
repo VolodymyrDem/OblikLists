@@ -233,7 +233,7 @@ public class WorkersHandbookController extends WindowController {
                 }
                 newWorkers.sort(Comparator.comparing(_Worker::getNameN));
                 Platform.runLater(() -> {
-                    workers.setAll(newWorkers); // Оновлення UI у JavaFX потоці
+                    workers.setAll(newWorkers);
                     moveTableDown(tableView);
                 });
                 return null;

@@ -12,13 +12,12 @@ public class QuarterYearSpinnerValueFactory extends SpinnerValueFactory<String> 
     private final int minQuarter;
     private final int maxQuarter;
 
-    // Відповідність кварталів місяцям
     private static final Map<Integer, int[]> QUARTER_MONTHS = new HashMap<>();
     static {
-        QUARTER_MONTHS.put(1, new int[]{1, 3});  // Січень - Березень
-        QUARTER_MONTHS.put(2, new int[]{4, 6});  // Квітень - Червень
-        QUARTER_MONTHS.put(3, new int[]{7, 9});  // Липень - Вересень
-        QUARTER_MONTHS.put(4, new int[]{10, 12}); // Жовтень - Грудень
+        QUARTER_MONTHS.put(1, new int[]{1, 3});
+        QUARTER_MONTHS.put(2, new int[]{4, 6});
+        QUARTER_MONTHS.put(3, new int[]{7, 9});
+        QUARTER_MONTHS.put(4, new int[]{10, 12});
     }
 
     public QuarterYearSpinnerValueFactory(int minQuarter, int maxQuarter, int initialYear) {

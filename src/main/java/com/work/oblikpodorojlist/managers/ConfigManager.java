@@ -10,14 +10,13 @@ public class ConfigManager {
         Properties properties = new Properties();
         File file = new File(CONFIG_FILE);
 
-        // Якщо файл не існує, створюємо його з дефолтними значеннями
         if (!file.exists()) {
-            saveIpAddress("localhost"); // Створюємо файл і зберігаємо значення за замовчуванням
+            saveIpAddress("localhost");
         }
 
         try (FileInputStream input = new FileInputStream(CONFIG_FILE)) {
             properties.load(input);
-            return properties.getProperty("ip_address", "localhost"); // Якщо щось не так, повертаємо localhost
+            return properties.getProperty("ip_address", "localhost");
         } catch (IOException e) {
             e.printStackTrace();
             return "localhost";
@@ -28,14 +27,13 @@ public class ConfigManager {
         Properties properties = new Properties();
         File file = new File(CONFIG_FILE);
 
-        // Якщо файл не існує, створюємо його з дефолтними значеннями
         if (!file.exists()) {
             saveBackupPath("C:\\backups\\mysql");
         }
 
         try (FileInputStream input = new FileInputStream(CONFIG_FILE)) {
             properties.load(input);
-            return properties.getProperty("backupAddress", "C:\\backups\\mysql"); // Якщо щось не так, повертаємо localhost
+            return properties.getProperty("backupAddress", "C:\\backups\\mysql");
         } catch (IOException e) {
             e.printStackTrace();
             return "localhost";

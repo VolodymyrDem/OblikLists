@@ -152,7 +152,6 @@ public class CarsHandbookController extends WindowController {
                 return new SimpleStringProperty(valid ? "Дійсний" : "Недійсний");
             });
 
-            // Активуємо кнопку "Редагувати авто" при виборі рядка
             tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
                 boolean isItemSelected = newSelection != null;
                 editButton.setDisable(!isItemSelected);

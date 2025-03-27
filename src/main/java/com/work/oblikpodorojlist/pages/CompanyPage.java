@@ -62,7 +62,6 @@ public class CompanyPage extends Application {
         tableView.setRowFactory(tv -> {
             TableRow<String> row = new TableRow<>();
 
-            // Double-click event handler
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
                     String selectedCompany = row.getItem();
@@ -126,7 +125,6 @@ public class CompanyPage extends Application {
             tableView.getItems().addAll(databases);
         });
 
-        // Створення сцени
         Scene scene = new Scene(layout, 500, 400);
         scene.getStylesheets().add(getClass().getResource("/css/styleWhite.css").toExternalForm());
 

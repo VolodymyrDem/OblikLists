@@ -77,7 +77,6 @@ public class PositionsHandbookController extends WindowController {
             TableColumn<_Position, String> nameRCol = new TableColumn<>("Назва(родовий відмінок)");
             nameRCol.setCellValueFactory(new PropertyValueFactory<>("nameR"));
 
-            // Активуємо кнопку "Редагувати авто" при виборі рядка
             tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
                 editButton.setDisable(newSelection == null);
                 deleteButton.setDisable(!(newSelection != null && dbManager.getUsername().equals("root")));
@@ -138,9 +137,9 @@ public class PositionsHandbookController extends WindowController {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
-                List<_Position> newPositions = dbManager.getPositions(); // Отримання даних у фоновому потоці
+                List<_Position> newPositions = dbManager.getPositions();
                 Platform.runLater(() -> {
-                    positions.setAll(newPositions); // Оновлення UI у JavaFX потоці
+                    positions.setAll(newPositions);
                     moveTableDown(tableView);
                 });
                 newPositions.sort(Comparator.comparing(_Position::getNameN));

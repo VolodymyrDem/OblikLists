@@ -294,7 +294,6 @@ public class ListsJournalController extends WindowController {
                     }
                 });
 
-                // Double-click event handler
                 row.setOnMouseClicked(event -> {
                     if (event.getClickCount() == 2 && !row.isEmpty()) {
                         _List selectedList = row.getItem();
@@ -304,9 +303,8 @@ public class ListsJournalController extends WindowController {
                     }
                 });
 
-                // Оновлення контекстного меню залежно від значення valid
                 row.itemProperty().addListener((obs, oldItem, newItem) -> {
-                    rowMenu.getItems().clear(); // Очищуємо попередні пункти
+                    rowMenu.getItems().clear();
                     if (newItem != null) {
                         rowMenu.getItems().add(openItem);
                         if(!newItem.isDone()) {
@@ -316,7 +314,6 @@ public class ListsJournalController extends WindowController {
                     }
                 });
 
-                // Прив'язка контекстного меню до рядка лише, коли він не порожній
                 row.contextMenuProperty().bind(
                         Bindings.when(Bindings.isNotNull(row.itemProperty()))
                                 .then(rowMenu)
@@ -361,11 +358,11 @@ public class ListsJournalController extends WindowController {
             protected Void call() {
                 if (carField.getCheckModel().getCheckedItems().isEmpty()) {
                     numbersGL = validCars.stream()
-                            .map(s -> s.split("\\s+")[0])  // Get the first word from each string
+                            .map(s -> s.split("\\s+")[0])
                             .collect(Collectors.toList());
                 } else {
                     numbersGL = carField.getCheckModel().getCheckedItems().stream()
-                            .map(s -> s.split("\\s+")[0])  // Get the first word from each checked item
+                            .map(s -> s.split("\\s+")[0])
                             .collect(Collectors.toList());
                 }
                 System.out.println(numbersGL);
@@ -373,7 +370,7 @@ public class ListsJournalController extends WindowController {
                 List<_List> newLists = dbManager.getListsForCars(numbersGL);
                 newLists.sort(Comparator.comparing(_List::getNumber));
                 Platform.runLater(() -> {
-                    lists.setAll(newLists); // Оновлення UI у JavaFX потоці
+                    lists.setAll(newLists);
                     moveTableDown(tableView);
                 });
                 return null;

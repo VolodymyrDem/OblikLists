@@ -57,8 +57,8 @@ public class EditReportController extends WindowController {
             TextField goalField = new TextField(dbManager.getOrderGoal(selectedReport.getOrderId()));
             TextField headField = new TextField(dbManager.getOrderHead(selectedReport.getOrderId()));
             TextArea  commentsField = new TextArea (selectedReport.getComments());
-            commentsField.setPrefRowCount(3); // Задати кількість рядків
-            commentsField.setWrapText(true);  // Дозволити перенесення тексту
+            commentsField.setPrefRowCount(3);
+            commentsField.setWrapText(true);
 
             orderNumberField.setDisable(true);
             datePicker.setDisable(true);

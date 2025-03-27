@@ -102,27 +102,23 @@ public class DBManager {
     public void CreateGuestUser() {
         List<String> dbnames = new ArrayList<>();
         try (Connection connection = Connect();
-             Statement statement = connection.createStatement()) {  // Окремий Statement для оновлення
+             Statement statement = connection.createStatement()) {
 
 
-            // 1. Створення користувача
             String createUserQuery = "CREATE USER IF NOT EXISTS '"+GuestUSERNAME+"'@'%' IDENTIFIED BY '"+GuestPASSWORD+"';";
             statement.executeUpdate(createUserQuery);
 
-            // 2. Надання загальних привілеїв
             String grantPrivilegesQuery = "GRANT SHOW DATABASES ON *.* TO '"+GuestUSERNAME+"'@'%';";
             String grantDB = "GRANT SELECT ON mysql.db TO '"+GuestUSERNAME+"'@'%'";
 
             statement.executeUpdate(grantPrivilegesQuery);
             statement.executeUpdate(grantDB);
 
-            // 3. Отримання списку баз даних
             String getDatabasesQuery = "SHOW DATABASES";
             try (ResultSet resultSet = statement.executeQuery(getDatabasesQuery)) {
                 while (resultSet.next()) {
                     String dbName = resultSet.getString(1);
 
-                    // Пропускаємо системні бази
                     if (dbName.equalsIgnoreCase("information_schema") ||
                             dbName.equalsIgnoreCase("mysql") ||
                             dbName.equalsIgnoreCase("performance_schema") ||
@@ -143,7 +139,6 @@ public class DBManager {
                 String grantQuery = "GRANT SELECT ON `" + dbName + "`.parameters TO '"+GuestUSERNAME+"'@'%';";
                 stm.executeUpdate(grantQuery);
             }
-            // 4. Оновлення привілеїв
             stm.executeUpdate("FLUSH PRIVILEGES");
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -169,15 +164,12 @@ public class DBManager {
             while (databases.next()) {
                 String dbName = databases.getString(1);
 
-                // Пропускаємо службові бази MySQL
                 if (!dbName.equalsIgnoreCase("information_schema") &&
                         !dbName.equalsIgnoreCase("mysql") &&
                         !dbName.equalsIgnoreCase("performance_schema") &&
                         !dbName.equalsIgnoreCase("sys")) {
 
-                    // Перевіряємо, чи є таблиця `parameters` в цій базі
                     if (tableExists(connection, dbName, "parameters")) {
-                        // Отримуємо всі значення `name` з таблиці `parameters`
                         String query = "SELECT name FROM `" + dbName + "`.parameters";
 
                         try (Statement stmt = connection.createStatement();
@@ -247,17 +239,14 @@ public class DBManager {
 
     public void createUser(String username, String password) {
         try (Connection connection = Connect();
-             Statement statement = connection.createStatement()) { // Використовуємо Statement замість PreparedStatement
+             Statement statement = connection.createStatement()) {
 
-            // 1. Створення користувача
             String createUserQuery = "CREATE USER IF NOT EXISTS '"+username+"'@'%' IDENTIFIED BY '"+password+"';";
             statement.executeUpdate(createUserQuery);
 
-            // 2. Надання прав доступу
             String grantPrivilegesQuery = "GRANT ALL PRIVILEGES ON `"+company+"`.* TO '"+username+"'@'%';";
             statement.executeUpdate(grantPrivilegesQuery);
 
-            // 3. Оновлення привілеїв
             String flushPrivilegesQuery = "FLUSH PRIVILEGES;";
             statement.executeUpdate(flushPrivilegesQuery);
 
@@ -268,15 +257,11 @@ public class DBManager {
     }
 
     private String getBackupFolderPath() {
-        // Якщо програма працює в середовищі розробки (наприклад, як .jar), беремо папку ресурсів
         URL resource = DBManager.class.getClassLoader().getResource("config");
         if (resource != null) {
-            // Якщо ресурс існує, це ймовірно, коли програма запущена з .jar
-            // Шлях до папки ресурсів (відносний)
             String resourcePath = resource.getPath();
             return new File(resourcePath).getParent() + File.separator + "backups";
         } else {
-            // Якщо програма працює в .exe середовищі, використовуємо директорію виконуваного файлу
             String currentDir = System.getProperty("user.dir");
             return currentDir + File.separator + "backups";
         }
@@ -284,7 +269,7 @@ public class DBManager {
 
     public void createBackup() {
         String backupFolderPath = getBackupFolderPath() + "\\" + company;
-        backupFolderPath = backupFolderPath.replace("\\\\", "\\"); // Виправлення шляху
+        backupFolderPath = backupFolderPath.replace("\\\\", "\\");
 
         File backupFolder = new File(backupFolderPath);
         if (!backupFolder.exists() && !backupFolder.mkdirs()) {
@@ -301,49 +286,41 @@ public class DBManager {
         String backupFilePath = backupFolderPath + "\\backup_(" + today.format(formatter) + ")_" + formattedTime + ".sql";
         String mysqlDumpPath = findMySQLDump();
 
-        // Формуємо команду динамічно
         List<String> commandList = new ArrayList<>();
         commandList.add(mysqlDumpPath);
 
-        // Додаємо логін
         if (username.contains(" ")) {
             commandList.add("-u");
-            commandList.add("\"" + username + "\""); // Беремо в лапки, якщо є пробіл
+            commandList.add("\"" + username + "\"");
         } else {
             commandList.add("-u");
             commandList.add(username);
         }
 
-        // Додаємо пароль (тільки якщо він є)
         if (password != null && !password.isEmpty()) {
             commandList.add("--password=" + password);
         }
 
-        // Додаємо назву компанії (базу даних)
         commandList.add(company);
 
-        // Вказуємо шлях для збереження бекапу
         commandList.add("-r");
         commandList.add(backupFilePath);
 
-        // Конвертуємо список у масив
         String[] command = commandList.toArray(new String[0]);
 
         System.out.println("Виконується команда: " + Arrays.toString(command));
 
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.redirectErrorStream(true); // Об'єднує стандартний вивід і помилки
+            processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
 
-            // Читаємо стандартний вивід mysqldump
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }
 
-            // Читаємо помилки
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             while ((line = errorReader.readLine()) != null) {
                 System.err.println("Помилка: " + line);
@@ -405,16 +382,15 @@ public class DBManager {
         String backupFolderPath = getBackupFolderPath()+ "\\"+company;
         File backupDir = new File(backupFolderPath);
         if (!backupDir.exists()) {
-            backupDir.mkdirs();  // Створюємо папку, якщо її немає
+            backupDir.mkdirs();
         }
-        // Створюємо вікно вибору файлу у стилі системи
         FileDialog fileDialog = new FileDialog((Frame) null, "Оберіть файл для відновлення", FileDialog.LOAD);
-        fileDialog.setDirectory(backupFolderPath); // Встановлюємо початкову папку
-        fileDialog.setFile("*.sql"); // Фільтр для файлів SQL
+        fileDialog.setDirectory(backupFolderPath);
+        fileDialog.setFile("*.sql");
 
-        fileDialog.setVisible(true); // Відкриваємо діалог
+        fileDialog.setVisible(true);
 
-        String selectedFile = fileDialog.getFile(); // Отримуємо обраний файл
+        String selectedFile = fileDialog.getFile();
         if (selectedFile == null) {
             System.out.println("Відновлення скасовано користувачем.");
             fileDialog.dispose();
@@ -443,7 +419,6 @@ public class DBManager {
             processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
 
-            // Читаємо вхідний потік, щоб не заблокувалося завершення процесу
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -465,7 +440,6 @@ public class DBManager {
     }
 
     private String findMySQLDump() {
-        // 1. Перевіряємо змінну середовища PATH
         String path = System.getenv("PATH");
         if (path != null) {
             for (String dir : path.split(";")) {
@@ -476,7 +450,6 @@ public class DBManager {
             }
         }
 
-        // 2. Перевіряємо типові директорії MySQL
         String[] commonPaths = {
                 "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe",
                 "C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqldump.exe",
@@ -493,7 +466,6 @@ public class DBManager {
             }
         }
 
-        // 3. Якщо не знайдено, повертаємо null
         return null;
     }
 
@@ -510,9 +482,7 @@ public class DBManager {
 
     public void createCompany(String companyName, String address, String code, String ceo, String accountant, String typeFull, String typeShort) {
         try (Connection connection = Connect();
-             Statement statement = connection.createStatement()) { // Використовуємо Statement замість PreparedStatement
-
-            // 1. Створення користувача
+             Statement statement = connection.createStatement()) {
             String createDB = "CREATE DATABASE IF NOT EXISTS `"+code+"`;";
             statement.executeUpdate(createDB);
 
@@ -608,7 +578,7 @@ public class DBManager {
             try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery);
                  ResultSet rs = checkStmt.executeQuery()) {
 
-                if (rs.next() && rs.getInt(1) == 0) {  // Check if count is 0 (no records exist)
+                if (rs.next() && rs.getInt(1) == 0) {
                     try (PreparedStatement pstmt = connection.prepareStatement(insertParametersTable)) {
                         pstmt.setString(1, companyName);
                         pstmt.setString(2, address);
@@ -618,7 +588,7 @@ public class DBManager {
                         pstmt.setString(6, typeFull);
                         pstmt.setString(7, typeShort);
 
-                        pstmt.executeUpdate(); // Execute the insertion
+                        pstmt.executeUpdate();
                         System.out.println("New record inserted.");
                     }
                 } else {
@@ -667,9 +637,7 @@ public class DBManager {
 
     public void deleteCompany(String code) {
         try (Connection connection = Connect();
-             Statement statement = connection.createStatement()) { // Використовуємо Statement замість PreparedStatement
-
-            // 1. Створення користувача
+             Statement statement = connection.createStatement()) {
             String createDB = "DROP DATABASE `"+code+"`;";
             statement.executeUpdate(createDB);
 
@@ -702,8 +670,6 @@ public class DBManager {
 
         createCompany(companyName, address, String.valueOf(code), ceo, accountant, typeFull ,typeShort);
     }
-
-    //----------------------------------
 
     public List<_Report> getReports() {
         String sql = "SELECT * FROM reports";
@@ -753,8 +719,6 @@ public class DBManager {
         }
         return company;
     }
-
-    //----------------------------------
 
     public List<_List> getListsFiltered(List<String> Numbers, LocalDate startDate, LocalDate endDate) {
         List<_List> listsAll = new ArrayList<>();
@@ -810,7 +774,7 @@ public class DBManager {
                     } else {
                         list.setIdOrder(idOrder);
                         list.setStartDate(getStartOrderDate(idOrder));
-                        list.setEndDate(getEndOrderDate(idOrder));  // Fix if needed to set correct dates
+                        list.setEndDate(getEndOrderDate(idOrder));
                         list.setRoute(getOrderRoute(idOrder));
                         list.setGoal(getOrderGoal(idOrder));
                         list.setIdWorker(getOrderIdWorker(idOrder));
@@ -879,7 +843,7 @@ public class DBManager {
                     } else {
                         list.setIdOrder(idOrder);
                         list.setStartDate(getStartOrderDate(idOrder));
-                        list.setEndDate(getStartOrderDate(idOrder));  // Fix if needed to set correct dates
+                        list.setEndDate(getStartOrderDate(idOrder));
                         list.setRoute(getOrderRoute(idOrder));
                         list.setGoal(getOrderGoal(idOrder));
                         list.setIdWorker(getOrderIdWorker(idOrder));
@@ -944,7 +908,7 @@ public class DBManager {
                     } else {
                         list.setIdOrder(idOrder);
                         list.setStartDate(getStartOrderDate(idOrder));
-                        list.setEndDate(getEndOrderDate(idOrder));  // Fix if needed to set correct dates
+                        list.setEndDate(getEndOrderDate(idOrder));
                         list.setRoute(getOrderRoute(idOrder));
                         list.setGoal(getOrderGoal(idOrder));
                         list.setIdWorker(getOrderIdWorker(idOrder));
@@ -962,7 +926,7 @@ public class DBManager {
 
     private List<FuelUsage> getFuelUsagesPeriodics(String carNumber, List<_List> carLists, PeriodParameters params) {
         List<FuelUsage> fuelUsages = new ArrayList<>();
-        Set<_List> processedLists = new HashSet<>();  // To track processed lists for the current period
+        Set<_List> processedLists = new HashSet<>();
         LocalDate currentStart = params.getStartDate();
         LocalDate endDate = params.getEndDate();
 
@@ -1004,13 +968,13 @@ public class DBManager {
                     if (!processedLists.contains(list)) {
                         totalMileage += list.getEndMileage() - list.getStartMileage();
                         totalFuelFact += (list.getStartFuel() - list.getEndFuel()) + list.getRefuel();
-                        processedLists.add(list); // Mark this list as processed
+                        processedLists.add(list);
                     }
                 }
             }
 
             if (totalMileage > 0) {
-                fuelNorm = totalMileage * getCarFuelUsage(carLists.get(0).getIdCar()) / 100; // Приклад розрахунку норми пального
+                fuelNorm = totalMileage * getCarFuelUsage(carLists.get(0).getIdCar()) / 100;
                 fuelUsages.add(new FuelUsage(currentStart, currentEnd, carNumber, totalMileage, totalFuelFact, fuelNorm));
             }
 
@@ -1019,7 +983,6 @@ public class DBManager {
         return fuelUsages;
     }
 
-    //----------------------------------
 
     public List<_List> getLists() {
         String sql = "SELECT * FROM lists";
@@ -1222,7 +1185,6 @@ public class DBManager {
         }
     }
 
-    //----------------------------------
 
     public boolean isOrderModifiable(int orderId) {
         String query = "SELECT COUNT(*) FROM reports WHERE `id-order` = ?;";
@@ -1231,12 +1193,12 @@ public class DBManager {
             stmt.setInt(1, orderId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getInt(1) == 0; // True if no completed lists exist
+                return rs.getInt(1) == 0;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false; // Default to not modifiable
+        return false;
     }
 
     public List<_Order> getOrders() {
@@ -1273,15 +1235,12 @@ public class DBManager {
         return orders;
     }
 
-    //redo
     public List<_Order> getOrdersFiltered(String workerNameN, LocalDate startDate, LocalDate endDate) {
         StringBuilder sql = new StringBuilder("SELECT * FROM orders");
         List<Object> parameters = new ArrayList<>();
         boolean hasCondition = false;
 
-        // Worker condition (handling multiple workers with the same name)
         if (workerNameN != null && !workerNameN.isEmpty() && !workerNameN.equals("-1")) {
-            // First, get the IDs of workers whose name matches the given workerNameN
             String workerSql = "SELECT id FROM workers WHERE nameN = ?";
             List<Integer> workerIds = new ArrayList<>();
 
@@ -1311,20 +1270,17 @@ public class DBManager {
             }
         }
 
-        // Start date condition
         if (startDate != null) {
             sql.append(hasCondition ? " AND " : " WHERE ").append("`order-date` >= ?");
             parameters.add(Date.valueOf(startDate));
             hasCondition = true;
         }
 
-        // End date condition
         if (endDate != null) {
             sql.append(hasCondition ? " AND " : " WHERE ").append("`order-date` <= ?");
             parameters.add(Date.valueOf(endDate));
         }
 
-        // If both start and end dates are null, select all orders
         if (startDate == null && endDate == null) {
             sql.append(hasCondition ? " AND " : " WHERE ").append("`order-date` IS NOT NULL");
         }
@@ -1334,7 +1290,6 @@ public class DBManager {
         try (Connection connection = Connect();
              PreparedStatement statement = connection.prepareStatement(sql.toString())) {
 
-            // Set parameters in PreparedStatement
             for (int i = 0; i < parameters.size(); i++) {
                 statement.setObject(i + 1, parameters.get(i));
             }
@@ -1681,7 +1636,6 @@ public class DBManager {
         return date;
     }
 
-    //----------------------------------
 
     public List<_Car> getCars() {
         String sql = "SELECT * FROM cars";
@@ -1781,12 +1735,10 @@ public class DBManager {
              PreparedStatement checkStmt = connection.prepareStatement(checkSql);
              PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
 
-            // Перевіряємо, чи є активна машина з таким номером
             checkStmt.setString(1, car.getNumber());
             ResultSet resultSet = checkStmt.executeQuery();
 
             if (resultSet.next() && resultSet.getInt(1) == 0) {
-                // Якщо активної машини немає, додаємо новий запис
                 insertStmt.setString(1, car.getNumber());
                 insertStmt.setString(2, car.getModel());
                 insertStmt.setString(3, car.getFuelType());
@@ -1821,7 +1773,7 @@ public class DBManager {
             preparedStatement.setInt(3, car.getIdCar());
 
             int rowsAffected = preparedStatement.executeUpdate();
-            return rowsAffected > 0;  // Returns true if the car was successfully updated
+            return rowsAffected > 0;
         } catch (Exception e) {
             System.err.println("Error removing car: " + e.getMessage());
             return false;
@@ -2011,7 +1963,6 @@ public class DBManager {
     }
 
 
-    //----------------------------------
 
     public List<_Worker> getWorkers() {
         String sql = "SELECT * FROM workers";
@@ -2124,7 +2075,6 @@ public class DBManager {
 
                 _Worker worker = new _Worker(id, nameN, nameR, positionId, drivingLicense, startDate, startOrderNumber);
 
-                // Set the position names directly from the result set
                 worker.setPositionN(nameN);
                 worker.setPositionR(nameR);
 
@@ -2272,7 +2222,6 @@ public class DBManager {
              PreparedStatement checkExistenceStmt = connection.prepareStatement(sqlCheckExistence);
              PreparedStatement insertWorkerStmt = connection.prepareStatement(sqlInsertWorker)) {
 
-            // Check if the worker with the same name already exists
             checkExistenceStmt.setString(1, worker.getNameN());
             try (ResultSet rs = checkExistenceStmt.executeQuery()) {
                 if (rs.next()) {
@@ -2281,7 +2230,6 @@ public class DBManager {
                 }
             }
 
-            // If the worker doesn't exist, insert the new worker
             insertWorkerStmt.setString(1, worker.getNameN());
             insertWorkerStmt.setString(2, worker.getNameR());
             insertWorkerStmt.setInt(3, worker.getPositionId());
@@ -2308,7 +2256,7 @@ public class DBManager {
             preparedStatement.setInt(3, worker.getId());
 
             int rowsAffected = preparedStatement.executeUpdate();
-            return rowsAffected > 0;  // Returns true if the worker was successfully updated
+            return rowsAffected > 0;
         } catch (Exception e) {
             System.err.println("Error removing worker: " + e.getMessage());
             return false;
@@ -2391,7 +2339,7 @@ public class DBManager {
         try (Connection connection = Connect();
              PreparedStatement statement = connection.prepareStatement(sql)) {
 
-            statement.setInt(1, workerId);  // Set the workerId dynamically
+            statement.setInt(1, workerId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (resultSet.next()) {
@@ -2405,8 +2353,6 @@ public class DBManager {
         return positionName;
     }
 
-
-    //----------------------------------
 
     public List<_Position> getPositions() {
         String sql = "SELECT * FROM positions";
@@ -2457,7 +2403,6 @@ public class DBManager {
              PreparedStatement checkStmt = connection.prepareStatement(checkSql);
              PreparedStatement insertStmt = connection.prepareStatement(insertSql)) {
 
-            // Check if a position with the same nameN or nameR already exists
             checkStmt.setString(1, position.getNameN());
             checkStmt.setString(2, position.getNameR());
             ResultSet resultSet = checkStmt.executeQuery();
@@ -2467,7 +2412,6 @@ public class DBManager {
                 return false;
             }
 
-            // Insert new position
             insertStmt.setString(1, position.getNameN());
             insertStmt.setString(2, position.getNameR());
             insertStmt.executeUpdate();
@@ -2488,7 +2432,7 @@ public class DBManager {
             preparedStatement.setInt(1, position.getId());
 
             int rowsAffected = preparedStatement.executeUpdate();
-            return rowsAffected > 0;  // Returns true if the position was successfully deleted
+            return rowsAffected > 0;
         } catch (Exception e) {
             System.err.println("Error removing position: " + e.getMessage());
             return false;

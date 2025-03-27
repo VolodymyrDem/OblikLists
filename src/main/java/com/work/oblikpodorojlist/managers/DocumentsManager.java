@@ -84,15 +84,11 @@ public class DocumentsManager {
 
     public String getDocsFolderPath() {
 
-        // Якщо програма працює в середовищі розробки (наприклад, як .jar), беремо папку ресурсів
         URL resource = DBManager.class.getClassLoader().getResource("config");
         if (resource != null) {
-            // Якщо ресурс існує, це ймовірно, коли програма запущена з .jar
-            // Шлях до папки ресурсів (відносний)
             String resourcePath = resource.getPath();
             return new File(resourcePath).getParent() + File.separator;
         } else {
-            // Якщо програма працює в .exe середовищі, використовуємо директорію виконуваного файлу
             String currentDir = System.getProperty("user.dir");
             return currentDir + File.separator;
         }
@@ -103,8 +99,8 @@ public class DocumentsManager {
         CTPPr ctpPr = ctp.isSetPPr() ? ctp.getPPr() : ctp.addNewPPr();
         CTSpacing spacing = ctpPr.isSetSpacing() ? ctpPr.getSpacing() : ctpPr.addNewSpacing();
 
-        spacing.setBefore(BigInteger.valueOf(0)); // 5pt before each paragraph
-        spacing.setAfter(BigInteger.valueOf(0));  // 5pt after each paragraph
+        spacing.setBefore(BigInteger.valueOf(0));
+        spacing.setAfter(BigInteger.valueOf(0));
     }
 
     private String getNameSurname(String fullname) {
@@ -139,14 +135,12 @@ public class DocumentsManager {
         StringBuilder line = new StringBuilder();
 
         for (String word : words) {
-            // Якщо додавання слова перевищить ліміт або воно вже занадто довге, переносимо рядок
             if (!line.isEmpty() && (line.length() + word.length() + 1 > maxLineLength)) {
-                run.setText(line.toString()); // Додаємо попередній рядок
-                run.addBreak(); // Переносимо на новий рядок
-                line.setLength(0); // Очищаємо буфер
+                run.setText(line.toString());
+                run.addBreak();
+                line.setLength(0);
             }
 
-            // Якщо слово довше за maxLineLength, виводимо його окремо
             if (word.length() > maxLineLength) {
                 if (line.length() > 0) {
                     run.setText(line.toString());
@@ -157,18 +151,16 @@ public class DocumentsManager {
                 run.addBreak();
             } else {
                 if (!line.isEmpty()) {
-                    line.append(" "); // Додаємо пробіл між словами
+                    line.append(" ");
                 }
                 line.append(word);
             }
         }
 
-        // Додаємо залишковий рядок, якщо є
         if (!line.isEmpty()) {
             run.setText(line.toString());
         }
     }
-    // Method to create and save a Word document
     public void createOrderDocument(DBManager dbManager, _Order order) {
         try {
             _Company _company = dbManager.getCompanyInfo();
@@ -193,10 +185,8 @@ public class DocumentsManager {
 
             String formattedDate = currentDate.format(formatter);
 
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
 
             File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[2] + "\\");
@@ -207,21 +197,17 @@ public class DocumentsManager {
 
             fileChooser.setDialogTitle("Save Word Document");
             String filename = "Наказ №"+order.getOrderNumber();
-            fileChooser.setSelectedFile(new File(filename+".docx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename+".docx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .docx extension
                 if (!fileToSave.getName().endsWith(".docx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".docx");
                 }
 
-                // Create a new Word document using Apache POI
                 XWPFDocument document = new XWPFDocument();
 
                 XWPFParagraph TOV = document.createParagraph();
@@ -248,7 +234,7 @@ public class DocumentsManager {
                 CTBorder border = ctpPr.isSetPBdr() ? ctpPr.getPBdr().addNewBottom() : ctpPr.addNewPBdr().addNewBottom();
 
                 border.setVal(STBorder.SINGLE);
-                border.setSz(BigInteger.valueOf(12)); // Thickness (1/8 pt units, 24 = 3pt)
+                border.setSz(BigInteger.valueOf(12));
                 border.setColor("000000");
 
                 setParagraphSpacing(name);
@@ -302,23 +288,22 @@ public class DocumentsManager {
                 XWPFParagraph date = document.createParagraph();
                 date.setAlignment(ParagraphAlignment.LEFT);
 
-                // Set tab stops
                 CTPPr ppr = date.getCTP().getPPr();
                 if (ppr == null) {
                     ppr = date.getCTP().addNewPPr();
                 }
                 CTTabs tabs = ppr.addNewTabs();
                 CTTabStop tabStop = tabs.addNewTab();
-                tabStop.setVal(STTabJc.RIGHT); // Right alignment
-                tabStop.setPos(BigInteger.valueOf(9000)); // Adjust position as needed
+                tabStop.setVal(STTabJc.RIGHT);
+                tabStop.setPos(BigInteger.valueOf(9000));
 
                 XWPFRun dateRun = date.createRun();
                 dateRun.setFontFamily("Times New Roman");
                 dateRun.setFontSize(12);
 
-                dateRun.setText(formattedDate); // Add the date
-                dateRun.addTab();  // Move cursor to the tab stop
-                dateRun.setText("№ " + number); // Add the number at the right
+                dateRun.setText(formattedDate);
+                dateRun.addTab();
+                dateRun.setText("№ " + number);
 
                 setParagraphSpacing(date);
 
@@ -424,32 +409,29 @@ public class DocumentsManager {
 
                 setParagraphSpacing(director);
 
-                // Create the first paragraph
                 XWPFParagraph TOV1 = document.createParagraph();
-                TOV1.setAlignment(ParagraphAlignment.LEFT);  // Left-align the first part
+                TOV1.setAlignment(ParagraphAlignment.LEFT);
                 ppr = TOV1.getCTP().getPPr();
                 if (ppr == null) {
                     ppr = TOV1.getCTP().addNewPPr();
                 }
                 tabs = ppr.addNewTabs();
 
-                // Add tab stops for right alignment
                 CTTabStop leftTab = tabs.addNewTab();
                 leftTab.setVal(STTabJc.LEFT);
-                leftTab.setPos(BigInteger.valueOf(3600)); // Adjust this position as needed
-
+                leftTab.setPos(BigInteger.valueOf(3600));
                 CTTabStop rightTab = tabs.addNewTab();
                 rightTab.setVal(STTabJc.RIGHT);
-                rightTab.setPos(BigInteger.valueOf(9000)); // Right-aligned tab stop
+                rightTab.setPos(BigInteger.valueOf(9000));
 
                 XWPFRun TOV1Run = TOV1.createRun();
                 TOV1Run.setFontFamily("Times New Roman");
                 TOV1Run.setFontSize(12);
                 TOV1Run.setBold(true);
                 TOV1Run.setText(_company.getTypeShort() + "«"+_company.getName()+"»");
-                TOV1Run.addTab();  // Move to the next tab position (right)
+                TOV1Run.addTab();
                 TOV1Run.setText("_________________");
-                TOV1Run.addTab();  // Move to the next tab position (right)
+                TOV1Run.addTab();
                 TOV1Run.setText(getNameSurname(order.getHead()));
 
 
@@ -473,9 +455,8 @@ public class DocumentsManager {
                 setParagraphSpacing(separator);
                 separator.createRun();
 
-                // Create another paragraph for the next field (like the accountant)
                 XWPFParagraph accountant = document.createParagraph();
-                accountant.setAlignment(ParagraphAlignment.LEFT);  // Left-align the first part
+                accountant.setAlignment(ParagraphAlignment.LEFT);
                 ppr = accountant.getCTP().getPPr();
                 if (ppr == null) {
                     ppr = accountant.getCTP().addNewPPr();
@@ -484,19 +465,19 @@ public class DocumentsManager {
 
                 leftTab = tabs.addNewTab();
                 leftTab.setVal(STTabJc.LEFT);
-                leftTab.setPos(BigInteger.valueOf(3600)); // Left-aligned position
+                leftTab.setPos(BigInteger.valueOf(3600));
 
                 rightTab = tabs.addNewTab();
                 rightTab.setVal(STTabJc.RIGHT);
-                rightTab.setPos(BigInteger.valueOf(9000)); // Right-aligned tab stop
+                rightTab.setPos(BigInteger.valueOf(9000));
 
                 XWPFRun accountantRun = accountant.createRun();
                 accountantRun.setFontFamily("Times New Roman");
                 accountantRun.setFontSize(12);
                 accountantRun.setText("Головний бухгалтер");
-                accountantRun.addTab();  // Move to the next tab position (right)
+                accountantRun.addTab();
                 accountantRun.setText("_________________");
-                accountantRun.addTab();  // Move to the next tab position (right)
+                accountantRun.addTab();
                 accountantRun.setText(getNameSurname(_company.getAccountant()));
 
                 setParagraphSpacing(accountant);
@@ -505,9 +486,8 @@ public class DocumentsManager {
                 setParagraphSpacing(separator);
                 separator.createRun();
 
-                // Repeat for other fields (e.g., worker)
                 XWPFParagraph worker = document.createParagraph();
-                worker.setAlignment(ParagraphAlignment.LEFT);  // Left-align the first part
+                worker.setAlignment(ParagraphAlignment.LEFT);
                 ppr = worker.getCTP().getPPr();
                 if (ppr == null) {
                     ppr = worker.getCTP().addNewPPr();
@@ -516,19 +496,19 @@ public class DocumentsManager {
 
                 leftTab = tabs.addNewTab();
                 leftTab.setVal(STTabJc.LEFT);
-                leftTab.setPos(BigInteger.valueOf(3600)); // Left-aligned position
+                leftTab.setPos(BigInteger.valueOf(3600));
 
                 rightTab = tabs.addNewTab();
                 rightTab.setVal(STTabJc.RIGHT);
-                rightTab.setPos(BigInteger.valueOf(9000)); // Right-aligned tab stop
+                rightTab.setPos(BigInteger.valueOf(9000));
                 addWrappedText(worker, capitalizeFirstLetter(dbManager.getWorkerPosition(true, _worker.getId())), 31);
 
                 XWPFRun workerRun = worker.createRun();
                 workerRun.setFontFamily("Times New Roman");
                 workerRun.setFontSize(12);
-                workerRun.addTab();  // Move to the next tab position (right)
+                workerRun.addTab();
                 workerRun.setText("_________________");
-                workerRun.addTab();  // Move to the next tab position (right)
+                workerRun.addTab();
                 workerRun.setText(getNameSurname(_worker.getNameN()));
 
                 setParagraphSpacing(worker);
@@ -577,10 +557,8 @@ public class DocumentsManager {
     public void createList(DBManager dbManager, _List  list) {
         try {
             _Company _company = _Company.getInstance();
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
@@ -592,21 +570,17 @@ public class DocumentsManager {
             }
 
             String filename = "Подорожній лист №"+String.valueOf(list.getNumber());
-            fileChooser.setSelectedFile(new File(filename+".xlsx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename+".xlsx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .xlsx extension
                 if (!fileToSave.getName().endsWith(".xlsx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".xlsx");
                 }
 
-                // Create a new Excel workbook and populate it with sample data
                 try (XSSFWorkbook workbook = new XSSFWorkbook()) {
 
                     _Car car = dbManager.getCar(list.getIdCar());
@@ -811,7 +785,7 @@ public class DocumentsManager {
                     currentCell.setCellStyle(centeredStyle14);
                     currentCell.setCellValue("Подорожній лист службового автомобіля №" + list.getNumber());
 
-                    sheet.addMergedRegion(new CellRangeAddress(2, 2, 0, 11)); // 5th and 6th columns (0-indexed)
+                    sheet.addMergedRegion(new CellRangeAddress(2, 2, 0, 11));
 
                     currentRow = sheet.createRow(3);
 
@@ -1239,12 +1213,10 @@ public class DocumentsManager {
                     applyBordersToMergedRegion(sheet, new CellRangeAddress(rowIndex, rowIndex, 7, 11), borderBottomThinStyle);
 
 
-                    // Write the workbook to the selected file
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
                         workbook.write(out);
                         JOptionPane.showMessageDialog(null, "Excel file saved successfully!");
 
-                        // Open the file automatically if supported
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();
                             desktop.open(fileToSave);
@@ -1264,10 +1236,8 @@ public class DocumentsManager {
     public void createRegisterOrders(DBManager dbManager, List<_Order> orders, String WorkerName, LocalDate startDate, LocalDate endDate) {
         try {
             _Company _company = _Company.getInstance();
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
@@ -1280,21 +1250,17 @@ public class DocumentsManager {
 
             DateTimeFormatter formatterFile = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             String filename = "Реєстр наказів " + startDate.format(formatterFile) + " - " + endDate.format(formatterFile);
-            fileChooser.setSelectedFile(new File(filename+".xlsx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename+".xlsx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .xlsx extension
                 if (!fileToSave.getName().endsWith(".xlsx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".xlsx");
                 }
 
-                // Create a new Excel workbook and populate it with sample data
                 try (XSSFWorkbook workbook = new XSSFWorkbook()) {
                     Font BoldFont = workbook.createFont();
                     BoldFont.setBold(true);
@@ -1464,12 +1430,10 @@ public class DocumentsManager {
                     currentCell.setCellStyle(overlapStyle);
 
 
-                    // Write the workbook to the selected file
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
                         workbook.write(out);
                         JOptionPane.showMessageDialog(null, "Excel file saved successfully!");
 
-                        // Open the file automatically if supported
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();
                             desktop.open(fileToSave);
@@ -1500,10 +1464,8 @@ public class DocumentsManager {
             String orderDate = dbManager.getOrderDate(report.getOrderId()).format(formatter);
             String head = dbManager.getOrderHead(report.getOrderId());
 
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Word Document");
 
@@ -1516,21 +1478,17 @@ public class DocumentsManager {
 
 
             String filename = "Звіт про виконання наказу №"+orderNumber;
-            fileChooser.setSelectedFile(new File(filename+".docx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename+".docx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .docx extension
                 if (!fileToSave.getName().endsWith(".docx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".docx");
                 }
 
-                // Create a new Word document using Apache POI
                 XWPFDocument document = new XWPFDocument();
 
                 XWPFParagraph orderTitle = document.createParagraph();
@@ -1633,24 +1591,22 @@ public class DocumentsManager {
                 XWPFParagraph dateP = document.createParagraph();
                 dateP.setAlignment(ParagraphAlignment.LEFT);
 
-                // Set tab stops
                 CTPPr ppr = dateP.getCTP().getPPr();
                 if (ppr == null) {
                     ppr = dateP.getCTP().addNewPPr();
                 }
                 CTTabs tabs = ppr.addNewTabs();
                 CTTabStop tabStop = tabs.addNewTab();
-                tabStop.setVal(STTabJc.RIGHT); // Right alignment
-                tabStop.setPos(BigInteger.valueOf(9000)); // Adjust position as needed
+                tabStop.setVal(STTabJc.RIGHT);
+                tabStop.setPos(BigInteger.valueOf(9000));
 
                 XWPFRun dateRun = dateP.createRun();
                 dateRun.setFontFamily("Times New Roman");
                 dateRun.setFontSize(12);
 
-                dateRun.setText(date); // Add the date
-                dateRun.addTab();  // Move cursor to the tab stop
-                dateRun.setText("Підпис виконавця   _________________"); // Add the number at the right
-
+                dateRun.setText(date);
+                dateRun.addTab();
+                dateRun.setText("Підпис виконавця   _________________");
                 separator = document.createParagraph();
                 setParagraphSpacing(separator);
                 separator.createRun();
@@ -1663,31 +1619,29 @@ public class DocumentsManager {
                 textFieldr.setText("Доцільність відрядження підтверджую");
                 textFieldr.setFontSize(14);
 
-                // Create the first paragraph
                 XWPFParagraph TOV1 = document.createParagraph();
-                TOV1.setAlignment(ParagraphAlignment.LEFT);  // Left-align the first part
+                TOV1.setAlignment(ParagraphAlignment.LEFT);
                 ppr = TOV1.getCTP().getPPr();
                 if (ppr == null) {
                     ppr = TOV1.getCTP().addNewPPr();
                 }
                 tabs = ppr.addNewTabs();
 
-                // Add tab stops for right alignment
                 CTTabStop leftTab = tabs.addNewTab();
                 leftTab.setVal(STTabJc.LEFT);
-                leftTab.setPos(BigInteger.valueOf(3600)); // Adjust this position as needed
+                leftTab.setPos(BigInteger.valueOf(3600));
 
                 CTTabStop rightTab = tabs.addNewTab();
                 rightTab.setVal(STTabJc.RIGHT);
-                rightTab.setPos(BigInteger.valueOf(9000)); // Right-aligned tab stop
+                rightTab.setPos(BigInteger.valueOf(9000));
 
                 XWPFRun TOV1Run = TOV1.createRun();
                 TOV1Run.setFontFamily("Times New Roman");
                 TOV1Run.setFontSize(14);
                 TOV1Run.setText((Objects.equals(head, _company.getCeo()))?"Директор":"В.о. директора");
-                TOV1Run.addTab();  // Move to the next tab position (right)
+                TOV1Run.addTab();
                 TOV1Run.setText("_________________");
-                TOV1Run.addTab();  // Move to the next tab position (right)
+                TOV1Run.addTab();
                 TOV1Run.setText(getNameSurname(head));
 
 
@@ -1713,10 +1667,8 @@ public class DocumentsManager {
     public void createRegisterFuel(DBManager dbManager, List<String> numbers, List<FuelUsage> usages, LocalDate startDate, LocalDate endDate, Period period) {
         try {
             _Company _company = _Company.getInstance();
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
@@ -1730,21 +1682,17 @@ public class DocumentsManager {
             DateTimeFormatter formatterFile = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             String filename = "Реєстр використання палива " + startDate.format(formatterFile) + " - " + endDate.format(formatterFile);
 
-            fileChooser.setSelectedFile(new File(filename + ".xlsx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename + ".xlsx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .xlsx extension
                 if (!fileToSave.getName().endsWith(".xlsx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".xlsx");
                 }
 
-                // Create a new Excel workbook and populate it with sample data
                 try (XSSFWorkbook workbook = new XSSFWorkbook()) {
                     Font BoldFont = workbook.createFont();
                     BoldFont.setBold(true);
@@ -2000,12 +1948,10 @@ public class DocumentsManager {
                     currentCell.setCellStyle(overlapStyle);
 
 
-                    // Write the workbook to the selected file
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
                         workbook.write(out);
                         JOptionPane.showMessageDialog(null, "Excel file saved successfully!");
 
-                        // Open the file automatically if supported
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();
                             desktop.open(fileToSave);
@@ -2025,10 +1971,8 @@ public class DocumentsManager {
     public void createRegisterLists(DBManager dbManager, List<String> numbers, List<_List> lists, LocalDate startDate, LocalDate endDate) {
         try {
             _Company _company = _Company.getInstance();
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
@@ -2041,21 +1985,17 @@ public class DocumentsManager {
 
             DateTimeFormatter formatterFile = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             String filename = "Реєстр подорожніх листів " + startDate.format(formatterFile) + " - " + endDate.format(formatterFile);
-            fileChooser.setSelectedFile(new File(filename+".xlsx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename+".xlsx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .xlsx extension
                 if (!fileToSave.getName().endsWith(".xlsx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".xlsx");
                 }
 
-                // Create a new Excel workbook and populate it with sample data
                 try (XSSFWorkbook workbook = new XSSFWorkbook()) {
                     Font BoldFont = workbook.createFont();
                     BoldFont.setBold(true);
@@ -2270,12 +2210,10 @@ public class DocumentsManager {
                     currentCell.setCellValue("Період: " + startDate.format(formatter) + " - " + endDate.format(formatter));
                     currentCell.setCellStyle(overlapStyle);
 
-                    // Write the workbook to the selected file
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
                         workbook.write(out);
                         JOptionPane.showMessageDialog(null, "Excel file saved successfully!");
 
-                        // Open the file automatically if supported
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();
                             desktop.open(fileToSave);
@@ -2296,10 +2234,8 @@ public class DocumentsManager {
     public void createCarsHandbook(DBManager dbManager, List<_Car> cars) {
         try {
             _Company _company = _Company.getInstance();
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
@@ -2312,21 +2248,17 @@ public class DocumentsManager {
 
             DateTimeFormatter formatterFile = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             String filename = "Довідник автомобілів " + LocalDate.now().format(formatterFile);
-            fileChooser.setSelectedFile(new File(filename+".xlsx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename+".xlsx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .xlsx extension
                 if (!fileToSave.getName().endsWith(".xlsx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".xlsx");
                 }
 
-                // Create a new Excel workbook and populate it with sample data
                 try (XSSFWorkbook workbook = new XSSFWorkbook()) {
                     Font BoldFont = workbook.createFont();
                     BoldFont.setBold(true);
@@ -2500,12 +2432,10 @@ public class DocumentsManager {
                     currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
                     currentCell.setCellStyle(CompanyStyle);
 
-                    // Write the workbook to the selected file
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
                         workbook.write(out);
                         JOptionPane.showMessageDialog(null, "Excel file saved successfully!");
 
-                        // Open the file automatically if supported
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();
                             desktop.open(fileToSave);
@@ -2525,10 +2455,8 @@ public class DocumentsManager {
     public void createWorkersHandbook(DBManager dbManager, List<_Worker> workers) {
         try {
             _Company _company = _Company.getInstance();
-            // Set the system's native look and feel
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-            // Open the system's default file save dialog
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
@@ -2541,21 +2469,17 @@ public class DocumentsManager {
 
             DateTimeFormatter formatterFile = DateTimeFormatter.ofPattern("dd.MM.yyyy");
             String filename = "Довідник працівників " + LocalDate.now().format(formatterFile);
-            fileChooser.setSelectedFile(new File(filename+".xlsx"));  // Default file name
+            fileChooser.setSelectedFile(new File(filename+".xlsx"));
 
-            // Show save dialog and capture the user's selection
             int userSelection = fileChooser.showSaveDialog(null);
 
-            // Check if the user approved the file selection
             if (userSelection == JFileChooser.APPROVE_OPTION) {
                 File fileToSave = fileChooser.getSelectedFile();
 
-                // Ensure the file has a .xlsx extension
                 if (!fileToSave.getName().endsWith(".xlsx")) {
                     fileToSave = new File(fileToSave.getAbsolutePath() + ".xlsx");
                 }
 
-                // Create a new Excel workbook and populate it with sample data
                 try (XSSFWorkbook workbook = new XSSFWorkbook()) {
                     Font BoldFont = workbook.createFont();
                     BoldFont.setBold(true);
@@ -2713,12 +2637,10 @@ public class DocumentsManager {
                     currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
                     currentCell.setCellStyle(CompanyStyle);
 
-                    // Write the workbook to the selected file
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
                         workbook.write(out);
                         JOptionPane.showMessageDialog(null, "Excel file saved successfully!");
 
-                        // Open the file automatically if supported
                         if (Desktop.isDesktopSupported()) {
                             Desktop desktop = Desktop.getDesktop();
                             desktop.open(fileToSave);

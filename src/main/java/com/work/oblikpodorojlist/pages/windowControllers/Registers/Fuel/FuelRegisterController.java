@@ -90,7 +90,11 @@ public class FuelRegisterController extends WindowController {
                 }
             });
 
-            carField = new CheckComboBox<>();
+            carField.setPrefWidth(200);
+            carField.setMaxWidth(200);
+            carField.setMinWidth(200);
+
+
 
             Label carLabel = new Label("Авто:");
             Label timeLabel = new Label("Період: з ");
@@ -213,7 +217,7 @@ public class FuelRegisterController extends WindowController {
                     }
                 }
             });
-            DecimalFormat df = new DecimalFormat("#.##"); // 2 знаки після коми
+            DecimalFormat df = new DecimalFormat("#.##");
 
             TableColumn<FuelUsage, String> carNumbercol = new TableColumn<>("Номер авто");
             carNumbercol.setCellValueFactory(new PropertyValueFactory<>("carNumber"));
@@ -306,11 +310,11 @@ public class FuelRegisterController extends WindowController {
 
                 if (carField.getCheckModel().getCheckedItems().isEmpty()) {
                     numbersG = validCars.stream()
-                            .map(s -> s.split("\\s+")[0])  // Get the first word from each string
+                            .map(s -> s.split("\\s+")[0])
                             .collect(Collectors.toList());
                 } else {
                     numbersG = carField.getCheckModel().getCheckedItems().stream()
-                            .map(s -> s.split("\\s+")[0])  // Get the first word from each checked item
+                            .map(s -> s.split("\\s+")[0])
                             .collect(Collectors.toList());
                 }
                 Period podil = switch (podilField.getValue()) {
