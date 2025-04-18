@@ -43,10 +43,7 @@ public class FuelRegisterController extends WindowController {
     public DatePicker datePickerStart;
     public DatePicker datePickerEnd;
 
-    public FuelRegisterController(){
-        datePickerStart = new DatePicker();
-        datePickerEnd = new DatePicker();
-    }
+    public FuelRegisterController(){}
 
 
     public void openWindow(){
@@ -60,6 +57,8 @@ public class FuelRegisterController extends WindowController {
             }
         }
         else {
+            datePickerStart = new DatePicker();
+            datePickerEnd = new DatePicker();
             fuelPeriodController = new FuelPeriodController();
             documentsManager = DocumentsManager.getInstance();
             dbManager = DBManager.getInstance();
@@ -327,6 +326,9 @@ public class FuelRegisterController extends WindowController {
                 };
 
                 parametersFuelUsage.setPeriod(podil);
+                parametersFuelUsage.setStartDate(datePickerStart.getValue());
+                parametersFuelUsage.setEndDate(datePickerEnd.getValue());
+
                 List<FuelUsage> newUsage = dbManager.getListsFuelFiltered(numbersG, parametersFuelUsage);
                 Platform.runLater(() -> {
                     FilteredFuelUsage.setAll(newUsage);

@@ -377,7 +377,6 @@ public class DBManager {
         }
     }
 
-
     public void loadBackup() {
         String backupFolderPath = getBackupFolderPath()+ "\\"+company;
         File backupDir = new File(backupFolderPath);
@@ -613,6 +612,7 @@ public class DBManager {
                     "  `id` int NOT NULL AUTO_INCREMENT,\n" +
                     "  `nameN` MEDIUMTEXT NOT NULL,\n" +
                     "  `nameR` MEDIUMTEXT NOT NULL,\n" +
+                    "  `nameD` MEDIUMTEXT NOT NULL,\n" +
                     "  `positionId` int NOT NULL,\n" +
                     "  `drivingLicence` MEDIUMTEXT DEFAULT NULL,\n" +
                     "  `start-date` date NOT NULL,\n" +
@@ -624,9 +624,6 @@ public class DBManager {
                     ") ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;\n";
 
             statement.executeUpdate(createWorkersTable);
-
-
-
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -1976,6 +1973,7 @@ public class DBManager {
                 int id = resultSet.getInt("id");
                 String nameN = resultSet.getString("nameN");
                 String nameR = resultSet.getString("nameR");
+                String nameD = resultSet.getString("nameD");
                 int positionId = resultSet.getInt("positionId");
                 String drivingLicense = resultSet.getString("drivingLicence");
                 LocalDate startDate = resultSet.getDate("start-date").toLocalDate();
@@ -1984,7 +1982,7 @@ public class DBManager {
                 String endOrderNumber = resultSet.getString("end-order-number");
                 boolean valid = resultSet.getBoolean("valid");
 
-                _Worker worker = new _Worker(id, nameN, nameR, positionId, drivingLicense, startDate, startOrderNumber);
+                _Worker worker = new _Worker(id, nameN, nameR,nameD, positionId, drivingLicense, startDate, startOrderNumber);
 
                 worker.setPositionN(getPositionNameN(positionId));
                 worker.setPositionR(getPositionNameR(positionId));
@@ -2065,6 +2063,7 @@ public class DBManager {
                 int id = resultSet.getInt("id");
                 String nameN = resultSet.getString("nameN");
                 String nameR = resultSet.getString("nameR");
+                String nameD = resultSet.getString("nameD");
                 int positionId = resultSet.getInt("positionId");
                 String drivingLicense = resultSet.getString("drivingLicence");
                 LocalDate startDate = resultSet.getDate("start-date").toLocalDate();
@@ -2073,7 +2072,7 @@ public class DBManager {
                 String endOrderNumber = resultSet.getString("end-order-number");
                 boolean valid = resultSet.getBoolean("valid");
 
-                _Worker worker = new _Worker(id, nameN, nameR, positionId, drivingLicense, startDate, startOrderNumber);
+                _Worker worker = new _Worker(id, nameN, nameR,nameD, positionId, drivingLicense, startDate, startOrderNumber);
 
                 worker.setPositionN(nameN);
                 worker.setPositionR(nameR);
@@ -2106,6 +2105,7 @@ public class DBManager {
                 int id = resultSet.getInt("id");
                 String nameN = resultSet.getString("nameN");
                 String nameR = resultSet.getString("nameR");
+                String nameD = resultSet.getString("nameD");
                 int positionId = resultSet.getInt("positionId");
                 String drivingLicense = resultSet.getString("drivingLicence");
                 LocalDate startDate = resultSet.getDate("start-date").toLocalDate();
@@ -2114,7 +2114,7 @@ public class DBManager {
                 String endOrderNumber = resultSet.getString("end-order-number");
                 boolean valid = resultSet.getBoolean("valid");
 
-                worker = new _Worker(id, nameN, nameR, positionId, drivingLicense, startDate, startOrderNumber);
+                worker = new _Worker(id, nameN, nameR,nameD, positionId, drivingLicense, startDate, startOrderNumber);
 
                 worker.setPositionN(getPositionNameN(positionId));
                 worker.setPositionR(getPositionNameR(positionId));
@@ -2145,6 +2145,7 @@ public class DBManager {
                 int id = resultSet.getInt("id");
                 String nameN = resultSet.getString("nameN");
                 String nameR = resultSet.getString("nameR");
+                String nameD = resultSet.getString("nameD");
                 int positionId = resultSet.getInt("positionId");
                 String drivingLicense = resultSet.getString("drivingLicence");
                 LocalDate startDate = resultSet.getDate("start-date").toLocalDate();
@@ -2153,7 +2154,7 @@ public class DBManager {
                 String endOrderNumber = resultSet.getString("end-order-number");
                 boolean valid = resultSet.getBoolean("valid");
 
-                _Worker worker = new _Worker(id, nameN, nameR, positionId, drivingLicense, startDate, startOrderNumber);
+                _Worker worker = new _Worker(id, nameN, nameR,nameD, positionId, drivingLicense, startDate, startOrderNumber);
 
                 worker.setPositionN(getPositionNameN(positionId));
                 worker.setPositionR(getPositionNameR(positionId));
@@ -2185,6 +2186,7 @@ public class DBManager {
                 int id = resultSet.getInt("id");
                 String nameN = resultSet.getString("nameN");
                 String nameR = resultSet.getString("nameR");
+                String nameD = resultSet.getString("nameD");
                 int positionId = resultSet.getInt("positionId");
                 String drivingLicense = resultSet.getString("drivingLicence");
                 LocalDate startDate = resultSet.getDate("start-date").toLocalDate();
@@ -2193,7 +2195,7 @@ public class DBManager {
                 String endOrderNumber = resultSet.getString("end-order-number");
                 boolean valid = resultSet.getBoolean("valid");
 
-                _Worker worker = new _Worker(id, nameN, nameR, positionId, drivingLicense, startDate, startOrderNumber);
+                _Worker worker = new _Worker(id, nameN, nameR, nameD, positionId, drivingLicense, startDate, startOrderNumber);
 
                 worker.setPositionN(getPositionNameN(positionId));
                 worker.setPositionR(getPositionNameR(positionId));
@@ -2215,8 +2217,8 @@ public class DBManager {
 
     public boolean addWorker(_Worker worker) {
         String sqlCheckExistence = "SELECT 1 FROM workers WHERE nameN = ? AND valid = 1";
-        String sqlInsertWorker = "INSERT INTO workers (nameN, nameR, positionId, drivingLicence, `start-date`, `start-order-number`, valid) "
-                + "VALUES (?, ?, ?, ?, ?, ?, 1)";
+        String sqlInsertWorker = "INSERT INTO workers (nameN, nameR, nameD positionId, drivingLicence, `start-date`, `start-order-number`, valid) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
 
         try (Connection connection = Connect();
              PreparedStatement checkExistenceStmt = connection.prepareStatement(sqlCheckExistence);
@@ -2232,10 +2234,11 @@ public class DBManager {
 
             insertWorkerStmt.setString(1, worker.getNameN());
             insertWorkerStmt.setString(2, worker.getNameR());
-            insertWorkerStmt.setInt(3, worker.getPositionId());
-            insertWorkerStmt.setString(4, worker.getDrivingLicense());
-            insertWorkerStmt.setDate(5, java.sql.Date.valueOf(worker.getStartDate()));
-            insertWorkerStmt.setString(6, worker.getStartOrderNumber());
+            insertWorkerStmt.setString(3, worker.getNameD());
+            insertWorkerStmt.setInt(4, worker.getPositionId());
+            insertWorkerStmt.setString(5, worker.getDrivingLicense());
+            insertWorkerStmt.setDate(6, java.sql.Date.valueOf(worker.getStartDate()));
+            insertWorkerStmt.setString(7, worker.getStartOrderNumber());
 
             insertWorkerStmt.executeUpdate();
             return true;
@@ -2269,6 +2272,7 @@ public class DBManager {
             sql = "UPDATE `workers` SET" +
                     " `nameN` = '" + worker.getNameN() + "'," +
                     " `nameR` = '" + worker.getNameR() + "'," +
+                    "`nameD` = '" + worker.getNameD() + "'," +
                     " `positionId` = '" + String.valueOf(worker.getPositionId()) + "'," +
                     " `drivingLicence` = '" + worker.getDrivingLicense() + "'," +
                     " `start-date` = '" + worker.getStartDate() + "'," +
@@ -2281,6 +2285,7 @@ public class DBManager {
             sql = "UPDATE `workers` SET" +
                     " `nameN` = '" + worker.getNameN() + "'," +
                     " `nameR` = '" + worker.getNameR() + "'," +
+                    "`nameD` = '" + worker.getNameD() + "'," +
                     " `positionId` = '" + String.valueOf(worker.getPositionId()) + "'," +
                     " `drivingLicence` = '" + worker.getDrivingLicense() + "'," +
                     " `start-date` = '" + worker.getStartDate() + "'," +
@@ -2312,6 +2317,24 @@ public class DBManager {
 
             if (resultSet.next()) {
                 name = resultSet.getString(isN?"nameN":"nameR");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return name;
+    }
+
+    public String getWorkerNameD(int workerId) {
+        String sql = "SELECT * FROM workers WHERE `id` = "+workerId+";";
+
+        String name="";
+        try (Connection connection = Connect();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            if (resultSet.next()) {
+                name = resultSet.getString("NameD");
             }
 
         } catch (Exception e) {

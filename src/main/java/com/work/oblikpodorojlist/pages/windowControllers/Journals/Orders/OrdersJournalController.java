@@ -19,6 +19,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -36,8 +37,11 @@ public class OrdersJournalController extends WindowController {
     private AddOrderController addOrderController;
     private EditOrderController editOrderController;
     private TableView<_Order> tableView;
-    public OrdersJournalController(){}
+    private final int rowsPerPage = 20;
+    private Pagination pagination;
+    private VBox tableContainer;
 
+    public OrdersJournalController(){}
 
     public void openWindow(){
         String windowTitle = "Журнал: накази";
@@ -50,6 +54,7 @@ public class OrdersJournalController extends WindowController {
         }
         else {
             tableView = new TableView<>();
+            tableContainer = new VBox(tableView);
             addOrderController = new AddOrderController();
             editOrderController = new EditOrderController();
             documentsManager = DocumentsManager.getInstance();
@@ -289,37 +294,71 @@ public class OrdersJournalController extends WindowController {
                 });
             }
 
+            pagination = new Pagination(1, 0);
+            pagination.setPageFactory(this::createPage);
 
             VBox.setVgrow(tableView, Priority.ALWAYS);
+            VBox.setVgrow(tableContainer, Priority.ALWAYS);
+            VBox.setVgrow(pagination, Priority.ALWAYS);
 
             VBox table = new VBox();
             VBox.setVgrow(table, Priority.ALWAYS);
 
-            table.getChildren().addAll(buttonBox,tableView);
+            table.getChildren().addAll(buttonBox,tableContainer, pagination);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
     }
 
+    private Node createPage(int pageIndex) {
+        int fromIndex = pageIndex * rowsPerPage;
+        int toIndex = Math.min(fromIndex + rowsPerPage, orders.size());
+
+        if (fromIndex > toIndex) {
+            tableView.setItems(FXCollections.observableArrayList());
+        } else {
+            tableView.setItems(FXCollections.observableArrayList(orders.subList(fromIndex, toIndex)));
+        }
+
+        return new VBox(); // нічого не повертаємо, бо ми напряму працюємо з tableContainer
+    }
+
+
     public void updateValues() {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
-                List<_Order> newOrders;
-
-                newOrders = dbManager.getOrders();
+                List<_Order> newOrders = dbManager.getOrders();
                 newOrders.sort((o1, o2) -> {
                     int num1 = extractNumber(o1.getOrderNumber());
                     int num2 = extractNumber(o2.getOrderNumber());
                     return Integer.compare(num1, num2);
                 });
+
                 Platform.runLater(() -> {
                     orders.setAll(newOrders);
+
+                    int pageCount = (int) Math.ceil((double) orders.size() / rowsPerPage);
+                    pagination.setPageCount(Math.max(pageCount, 1));
+                    int lastPage = Math.max(pageCount - 1, 0);
+                    pagination.setCurrentPageIndex(lastPage);
+
+                    // примусово оновлюємо таблицю
+                    int fromIndex = lastPage * rowsPerPage;
+                    int toIndex = Math.min(fromIndex + rowsPerPage, orders.size());
+                    tableView.setItems(FXCollections.observableArrayList(orders.subList(fromIndex, toIndex)));
+
+                    // на всяк випадок оновлюємо контейнер
+                    tableContainer.getChildren().setAll(tableView);
+
                     moveTableDown(tableView);
                 });
+
                 return null;
             }
         };
         new Thread(task).start();
     }
+
+
 }

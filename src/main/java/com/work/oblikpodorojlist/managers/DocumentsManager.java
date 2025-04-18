@@ -103,13 +103,14 @@ public class DocumentsManager {
         spacing.setAfter(BigInteger.valueOf(0));
     }
 
-    private String getNameSurname(String fullname) {
-        String[] words = fullname.split(" ");
-        String newString = "";
+    private String getFormattedNameSurname(String fullname) {
+        String[] words = fullname.trim().split("\\s+");
         if (words.length >= 2) {
-            newString = words[1] + " " + words[0];
+            String surname = words[0].toUpperCase();
+            String name = words[1].substring(0, 1).toUpperCase() + words[1].substring(1).toLowerCase(); // Ім'я з великої букви
+            return name + " " + surname;
         }
-        return newString;
+        return fullname;
     }
 
     private String getNAmeInitials(String fullname) {
@@ -120,6 +121,7 @@ public class DocumentsManager {
         }
         return newString;
     }
+
     public static String capitalizeFirstLetter(String str) {
         if (str == null || str.isEmpty()) {
             return str;
@@ -161,6 +163,7 @@ public class DocumentsManager {
             run.setText(line.toString());
         }
     }
+
     public void createOrderDocument(DBManager dbManager, _Order order) {
         try {
             _Company _company = dbManager.getCompanyInfo();
@@ -376,7 +379,7 @@ public class DocumentsManager {
                 body3Run.setFontFamily("Times New Roman");
                 body3Run.setText(
                         "3. Після повернення з відрядження " +
-                                getNAmeInitials(_worker.getNameR()) +
+                                getNAmeInitials(_worker.getNameD()) +
                                 " звітувати щодо виконання поставленого завдання та суми використаних коштів у порядку та строки, передбачені законодавством. ");
                 body3Run.setFontSize(12);
 
@@ -432,7 +435,7 @@ public class DocumentsManager {
                 TOV1Run.addTab();
                 TOV1Run.setText("_________________");
                 TOV1Run.addTab();
-                TOV1Run.setText(getNameSurname(order.getHead()));
+                TOV1Run.setText(getFormattedNameSurname(order.getHead()));
 
 
                 setParagraphSpacing(TOV1);
@@ -478,7 +481,7 @@ public class DocumentsManager {
                 accountantRun.addTab();
                 accountantRun.setText("_________________");
                 accountantRun.addTab();
-                accountantRun.setText(getNameSurname(_company.getAccountant()));
+                accountantRun.setText(getFormattedNameSurname(_company.getAccountant()));
 
                 setParagraphSpacing(accountant);
 
@@ -509,7 +512,7 @@ public class DocumentsManager {
                 workerRun.addTab();
                 workerRun.setText("_________________");
                 workerRun.addTab();
-                workerRun.setText(getNameSurname(_worker.getNameN()));
+                workerRun.setText(getFormattedNameSurname(_worker.getNameN()));
 
                 setParagraphSpacing(worker);
 
@@ -1642,7 +1645,7 @@ public class DocumentsManager {
                 TOV1Run.addTab();
                 TOV1Run.setText("_________________");
                 TOV1Run.addTab();
-                TOV1Run.setText(getNameSurname(head));
+                TOV1Run.setText(getFormattedNameSurname(head));
 
 
                 try (FileOutputStream out = new FileOutputStream(fileToSave)) {

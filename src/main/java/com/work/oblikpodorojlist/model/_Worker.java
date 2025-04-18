@@ -6,6 +6,7 @@ public class _Worker {
     private int id;
     private String nameN;
     private String nameR;
+    private String nameD;
     private String positionN;
     private String positionR;
     private int positionId;
@@ -18,9 +19,10 @@ public class _Worker {
 
     public _Worker() {
     }
-    public _Worker(String nameN, String nameR, int positionId, String drivingLicense, LocalDate startDate, String startOrderNumber) {
+    public _Worker(String nameN, String nameR, String nameD, int positionId, String drivingLicense, LocalDate startDate, String startOrderNumber) {
         this.nameN = nameN;
         this.nameR = nameR;
+        this.nameD = nameD;
         this.positionId = positionId;
         this.drivingLicense = drivingLicense;
         this.startDate = startDate;
@@ -30,10 +32,11 @@ public class _Worker {
         this.endOrderNumber = null;
     }
 
-    public _Worker(int id, String nameN, String nameR, int positionId, String drivingLicense, LocalDate startDate, String startOrderNumber) {
+    public _Worker(int id, String nameN, String nameR,String nameD, int positionId, String drivingLicense, LocalDate startDate, String startOrderNumber) {
         this.id = id;
         this.nameN = nameN;
         this.nameR = nameR;
+        this.nameD = nameD;
         this.positionId = positionId;
         this.drivingLicense = drivingLicense;
         this.startDate = startDate;
@@ -83,6 +86,14 @@ public class _Worker {
 
     public String getNameR() {
         return nameR;
+    }
+
+    public String getNameD() {
+        return nameD;
+    }
+
+    public void setNameD(String nameD) {
+        this.nameD = nameD;
     }
 
     public void setNameR(String nameR) {

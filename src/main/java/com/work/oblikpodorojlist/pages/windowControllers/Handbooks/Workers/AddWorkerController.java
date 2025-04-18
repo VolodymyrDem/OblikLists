@@ -42,6 +42,8 @@ public class AddWorkerController extends WindowController {
 
             TextField nameNField = new TextField();
             TextField nameRField = new TextField();
+            TextField nameDField = new TextField();
+
 
             List<_Position> positions = dbManager.getPositions();
 
@@ -71,14 +73,16 @@ public class AddWorkerController extends WindowController {
             grid.add(nameNField, 1, 0);
             grid.add(new Label("ПІБ(родовий відмінок):"), 0, 1);
             grid.add(nameRField, 1, 1);
-            grid.add(new Label("Посада:"), 0, 2);
-            grid.add(position, 1, 2);
-            grid.add(new Label("Водійське посвідчення:"), 0, 3);
-            grid.add(licenceField, 1, 3);
-            grid.add(new Label("Дата працевлаштування:"), 0, 4);
-            grid.add(datePickerStart, 1, 4);
-            grid.add(new Label("Номер наказу працевлаштування:"), 0, 5);
-            grid.add(startOrderNumberField, 1, 5);
+            grid.add(new Label("ПІБ(давальний відмінок):"), 0, 2);
+            grid.add(nameDField, 1, 2);
+            grid.add(new Label("Посада:"), 0, 3);
+            grid.add(position, 1, 3);
+            grid.add(new Label("Водійське посвідчення:"), 0, 4);
+            grid.add(licenceField, 1, 4);
+            grid.add(new Label("Дата працевлаштування:"), 0, 5);
+            grid.add(datePickerStart, 1, 5);
+            grid.add(new Label("Номер наказу працевлаштування:"), 0, 6);
+            grid.add(startOrderNumberField, 1, 6);
 
             Button saveButton = new Button("Зберегти");
 
@@ -92,7 +96,7 @@ public class AddWorkerController extends WindowController {
             saveButton.setOnAction(e ->{
                 if (isEmptyOrWhitespace(nameNField.getText()) || isEmptyOrWhitespace(nameRField.getText()) ||
                         isEmptyOrWhitespace(licenceField.getText()) || datePickerStart.getValue() == null ||
-                        isEmptyOrWhitespace(startOrderNumberField.getText()) ) {
+                        isEmptyOrWhitespace(startOrderNumberField.getText()) || isEmptyOrWhitespace(nameDField.getText())) {
                     Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
@@ -100,6 +104,7 @@ public class AddWorkerController extends WindowController {
                         _Worker worker = new _Worker(
                                 nameNField.getText(),
                                 nameRField.getText(),
+                                nameDField.getText(),
                                 positionsT.get(position.getValue()),
                                 licenceField.getText(),
                                 datePickerStart.getValue(),
