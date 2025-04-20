@@ -37,7 +37,6 @@ public class OrdersJournalController extends WindowController {
     private AddOrderController addOrderController;
     private EditOrderController editOrderController;
     private TableView<_Order> tableView;
-    private final int rowsPerPage = 20;
     private Pagination pagination;
     private VBox tableContainer;
 
@@ -54,7 +53,6 @@ public class OrdersJournalController extends WindowController {
         }
         else {
             tableView = new TableView<>();
-            tableContainer = new VBox(tableView);
             addOrderController = new AddOrderController();
             editOrderController = new EditOrderController();
             documentsManager = DocumentsManager.getInstance();
@@ -298,11 +296,42 @@ public class OrdersJournalController extends WindowController {
             pagination.setPageFactory(this::createPage);
 
             VBox.setVgrow(tableView, Priority.ALWAYS);
+
+            tableContainer = new VBox(tableView);
             VBox.setVgrow(tableContainer, Priority.ALWAYS);
-            VBox.setVgrow(pagination, Priority.ALWAYS);
 
             VBox table = new VBox();
             VBox.setVgrow(table, Priority.ALWAYS);
+
+            table.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            tableView.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
 
             table.getChildren().addAll(buttonBox,tableContainer, pagination);
 

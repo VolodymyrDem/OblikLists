@@ -13,6 +13,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -33,7 +34,8 @@ public class CarsHandbookController extends WindowController {
     private RemoveCarController removeCarController;
     private TableView<_Car> tableView;
     ComboBox<String> selectionModel = new ComboBox<>();
-
+    private Pagination pagination;
+    private VBox tableContainer;
 
     public CarsHandbookController(){}
 
@@ -91,8 +93,8 @@ public class CarsHandbookController extends WindowController {
             updateButton.setGraphic(IconsManager.getUpdateIcon());
 
 
-
-
+            pagination = new Pagination(1, 0);
+            pagination.setPageFactory(this::createPage);
 
             TableColumn<_Car, String> idCol = new TableColumn<>("ID");
             idCol.setCellValueFactory(new PropertyValueFactory<>("idCar"));
@@ -142,6 +144,43 @@ public class CarsHandbookController extends WindowController {
                     }
                 }
             });
+
+            VBox table = new VBox();
+            VBox.setVgrow(table, Priority.ALWAYS);
+
+            tableContainer = new VBox(tableView);
+            VBox.setVgrow(tableContainer, Priority.ALWAYS);
+
+            table.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            tableView.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
 
             TableColumn<_Car, String> endOrderCol = new TableColumn<>("Номер наказу \nзакінчення експлуатації");
             endOrderCol.setCellValueFactory(new PropertyValueFactory<>("endOrderNumber"));
@@ -201,6 +240,13 @@ public class CarsHandbookController extends WindowController {
             tableView.getColumns().addAll(numberCol, modelCol, fuelTypeCol, fuelUsageCol,
                     engineVolCol, startDateCol, startOrderCol, endDateCol, endOrderCol, validCol);
 
+            tableView.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT -> pagination.setCurrentPageIndex(Math.min(pagination.getCurrentPageIndex() + 1, pagination.getPageCount() - 1));
+                    case LEFT -> pagination.setCurrentPageIndex(Math.max(pagination.getCurrentPageIndex() - 1, 0));
+                }
+            });
+
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
             VBox.setVgrow(tableView, Priority.ALWAYS);
 
@@ -226,10 +272,7 @@ public class CarsHandbookController extends WindowController {
                 });
             }
 
-            VBox table = new VBox();
-            VBox.setVgrow(table, Priority.ALWAYS);
-
-            table.getChildren().addAll(buttonBox,tableView);
+            table.getChildren().addAll(buttonBox,tableContainer, pagination);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
@@ -248,16 +291,36 @@ public class CarsHandbookController extends WindowController {
                 } else {
                     newCars = dbManager.getCars();
                 }
-
                 newCars.sort(Comparator.comparing(_Car::getNumber));
-
                 Platform.runLater(() -> {
                     cars.setAll(newCars);
+                    int pageCount = (int) Math.ceil((double) cars.size() / rowsPerPage);
+                    pagination.setPageCount(Math.max(pageCount, 1));
+                    int lastPage = Math.max(pageCount - 1, 0);
+                    pagination.setCurrentPageIndex(lastPage);
+                    int fromIndex = lastPage * rowsPerPage;
+                    int toIndex = Math.min(fromIndex + rowsPerPage, cars.size());
+                    tableView.setItems(FXCollections.observableArrayList(cars.subList(fromIndex, toIndex)));
+                    tableContainer.getChildren().setAll(tableView);
                     moveTableDown(tableView);
+
                 });
                 return null;
             }
         };
         new Thread(task).start();
+    }
+
+    private Node createPage(int pageIndex) {
+        int fromIndex = pageIndex * rowsPerPage;
+        int toIndex = Math.min(fromIndex + rowsPerPage, cars.size());
+
+        if (fromIndex > toIndex) {
+            tableView.setItems(FXCollections.observableArrayList());
+        } else {
+            tableView.setItems(FXCollections.observableArrayList(cars.subList(fromIndex, toIndex)));
+        }
+
+        return new VBox();
     }
 }

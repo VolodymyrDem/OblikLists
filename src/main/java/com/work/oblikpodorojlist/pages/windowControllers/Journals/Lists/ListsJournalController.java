@@ -19,6 +19,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -44,6 +45,8 @@ public class ListsJournalController extends WindowController {
     private EditListController editListController;
     private CloseListController closeListController;
     private TableView<_List> tableView;
+    private Pagination pagination;
+    private VBox tableContainer;
     public ListsJournalController(){}
 
 
@@ -88,7 +91,8 @@ public class ListsJournalController extends WindowController {
                 openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[4] + "\\");
             });
 
-
+            pagination = new Pagination(1, 0);
+            pagination.setPageFactory(this::createPage);
 
             updateButton.setOnAction(e->{
                 updateValues();
@@ -340,13 +344,48 @@ public class ListsJournalController extends WindowController {
                 });
             }
 
-
-            VBox.setVgrow(tableView, Priority.ALWAYS);
-
             VBox table = new VBox();
             VBox.setVgrow(table, Priority.ALWAYS);
 
-            table.getChildren().addAll(buttonBox,tableView);
+            table.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            tableView.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+
+            VBox.setVgrow(tableView, Priority.ALWAYS);
+
+
+
+            tableContainer = new VBox(tableView);
+            VBox.setVgrow(tableContainer, Priority.ALWAYS);
+
+            table.getChildren().addAll(buttonBox,tableContainer, pagination);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
@@ -365,17 +404,37 @@ public class ListsJournalController extends WindowController {
                             .map(s -> s.split("\\s+")[0])
                             .collect(Collectors.toList());
                 }
-                System.out.println(numbersGL);
 
                 List<_List> newLists = dbManager.getListsForCars(numbersGL);
-                newLists.sort(Comparator.comparing(_List::getNumber));
                 Platform.runLater(() -> {
+                    newLists.sort(Comparator.comparing(_List::getNumber));
                     lists.setAll(newLists);
+                    int pageCount = (int) Math.ceil((double) lists.size() / rowsPerPage);
+                    pagination.setPageCount(Math.max(pageCount, 1));
+                    int lastPage = Math.max(pageCount - 1, 0);
+                    pagination.setCurrentPageIndex(lastPage);
+                    int fromIndex = lastPage * rowsPerPage;
+                    int toIndex = Math.min(fromIndex + rowsPerPage, lists.size());
+                    tableView.setItems(FXCollections.observableArrayList(lists.subList(fromIndex, toIndex)));
+                    tableContainer.getChildren().setAll(tableView);
                     moveTableDown(tableView);
                 });
                 return null;
             }
         };
         new Thread(task).start();
+    }
+
+    private Node createPage(int pageIndex) {
+        int fromIndex = pageIndex * rowsPerPage;
+        int toIndex = Math.min(fromIndex + rowsPerPage, lists.size());
+
+        if (fromIndex > toIndex) {
+            tableView.setItems(FXCollections.observableArrayList());
+        } else {
+            tableView.setItems(FXCollections.observableArrayList(lists.subList(fromIndex, toIndex)));
+        }
+
+        return new VBox();
     }
 }

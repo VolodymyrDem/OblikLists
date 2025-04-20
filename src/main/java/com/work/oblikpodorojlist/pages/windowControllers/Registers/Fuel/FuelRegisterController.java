@@ -6,6 +6,7 @@ import com.work.oblikpodorojlist.managers.DocumentsManager;
 import com.work.oblikpodorojlist.managers.IconsManager;
 import com.work.oblikpodorojlist.model.FuelUsage;
 import com.work.oblikpodorojlist.model.PeriodParameters;
+import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.application.Platform;
@@ -14,6 +15,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -42,7 +44,9 @@ public class FuelRegisterController extends WindowController {
     private List<String> numbersG;
     public DatePicker datePickerStart;
     public DatePicker datePickerEnd;
-
+    private Pagination pagination;
+    private VBox tableContainer;
+    private TableView<FuelUsage> tableView;
     public FuelRegisterController(){}
 
 
@@ -180,10 +184,11 @@ public class FuelRegisterController extends WindowController {
                 updateButton.setDisable(true);
             });
 
+            pagination = new Pagination(1, 0);
+            pagination.setPageFactory(this::createPage);
 
 
-
-            TableView<FuelUsage> tableView = new TableView<>();
+            tableView = new TableView<>();
             tableView.setItems(FilteredFuelUsage);
 
 
@@ -293,7 +298,41 @@ public class FuelRegisterController extends WindowController {
             VBox table = new VBox();
             VBox.setVgrow(table, Priority.ALWAYS);
 
-            table.getChildren().addAll(buttonBox,tableView);
+            tableContainer = new VBox(tableView);
+            VBox.setVgrow(tableContainer, Priority.ALWAYS);
+
+
+            table.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            tableView.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            table.getChildren().addAll(buttonBox,tableContainer, pagination);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
@@ -332,11 +371,33 @@ public class FuelRegisterController extends WindowController {
                 List<FuelUsage> newUsage = dbManager.getListsFuelFiltered(numbersG, parametersFuelUsage);
                 Platform.runLater(() -> {
                     FilteredFuelUsage.setAll(newUsage);
+                    int pageCount = (int) Math.ceil((double) FilteredFuelUsage.size() / rowsPerPage);
+                    pagination.setPageCount(Math.max(pageCount, 1));
+                    int lastPage = Math.max(pageCount - 1, 0);
+                    pagination.setCurrentPageIndex(lastPage);
+                    int fromIndex = lastPage * rowsPerPage;
+                    int toIndex = Math.min(fromIndex + rowsPerPage, FilteredFuelUsage.size());
+                    tableView.setItems(FXCollections.observableArrayList(FilteredFuelUsage.subList(fromIndex, toIndex)));
+                    tableContainer.getChildren().setAll(tableView);
+                    moveTableDown(tableView);
                 });
                 return null;
             }
         };
         new Thread(task).start();
+    }
+
+    private Node createPage(int pageIndex) {
+        int fromIndex = pageIndex * rowsPerPage;
+        int toIndex = Math.min(fromIndex + rowsPerPage, FilteredFuelUsage.size());
+
+        if (fromIndex > toIndex) {
+            tableView.setItems(FXCollections.observableArrayList());
+        } else {
+            tableView.setItems(FXCollections.observableArrayList(FilteredFuelUsage.subList(fromIndex, toIndex)));
+        }
+
+        return new VBox();
     }
 
 }

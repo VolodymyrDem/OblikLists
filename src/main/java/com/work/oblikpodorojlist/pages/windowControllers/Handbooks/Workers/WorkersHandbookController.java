@@ -14,6 +14,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -34,6 +35,9 @@ public class WorkersHandbookController extends WindowController {
     private RemoveWorkerController removeWorkerController;
     private ComboBox<String> selectionModel;
     private TableView<_Worker> tableView;
+    private Pagination pagination;
+    private VBox tableContainer;
+
     public WorkersHandbookController(){}
 
     public void openWindow() {
@@ -90,7 +94,8 @@ public class WorkersHandbookController extends WindowController {
             updateButton.getStyleClass().add("grey-button");
             updateButton.setGraphic(IconsManager.getUpdateIcon());
 
-
+            pagination = new Pagination(1, 0);
+            pagination.setPageFactory(this::createPage);
 
             TableColumn<_Worker, Integer> idCol = new TableColumn<>("ID");
             idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -188,9 +193,41 @@ public class WorkersHandbookController extends WindowController {
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
             VBox.setVgrow(tableView, Priority.ALWAYS);
 
-            tableView.setItems(workers);
+            VBox table = new VBox();
+            VBox.setVgrow(table, Priority.ALWAYS);
 
-            tableView.scrollTo(tableView.getItems().size()-1);
+            tableContainer = new VBox(tableView);
+            VBox.setVgrow(tableContainer, Priority.ALWAYS);
+
+            table.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            tableView.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
 
             if(dbManager.getUsername().equals("root")) {
                 deleteButton.setText("Видалити працівника");
@@ -209,10 +246,7 @@ public class WorkersHandbookController extends WindowController {
             }
 
 
-            VBox table = new VBox();
-            VBox.setVgrow(table, Priority.ALWAYS);
-
-            table.getChildren().addAll(buttonBox,tableView);
+            table.getChildren().addAll(buttonBox,tableContainer, pagination);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
@@ -234,11 +268,32 @@ public class WorkersHandbookController extends WindowController {
                 newWorkers.sort(Comparator.comparing(_Worker::getNameN));
                 Platform.runLater(() -> {
                     workers.setAll(newWorkers);
+                    int pageCount = (int) Math.ceil((double) workers.size() / rowsPerPage);
+                    pagination.setPageCount(Math.max(pageCount, 1));
+                    int lastPage = Math.max(pageCount - 1, 0);
+                    pagination.setCurrentPageIndex(lastPage);
+                    int fromIndex = lastPage * rowsPerPage;
+                    int toIndex = Math.min(fromIndex + rowsPerPage, workers.size());
+                    tableView.setItems(FXCollections.observableArrayList(workers.subList(fromIndex, toIndex)));
+                    tableContainer.getChildren().setAll(tableView);
                     moveTableDown(tableView);
                 });
                 return null;
             }
         };
         new Thread(task).start();
+    }
+
+    private Node createPage(int pageIndex) {
+        int fromIndex = pageIndex * rowsPerPage;
+        int toIndex = Math.min(fromIndex + rowsPerPage, workers.size());
+
+        if (fromIndex > toIndex) {
+            tableView.setItems(FXCollections.observableArrayList());
+        } else {
+            tableView.setItems(FXCollections.observableArrayList(workers.subList(fromIndex, toIndex)));
+        }
+
+        return new VBox();
     }
 }

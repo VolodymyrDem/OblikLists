@@ -5,6 +5,7 @@ import com.work.oblikpodorojlist.managers.DBManager;
 import com.work.oblikpodorojlist.managers.DocumentsManager;
 import com.work.oblikpodorojlist.managers.IconsManager;
 import com.work.oblikpodorojlist.model._Order;
+import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import eu.hansolo.tilesfx.colors.Wan;
@@ -14,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
@@ -32,6 +34,10 @@ public class OrdersRegisterController extends WindowController {
     private ObservableList<_Order> filteredOrders = FXCollections.observableArrayList();
     public DatePicker datePickerStart;
     public DatePicker datePickerEnd;
+
+    private TableView<_Order> tableView;
+    private Pagination pagination;
+    private VBox tableContainer;
 
     public OrdersRegisterController(){
         datePickerStart = new DatePicker();
@@ -156,8 +162,11 @@ public class OrdersRegisterController extends WindowController {
             buttonBox.setAlignment(Pos.CENTER_LEFT);
 
             updateValues();
-            TableView<_Order> tableView = new TableView<>();
+            tableView = new TableView<>();
             tableView.setItems(filteredOrders);
+
+            pagination = new Pagination(1, 0);
+            pagination.setPageFactory(this::createPage);
 
             TableColumn<_Order, LocalDate> orderDateCol = new TableColumn<>("Дата наказу");
             orderDateCol.setCellValueFactory(new PropertyValueFactory<>("orderDate"));
@@ -230,7 +239,40 @@ public class OrdersRegisterController extends WindowController {
             VBox table = new VBox();
             VBox.setVgrow(table, Priority.ALWAYS);
 
-            table.getChildren().addAll(buttonBox,tableView);
+            tableContainer = new VBox(tableView);
+            VBox.setVgrow(tableContainer, Priority.ALWAYS);
+
+            table.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            tableView.setOnKeyPressed(event -> {
+                switch (event.getCode()) {
+                    case RIGHT:
+                        if (pagination.getCurrentPageIndex() < pagination.getPageCount() - 1) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() + 1);
+                        }
+                        break;
+                    case LEFT:
+                        if (pagination.getCurrentPageIndex() > 0) {
+                            pagination.setCurrentPageIndex(pagination.getCurrentPageIndex() - 1);
+                        }
+                        break;
+                }
+            });
+
+            table.getChildren().addAll(buttonBox,tableContainer, pagination);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
@@ -254,10 +296,32 @@ public class OrdersRegisterController extends WindowController {
 
                 Platform.runLater(() -> {
                     filteredOrders.setAll(newOrders);
+                    int pageCount = (int) Math.ceil((double) filteredOrders.size() / rowsPerPage);
+                    pagination.setPageCount(Math.max(pageCount, 1));
+                    int lastPage = Math.max(pageCount - 1, 0);
+                    pagination.setCurrentPageIndex(lastPage);
+                    int fromIndex = lastPage * rowsPerPage;
+                    int toIndex = Math.min(fromIndex + rowsPerPage, filteredOrders.size());
+                    tableView.setItems(FXCollections.observableArrayList(filteredOrders.subList(fromIndex, toIndex)));
+                    tableContainer.getChildren().setAll(tableView);
+                    moveTableDown(tableView);
                 });
                 return null;
             }
         };
         new Thread(task).start();
+    }
+
+    private Node createPage(int pageIndex) {
+        int fromIndex = pageIndex * rowsPerPage;
+        int toIndex = Math.min(fromIndex + rowsPerPage, filteredOrders.size());
+
+        if (fromIndex > toIndex) {
+            tableView.setItems(FXCollections.observableArrayList());
+        } else {
+            tableView.setItems(FXCollections.observableArrayList(filteredOrders.subList(fromIndex, toIndex)));
+        }
+
+        return new VBox();
     }
 }

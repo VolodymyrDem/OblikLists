@@ -467,3 +467,46 @@
 .decrement-arrow-button:pressed {
     -fx-background-color: #ced2d6;
 }
+
+.pagination {
+    -fx-background-color: #faf8f8;
+}
+
+.pagination .control-box {
+    -fx-spacing: 2px;
+    -fx-padding: 2px;
+    -fx-alignment: center;
+}
+
+.pagination .number-button {
+    -fx-background-color: #CED4DA;
+    -fx-text-fill: #212529;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.pagination .number-button:selected {
+    -fx-background-color: #007BFF;
+    -fx-text-fill: white;
+}
+
+.pagination .number-button:hover {
+    -fx-background-color: #ADB5BD;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 5, 0.5, 0, 0);
+    -fx-text-fill: white;
+}
+
+.pagination .arrow-button {
+    -fx-background-color: #DEE2E6;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-text-fill: #212529;
+}
+
+.pagination .arrow-button:hover {
+    -fx-background-color: #ADB5BD;
+}
+
+.uniform-button {
+    -fx-pref-height: 32px;
+}

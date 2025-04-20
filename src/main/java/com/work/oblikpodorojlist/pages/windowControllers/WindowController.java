@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public abstract class WindowController {
+    protected final int rowsPerPage = 25;
     protected DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
     protected void openFolder(String path) {
 
