@@ -108,8 +108,8 @@ public class FuelRegisterController extends WindowController {
             Button saveButton = new Button("Зберегти реєстр");
             saveButton.setGraphic(IconsManager.getTikIcon());
             saveButton.setDisable(true);
-            podilField.getItems().addAll("По днях", "По тижнях", "По місяцях", "По кварталах", "По роках");
-            podilField.setValue("По днях");
+            podilField.getItems().addAll("По днях", "По тижнях", "По місяцях", "По кварталах", "По роках", "По листах");
+            podilField.setValue("По листах");
 
             Button openFolderButton = new Button("Відкрити папку");
             openFolderButton.setGraphic(IconsManager.getFolderIcon());
@@ -361,6 +361,7 @@ public class FuelRegisterController extends WindowController {
                     case "По місяцях" -> Period.ofMonths(1);
                     case "По кварталах" -> Period.ofMonths(3);
                     case "По роках" -> Period.ofYears(1);
+                    case "По листах" -> Period.ofYears(2);
                     default -> Period.ofDays(1);
                 };
 

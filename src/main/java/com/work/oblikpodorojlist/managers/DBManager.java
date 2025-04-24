@@ -814,43 +814,120 @@ public class DBManager {
                     double startF = resultSet.getDouble("start-fuel");
                     boolean done = resultSet.getBoolean("done");
 
-                    _List list = new _List(id, number, idOrder, idCar, startM, startF, done);
-
                     if (done) {
+                        _List list = new _List(id, number, idOrder, idCar, startM, startF, done);
                         double endM = resultSet.getDouble("end-mileage");
                         double endF = resultSet.getDouble("end-fuel");
                         double refuel = resultSet.getDouble("refuel");
                         list.setEndFuel(endF);
                         list.setEndMileage(endM);
                         list.setRefuel(refuel);
+                        if (idOrder == -1) {
+                            LocalDate startData = resultSet.getDate("start-date").toLocalDate();
+                            LocalDate endData = resultSet.getDate("end-date").toLocalDate();
+                            String route = resultSet.getString("route");
+                            String goal = resultSet.getString("goal");
+                            int workerId = resultSet.getInt("id-worker");
+                            list.setStartDate(startData);
+                            list.setEndDate(endData);
+                            list.setRoute(route);
+                            list.setGoal(goal);
+                            list.setIdWorker(workerId);
+                            list.setIdOrder(-1);
+                        } else {
+                            list.setIdOrder(idOrder);
+                            list.setStartDate(getStartOrderDate(idOrder));
+                            list.setEndDate(getEndOrderDate(idOrder));
+                            list.setRoute(getOrderRoute(idOrder));
+                            list.setGoal(getOrderGoal(idOrder));
+                            list.setIdWorker(getOrderIdWorker(idOrder));
+                        }
+                        carLists.add(list);
                     }
 
-                    if (idOrder == -1) {
-                        LocalDate startData = resultSet.getDate("start-date").toLocalDate();
-                        LocalDate endData = resultSet.getDate("end-date").toLocalDate();
-                        String route = resultSet.getString("route");
-                        String goal = resultSet.getString("goal");
-                        int workerId = resultSet.getInt("id-worker");
-                        list.setStartDate(startData);
-                        list.setEndDate(endData);
-                        list.setRoute(route);
-                        list.setGoal(goal);
-                        list.setIdWorker(workerId);
-                        list.setIdOrder(-1);
-                    } else {
-                        list.setIdOrder(idOrder);
-                        list.setStartDate(getStartOrderDate(idOrder));
-                        list.setEndDate(getStartOrderDate(idOrder));
-                        list.setRoute(getOrderRoute(idOrder));
-                        list.setGoal(getOrderGoal(idOrder));
-                        list.setIdWorker(getOrderIdWorker(idOrder));
-                    }
-                    carLists.add(list);
                 }
             } catch (Exception e) {
                 System.err.println("Error getting list: " + e.getMessage());
             }
-            fuelUsages.addAll(getFuelUsagesPeriodics(carNumber, carLists, params));
+            if (params.getPeriod().equals(Period.ofYears(2))) {
+                // "По листах" — кожен лист окремо
+                for (_List list : carLists) {
+                    double mileage = list.getEndMileage() - list.getStartMileage();
+                    double fuelFact = (list.getStartFuel() - list.getEndFuel()) + list.getRefuel();
+                    double fuelNorm = mileage * getCarFuelUsage(list.getIdCar()) / 100;
+
+                    fuelUsages.add(new FuelUsage(
+                            list.getStartDate(),
+                            list.getEndDate(),
+                            carNumber,
+                            mileage,
+                            fuelFact,
+                            fuelNorm
+                    ));
+                }
+            } else {
+                // періодичний варіант
+                fuelUsages.addAll(getFuelUsagesPeriodics(carNumber, carLists, params));
+            }
+        }
+        return fuelUsages;
+    }
+
+    private List<FuelUsage> getFuelUsagesPeriodics(String carNumber, List<_List> carLists, PeriodParameters params) {
+        List<FuelUsage> fuelUsages = new ArrayList<>();
+        Set<_List> processedLists = new HashSet<>();
+        LocalDate currentStart = params.getStartDate();
+        LocalDate endDate = params.getEndDate();
+
+        if(params.getPeriod().equals(Period.ofWeeks(1))){
+            currentStart = params.getStartDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+            endDate = params.getEndDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+        }
+        if(params.getPeriod().equals(Period.ofMonths(1))){
+            currentStart = params.getStartDate().withDayOfMonth(1);
+            endDate = params.getEndDate().withDayOfMonth(params.getEndDate().lengthOfMonth());
+
+        }
+        if(params.getPeriod().equals(Period.ofMonths(3))){
+            Month startQuarterMonth = Month.of(((params.getStartDate().getMonthValue() - 1) / 3) * 3 + 1);
+            currentStart = params.getStartDate().withMonth(startQuarterMonth.getValue()).withDayOfMonth(1);
+
+            Month endQuarterMonth = Month.of(((params.getEndDate().getMonthValue() - 1) / 3) * 3 + 3);
+            endDate = params.getEndDate().withMonth(endQuarterMonth.getValue()).withDayOfMonth(params.getEndDate().lengthOfMonth());
+
+        }
+        if(params.getPeriod().equals(Period.ofYears(1))){
+            currentStart = params.getStartDate().withDayOfYear(1);
+            endDate = params.getEndDate().withDayOfYear(params.getEndDate().lengthOfYear());
+        }
+
+        while (!currentStart.isAfter(endDate)) {
+            LocalDate currentEnd = currentStart.plus(params.getPeriod()).minus(Period.ofDays(1));
+            if (currentEnd.isAfter(endDate)) {
+                currentEnd = endDate;
+            }
+
+            double totalMileage = 0;
+            double totalFuelFact = 0;
+            double fuelNorm = 0;
+
+
+            for (_List list : carLists) {
+                if (!list.getEndDate().isBefore(currentStart) && !list.getEndDate().isAfter(currentEnd)) {
+                    if (!processedLists.contains(list)) {
+                        totalMileage += list.getEndMileage() - list.getStartMileage();
+                        totalFuelFact += (list.getStartFuel() - list.getEndFuel()) + list.getRefuel();
+                        processedLists.add(list);
+                    }
+                }
+            }
+
+            if (totalMileage > 0) {
+                fuelNorm = totalMileage * getCarFuelUsage(carLists.get(0).getIdCar()) / 100;
+                fuelUsages.add(new FuelUsage(currentStart, currentEnd, carNumber, totalMileage, totalFuelFact, fuelNorm));
+            }
+
+            currentStart = currentStart.plus(params.getPeriod());
         }
         return fuelUsages;
     }
@@ -921,64 +998,27 @@ public class DBManager {
         return ListsCars;
     }
 
-    private List<FuelUsage> getFuelUsagesPeriodics(String carNumber, List<_List> carLists, PeriodParameters params) {
-        List<FuelUsage> fuelUsages = new ArrayList<>();
-        Set<_List> processedLists = new HashSet<>();
-        LocalDate currentStart = params.getStartDate();
-        LocalDate endDate = params.getEndDate();
+    private List<FuelUsage> getFuelUsagesByLists(String carNumber, List<_List> carLists) {
+        List<FuelUsage> usages = new ArrayList<>();
+        for (_List list : carLists) {
+            if (list.getEndDate() != null && list.getStartDate() != null) {
+                double mileage = list.getEndMileage() - list.getStartMileage();
+                double fuelFact = (list.getStartFuel() - list.getEndFuel()) + list.getRefuel();
+                double fuelNorm = mileage * getCarFuelUsage(list.getIdCar()) / 100;
 
-        if(params.getPeriod().equals(Period.ofWeeks(1))){
-            currentStart = params.getStartDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            endDate = params.getEndDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
-        }
-        if(params.getPeriod().equals(Period.ofMonths(1))){
-            currentStart = params.getStartDate().withDayOfMonth(1);
-            endDate = params.getEndDate().withDayOfMonth(params.getEndDate().lengthOfMonth());
-
-        }
-        if(params.getPeriod().equals(Period.ofMonths(3))){
-            Month startQuarterMonth = Month.of(((params.getStartDate().getMonthValue() - 1) / 3) * 3 + 1);
-            currentStart = params.getStartDate().withMonth(startQuarterMonth.getValue()).withDayOfMonth(1);
-
-            Month endQuarterMonth = Month.of(((params.getEndDate().getMonthValue() - 1) / 3) * 3 + 3);
-            endDate = params.getEndDate().withMonth(endQuarterMonth.getValue()).withDayOfMonth(params.getEndDate().lengthOfMonth());
-
-        }
-        if(params.getPeriod().equals(Period.ofYears(1))){
-            currentStart = params.getStartDate().withDayOfYear(1);
-            endDate = params.getEndDate().withDayOfYear(params.getEndDate().lengthOfYear());
-        }
-
-        while (!currentStart.isAfter(endDate)) {
-            LocalDate currentEnd = currentStart.plus(params.getPeriod()).minus(Period.ofDays(1));
-            if (currentEnd.isAfter(endDate)) {
-                currentEnd = endDate;
+                usages.add(new FuelUsage(
+                        list.getStartDate(),
+                        list.getEndDate(),
+                        carNumber,
+                        mileage,
+                        fuelFact,
+                        fuelNorm
+                ));
             }
-
-            double totalMileage = 0;
-            double totalFuelFact = 0;
-            double fuelNorm = 0;
-
-
-            for (_List list : carLists) {
-                if (!list.getEndDate().isBefore(currentStart) && !list.getEndDate().isAfter(currentEnd)) {
-                    if (!processedLists.contains(list)) {
-                        totalMileage += list.getEndMileage() - list.getStartMileage();
-                        totalFuelFact += (list.getStartFuel() - list.getEndFuel()) + list.getRefuel();
-                        processedLists.add(list);
-                    }
-                }
-            }
-
-            if (totalMileage > 0) {
-                fuelNorm = totalMileage * getCarFuelUsage(carLists.get(0).getIdCar()) / 100;
-                fuelUsages.add(new FuelUsage(currentStart, currentEnd, carNumber, totalMileage, totalFuelFact, fuelNorm));
-            }
-
-            currentStart = currentStart.plus(params.getPeriod());
         }
-        return fuelUsages;
+        return usages;
     }
+
 
 
     public List<_List> getLists() {
