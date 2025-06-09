@@ -63,11 +63,13 @@ public class AddReportController extends WindowController {
             });
             TextField workerField = new TextField();
             TextField positionField = new TextField();
-            TextField goalField = new TextField();
+            TextArea goalField = new TextArea();
             TextField headField = new TextField();
             TextArea  commentsField = new TextArea ();
             commentsField.setPrefRowCount(3);
+            goalField.setPrefRowCount(3);
             commentsField.setWrapText(true);
+            goalField.setWrapText(true);
 
             for(_Order d  : validOrders) {
                 ordersT.put(d.getOrderNumber(), d.getIdOrder());
@@ -88,14 +90,14 @@ public class AddReportController extends WindowController {
                     int selectedORderID = ordersT.get(slectedOrder);
                     workerField.setText(dbManager.getOrderWorkerName(selectedORderID));
                     positionField.setText(dbManager.getWorkerPosition(true, dbManager.getOrderIdWorker(selectedORderID)));
-                    goalField.setText(dbManager.getOrderGoal(selectedORderID));
+                    goalField.setText( dbManager.getOrderGoal(selectedORderID));
                     headField.setText(dbManager.getOrderHead(selectedORderID));
                 }
             });
 
             workerField.setDisable(true);
             positionField.setDisable(true);
-            goalField.setDisable(true);
+            goalField.setDisable(false);
             headField.setDisable(true);
             commentsField.setDisable(false);
 

@@ -129,6 +129,7 @@ public class CompanyPage extends Application {
         scene.getStylesheets().add(getClass().getResource("/css/styleWhite.css").toExternalForm());
 
         primaryStage.setScene(scene);
+        primaryStage.setMaximized(false);
         primaryStage.show();
     }
 
