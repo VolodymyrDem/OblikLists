@@ -1565,7 +1565,7 @@ public class DocumentsManager {
 
                 textField = textP.createRun();
                 textField.setFontFamily("Times New Roman");
-                textField.setText(goal);
+                textField.setText("Завдання по відрядженню " + goal + " виконано");
                 textField.setFontSize(14);
 
 

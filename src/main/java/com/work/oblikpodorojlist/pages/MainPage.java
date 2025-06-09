@@ -246,6 +246,7 @@ public class MainPage {
         primaryStage.heightProperty().addListener((obs, oldVal, newVal) -> resizeWorkspace(primaryStage));
 
         primaryStage.setScene(scene);
+        primaryStage.setMaximized(true);
         primaryStage.setTitle(dbManager.getCompanyInfo().getName() + ": " + _username);
         primaryStage.show();
         resizeWorkspace(primaryStage);

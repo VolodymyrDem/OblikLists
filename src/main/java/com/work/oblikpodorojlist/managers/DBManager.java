@@ -2257,7 +2257,7 @@ public class DBManager {
 
     public boolean addWorker(_Worker worker) {
         String sqlCheckExistence = "SELECT 1 FROM workers WHERE nameN = ? AND valid = 1";
-        String sqlInsertWorker = "INSERT INTO workers (nameN, nameR, nameD positionId, drivingLicence, `start-date`, `start-order-number`, valid) "
+        String sqlInsertWorker = "INSERT INTO workers (nameN, nameR, nameD, positionId, drivingLicence, `start-date`, `start-order-number`, valid) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, 1)";
 
         try (Connection connection = Connect();

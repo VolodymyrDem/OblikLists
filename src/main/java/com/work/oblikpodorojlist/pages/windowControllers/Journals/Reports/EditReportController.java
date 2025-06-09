@@ -54,17 +54,19 @@ public class EditReportController extends WindowController {
             });
             TextField workerField = new TextField(dbManager.getOrderWorkerName(selectedReport.getOrderId()));
             TextField positionField = new TextField(dbManager.getWorkerPosition(true, dbManager.getOrderIdWorker(selectedReport.getOrderId())));
-            TextField goalField = new TextField(dbManager.getOrderGoal(selectedReport.getOrderId()));
+            TextArea goalField = new TextArea(dbManager.getOrderGoal(selectedReport.getOrderId()));
             TextField headField = new TextField(dbManager.getOrderHead(selectedReport.getOrderId()));
             TextArea  commentsField = new TextArea (selectedReport.getComments());
             commentsField.setPrefRowCount(3);
             commentsField.setWrapText(true);
+            goalField.setPrefRowCount(3);
+            goalField.setWrapText(true);
 
             orderNumberField.setDisable(true);
             datePicker.setDisable(true);
             workerField.setDisable(true);
             positionField.setDisable(true);
-            goalField.setDisable(true);
+            goalField.setDisable(false);
             headField.setDisable(true);
             commentsField.setDisable(false);
 
