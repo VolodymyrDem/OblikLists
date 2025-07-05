@@ -1744,6 +1744,9 @@ public class DocumentsManager {
                     Inside.setBorderBottom(BorderStyle.THIN);
                     Inside.setBorderTop(BorderStyle.THIN);
 
+
+
+
                     CellStyle InsideBot = workbook.createCellStyle();
                     InsideBot.setBorderLeft(BorderStyle.THIN);
                     InsideBot.setBorderRight(BorderStyle.THIN);
@@ -1754,6 +1757,24 @@ public class DocumentsManager {
                     Top.setBorderTop(BorderStyle.THICK);
 
                     CreationHelper createHelper = workbook.getCreationHelper();
+                    short formatWithComma = createHelper.createDataFormat().getFormat("#,##0.00");
+
+                    CellStyle InsideWithDecimal = workbook.createCellStyle();
+                    InsideWithDecimal.cloneStyleFrom(Inside);
+                    InsideWithDecimal.setDataFormat(formatWithComma);
+
+                    CellStyle InsideBotWithDecimal = workbook.createCellStyle();
+                    InsideBotWithDecimal.cloneStyleFrom(InsideBot);
+                    InsideBotWithDecimal.setDataFormat(formatWithComma);
+
+                    CellStyle rightInsideWithDecimal = workbook.createCellStyle();
+                    rightInsideWithDecimal.cloneStyleFrom(rightInside);
+                    rightInsideWithDecimal.setDataFormat(formatWithComma);
+
+                    CellStyle rightInsideBotWithDecimal = workbook.createCellStyle();
+                    rightInsideBotWithDecimal.cloneStyleFrom(rightInsideBot);
+                    rightInsideBotWithDecimal.setDataFormat(formatWithComma);
+
 
                     CellStyle dateCellInsideStyle = workbook.createCellStyle();
                     dateCellInsideStyle.setDataFormat(createHelper.createDataFormat().getFormat("dd.MM.yyyy"));
@@ -1846,8 +1867,8 @@ public class DocumentsManager {
                         allMilaege+=usage.getMileage();
 
                         currentCell = currentRow.createCell(5);
-                        currentCell.setCellValue(String.valueOf(new BigDecimal(usage.getFuelFact()).setScale(2, RoundingMode.DOWN)));
-                        currentCell.setCellStyle(Inside);
+                        currentCell.setCellValue(usage.getFuelFact());
+                        currentCell.setCellStyle(InsideWithDecimal);
                         allFactUsage+=usage.getFuelFact();
 
                         currentCell = currentRow.createCell(6);
@@ -1856,13 +1877,25 @@ public class DocumentsManager {
                         allNormUsage+=usage.getFuelNorm();
 
                         currentCell = currentRow.createCell(7);
-                        currentCell.setCellValue((usage.getOverUse() == null)?"": String.valueOf(new BigDecimal(usage.getOverUse()).setScale(2, RoundingMode.DOWN)));
-                        currentCell.setCellStyle(Inside);
+                        if (usage.getOverUse() == null)
+                        {
+                            currentCell.setCellValue("");
+                            currentCell.setCellStyle(Inside);
+                        } else {
+                            currentCell.setCellValue(usage.getOverUse());
+                            currentCell.setCellStyle(InsideWithDecimal);
+                        }
                         allOverUse+=(usage.getOverUse() == null)?0:usage.getOverUse();
 
                         currentCell = currentRow.createCell(8);
-                        currentCell.setCellValue((usage.getUnderUse() == null)? "":String.valueOf(new BigDecimal(usage.getUnderUse()).setScale(2, RoundingMode.DOWN)));
-                        currentCell.setCellStyle(rightInside);
+                        if (usage.getUnderUse() == null)
+                        {
+                            currentCell.setCellValue("");
+                            currentCell.setCellStyle(rightInside);
+                        } else {
+                            currentCell.setCellValue(usage.getUnderUse());
+                            currentCell.setCellStyle(rightInsideWithDecimal);
+                        }
                         allUnderUse+=(usage.getUnderUse() == null)?0:usage.getUnderUse();
 
                         rowIndex++;

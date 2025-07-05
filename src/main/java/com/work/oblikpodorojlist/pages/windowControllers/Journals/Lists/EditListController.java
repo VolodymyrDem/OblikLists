@@ -296,43 +296,17 @@ public class EditListController extends WindowController {
                         newList.setNumber(Integer.parseInt(numberField.getText()));
 
                         if(dbManager.getUsername().equals("root")) {
-                            if(selectedList.getEndMileage() != Double.parseDouble(endMileageField.getText())) {
-                                newList.setEndMileage(Double.parseDouble(endMileageField.getText()));
-                            }
-                            if(selectedList.getEndFuel() != Double.parseDouble(endFuelField.getText())) {
-                                newList.setEndFuel(Double.parseDouble(endFuelField.getText()));
-                            }
-                            if(selectedList.getRefuel() != Double.parseDouble(refuelField.getText())) {
-                                newList.setRefuel(Double.parseDouble(refuelField.getText()));
-                            }
-                        }
-
-                        if(dbManager.getUsername().equals("root")) {
-                            if(selectedList.getEndFuel() != Double.parseDouble(endFuelField.getText())) {
-                                newList.setEndFuel(Double.parseDouble(endFuelField.getText()));
-                            } else {
-                                newList.setEndFuel(selectedList.getEndFuel());
-                            }
-                            if(selectedList.getEndMileage() != Double.parseDouble(endMileageField.getText())) {
-                                newList.setEndMileage(Double.parseDouble(endMileageField.getText()));
-                            } else {
-                                newList.setEndMileage(selectedList.getEndMileage());
-                            }
-                            if(selectedList.getRefuel() != Double.parseDouble(refuelField.getText())) {
-                                newList.setRefuel(Double.parseDouble(refuelField.getText()));
-                            } else {
-                                newList.setRefuel(selectedList.getRefuel());
-                            }
-                            if(selectedList.getStartFuel() != Double.parseDouble(startFuelField.getText())) {
-                                newList.setStartFuel(Double.parseDouble(startFuelField.getText()));
-                            } else {
-                                newList.setStartFuel(selectedList.getStartFuel());
-                            }
-                            if(selectedList.getStartMileage() != Double.parseDouble(startMileageField.getText())) {
-                                newList.setStartMileage(Double.parseDouble(startMileageField.getText()));
-                            } else {
-                                newList.setStartMileage(selectedList.getStartMileage());
-                            }
+                            newList.setEndMileage(Double.parseDouble(endMileageField.getText()));
+                            newList.setEndFuel(Double.parseDouble(endFuelField.getText()));
+                            newList.setRefuel(Double.parseDouble(refuelField.getText()));
+                            newList.setStartFuel(Double.parseDouble(startFuelField.getText()));
+                            newList.setStartMileage(Double.parseDouble(startMileageField.getText()));
+                        } else {
+                            newList.setEndFuel(selectedList.getEndFuel());
+                            newList.setEndMileage(selectedList.getEndMileage());
+                            newList.setRefuel(selectedList.getRefuel());
+                            newList.setStartFuel(selectedList.getStartFuel());
+                            newList.setStartMileage(selectedList.getStartMileage());
                         }
 
                         Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Редагувати лист");
