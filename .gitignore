@@ -9,9 +9,15 @@
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
+*.sql
+
+out/
+backups/
+DocFiles/
 
 # Package Files #
 *.jar
+*.exe
 *.war
 *.nar
 *.ear
