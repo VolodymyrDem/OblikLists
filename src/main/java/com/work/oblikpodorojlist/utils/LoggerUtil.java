@@ -1,4 +1,4 @@
-package com.work.oblikpodorojlist.managers;
+package com.work.oblikpodorojlist.utils;
 
 import java.io.IOException;
 import java.util.logging.*;

@@ -1,16 +1,11 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.utils.DocumentsUtil;
+import com.work.oblikpodorojlist.utils.IconsUtil;
 import com.work.oblikpodorojlist.model._List;
-import com.work.oblikpodorojlist.model._Order;
-import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.AddOrderController;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.EditOrderController;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.OrdersJournalController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -37,8 +32,8 @@ public class ListsJournalController extends WindowController {
     private ObservableList<_List> lists = FXCollections.observableArrayList();
     private MainPage mainPage;
     private List<String> numbersGL;
-    private DBManager dbManager;
-    private DocumentsManager documentsManager;
+    private DBUtil dbUtil;
+    private DocumentsUtil documentsUtil;
     private CheckComboBox<String> carField = new CheckComboBox<>();
     private List<String> validCars = new ArrayList<>();
     private AddListController addListController;
@@ -64,31 +59,31 @@ public class ListsJournalController extends WindowController {
             addListController = new AddListController();
             editListController = new EditListController();
             closeListController = new CloseListController();
-            documentsManager = DocumentsManager.getInstance();
-            dbManager = DBManager.getInstance();
+            documentsUtil = DocumentsUtil.getInstance();
+            dbUtil = DBUtil.getInstance();
 
             Button addButton = new Button("Додати лист");
-            addButton.setGraphic(IconsManager.getPlusIcon());
+            addButton.setGraphic(IconsUtil.getPlusIcon());
             addButton.setOnAction(e -> addListController.openWindow(this));
 
-            validCars = dbManager.getUniqueCarsNumbers();
+            validCars = dbUtil.getUniqueCarsNumbers();
 
             for(String d  : validCars) {
                 carField.getItems().add(d);
             }
 
             Button editButton = new Button("Редагувати лист");
-            editButton.setGraphic(IconsManager.getPencilIcon());
+            editButton.setGraphic(IconsUtil.getPencilIcon());
 
             Button updateButton = new Button();
             updateButton.getStyleClass().add("grey-button");
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
 
             Button openFolderButton = new Button("Відкрити папку");
-            openFolderButton.setGraphic(IconsManager.getFolderIcon());
+            openFolderButton.setGraphic(IconsUtil.getFolderIcon());
             openFolderButton.getStyleClass().add("grey-button");
             openFolderButton.setOnAction(e -> {
-                openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[4] + "\\");
+                openFolder(documentsUtil.getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + documentsUtil.getFolders()[4] + "\\");
             });
 
             pagination = new Pagination(1, 0);
@@ -102,11 +97,11 @@ public class ListsJournalController extends WindowController {
             editButton.setDisable(true);
 
             Button removeButton = new Button("Закрити лист");
-            removeButton.setGraphic(IconsManager.getTikIcon());
+            removeButton.setGraphic(IconsUtil.getTikIcon());
             removeButton.setDisable(true);
 
             Button deleteButton = new Button("Позначити лист на видалення");
-            deleteButton.setGraphic(IconsManager.getRubbishIcon());
+            deleteButton.setGraphic(IconsUtil.getRubbishIcon());
             deleteButton.setDisable(true);
 
             deleteButton.getStyleClass().add("red-button");
@@ -114,7 +109,7 @@ public class ListsJournalController extends WindowController {
             editButton.getStyleClass().add("yellow-button");
             removeButton.getStyleClass().add("green-button");
             Button openFileButton = new Button("Перегляд листа");
-            openFileButton.setGraphic(IconsManager.getFileIcon());
+            openFileButton.setGraphic(IconsUtil.getFileIcon());
             openFileButton.getStyleClass().add("grey-button");
             openFileButton.setDisable(true);
 
@@ -129,7 +124,7 @@ public class ListsJournalController extends WindowController {
 
             TableColumn<_List, String> workerCol = new TableColumn<>("ПІБ працівник");
             workerCol.setCellValueFactory(cellData -> {
-                String Name = dbManager.getWorkerName(true, cellData.getValue().getIdWorker());
+                String Name = dbUtil.getWorkerName(true, cellData.getValue().getIdWorker());
                 return new SimpleStringProperty(Name);
             });
 
@@ -164,7 +159,7 @@ public class ListsJournalController extends WindowController {
             TableColumn<_List, String> CarNumberCol = new TableColumn<>("Номер авто");
             CarNumberCol.setCellValueFactory(cellData -> {
                 int orderNumber = cellData.getValue().getIdCar();
-                return new SimpleStringProperty(dbManager.getCarNumber(orderNumber));
+                return new SimpleStringProperty(dbUtil.getCarNumber(orderNumber));
             });
 
             TableColumn<_List, String> orderCol = new TableColumn<>("№ наказу");
@@ -173,7 +168,7 @@ public class ListsJournalController extends WindowController {
                 if (idOrder == -1) {
                     return new SimpleStringProperty("по місту");
                 }
-                return new SimpleStringProperty(dbManager.getOrderNumber(idOrder));
+                return new SimpleStringProperty(dbUtil.getOrderNumber(idOrder));
             });
 
             TableColumn<_List, String> routeCol = new TableColumn<>("маршрут");
@@ -226,15 +221,15 @@ public class ListsJournalController extends WindowController {
 
 
             tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-                editButton.setDisable(newSelection == null || (newSelection.isDone() && !dbManager.getUsername().equals("root")));
+                editButton.setDisable(newSelection == null || (newSelection.isDone() && !dbUtil.getUsername().equals("root")));
                 removeButton.setDisable(newSelection == null || newSelection.isDone());
                 openFileButton.setDisable(newSelection == null);
-                deleteButton.setDisable(!(newSelection != null && dbManager.getUsername().equals("root")));
+                deleteButton.setDisable(!(newSelection != null && dbUtil.getUsername().equals("root")));
             });
 
             editButton.setOnAction(e -> {
                 _List selectedList = tableView.getSelectionModel().getSelectedItem();
-                if (selectedList != null && ( !selectedList.isDone() || dbManager.getUsername().equals("root")) ) {
+                if (selectedList != null && ( !selectedList.isDone() || dbUtil.getUsername().equals("root")) ) {
                     editListController.openWindow(selectedList);
                 }
             });
@@ -249,7 +244,7 @@ public class ListsJournalController extends WindowController {
             openFileButton.setOnAction(e -> {
                 _List selectedList = tableView.getSelectionModel().getSelectedItem();
                 if (selectedList != null) {
-                    documentsManager.createList(dbManager, selectedList);
+                    documentsUtil.createList(dbUtil, selectedList);
                 }
             });
 
@@ -275,7 +270,7 @@ public class ListsJournalController extends WindowController {
                 MenuItem editItem = new MenuItem("Редагувати");
                 editItem.setOnAction(event -> {
                     _List selectedList = row.getItem();
-                    if (selectedList != null && ( !selectedList.isDone() || dbManager.getUsername().equals("root"))) {
+                    if (selectedList != null && ( !selectedList.isDone() || dbUtil.getUsername().equals("root"))) {
                         editListController.openWindow(selectedList);
                     }
                 });
@@ -290,11 +285,11 @@ public class ListsJournalController extends WindowController {
 
 
                 MenuItem openItem = new MenuItem("Переглянути лист");
-                openItem.setGraphic(IconsManager.getFileIcon());
+                openItem.setGraphic(IconsUtil.getFileIcon());
                 openItem.setOnAction(event -> {
                     _List selectedList = row.getItem();
                     if (selectedList != null) {
-                        documentsManager.createList(dbManager, selectedList);
+                        documentsUtil.createList(dbUtil, selectedList);
                     }
                 });
 
@@ -302,7 +297,7 @@ public class ListsJournalController extends WindowController {
                     if (event.getClickCount() == 2 && !row.isEmpty()) {
                         _List selectedList = row.getItem();
                         if (selectedList != null) {
-                            documentsManager.createList(dbManager, selectedList);
+                            documentsUtil.createList(dbUtil, selectedList);
                         }
                     }
                 });
@@ -327,15 +322,15 @@ public class ListsJournalController extends WindowController {
             });
             tableView.scrollTo(tableView.getItems().size() - 1);
 
-            if(dbManager.getUsername().equals("root")) {
+            if(dbUtil.getUsername().equals("root")) {
                 deleteButton.setText("Видалити лист");
                 deleteButton.setOnAction(e->{
                     _List selectedList = tableView.getSelectionModel().getSelectedItem();
                     if (selectedList != null) {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Видалити лист");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Видалити лист");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.deleteList(selectedList);
+                                dbUtil.deleteList(selectedList);
                                 updateValues();
                             }
                         });
@@ -405,7 +400,7 @@ public class ListsJournalController extends WindowController {
                             .collect(Collectors.toList());
                 }
 
-                List<_List> newLists = dbManager.getListsForCars(numbersGL);
+                List<_List> newLists = dbUtil.getListsForCars(numbersGL);
                 Platform.runLater(() -> {
                     newLists.sort(Comparator.comparing(_List::getNumber));
                     lists.setAll(newLists);

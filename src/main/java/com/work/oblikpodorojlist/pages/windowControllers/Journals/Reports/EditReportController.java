@@ -1,25 +1,20 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Reports;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.model._Order;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.model._Report;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class EditReportController extends WindowController {
     private MainPage mainPage;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
 
     public EditReportController(){}
 
@@ -33,13 +28,13 @@ public class EditReportController extends WindowController {
             }
         }
         else {
-            dbManager = DBManager.getInstance();
+            dbUtil = DBUtil.getInstance();
             GridPane grid = new GridPane();
 
             grid.setHgap(10);
             grid.setVgap(10);
 
-            TextField orderNumberField = new TextField(dbManager.getOrderNumber(selectedReport.getOrderId()));
+            TextField orderNumberField = new TextField(dbUtil.getOrderNumber(selectedReport.getOrderId()));
             DatePicker datePicker = new DatePicker(selectedReport.getDate());
             datePicker.setConverter(new StringConverter<LocalDate>() {
                 @Override
@@ -52,10 +47,10 @@ public class EditReportController extends WindowController {
                     return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
                 }
             });
-            TextField workerField = new TextField(dbManager.getOrderWorkerName(selectedReport.getOrderId()));
-            TextField positionField = new TextField(dbManager.getWorkerPosition(true, dbManager.getOrderIdWorker(selectedReport.getOrderId())));
-            TextArea goalField = new TextArea(dbManager.getOrderGoal(selectedReport.getOrderId()));
-            TextField headField = new TextField(dbManager.getOrderHead(selectedReport.getOrderId()));
+            TextField workerField = new TextField(dbUtil.getOrderWorkerName(selectedReport.getOrderId()));
+            TextField positionField = new TextField(dbUtil.getWorkerPosition(true, dbUtil.getOrderIdWorker(selectedReport.getOrderId())));
+            TextArea goalField = new TextArea(dbUtil.getOrderGoal(selectedReport.getOrderId()));
+            TextField headField = new TextField(dbUtil.getOrderHead(selectedReport.getOrderId()));
             TextArea  commentsField = new TextArea (selectedReport.getComments());
             commentsField.setPrefRowCount(3);
             commentsField.setWrapText(true);
@@ -63,7 +58,7 @@ public class EditReportController extends WindowController {
             goalField.setWrapText(true);
 
             orderNumberField.setDisable(true);
-            datePicker.setDisable(true);
+            datePicker.setDisable(false);
             workerField.setDisable(true);
             positionField.setDisable(true);
             goalField.setDisable(false);
@@ -94,10 +89,11 @@ public class EditReportController extends WindowController {
 
             saveButton.setOnAction(e ->{
                 selectedReport.setComments(commentsField.getText());
-                Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Редагувати звіт");
+                selectedReport.setDate(datePicker.getValue());
+                Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Редагувати звіт");
                 confirmationAlert.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
-                        if(dbManager.changeReport(selectedReport)) {
+                        if(dbUtil.changeReport(selectedReport)) {
                             mainPage.closeInternalWindow(windowTitle);
                         }
                         controller.updateValues();

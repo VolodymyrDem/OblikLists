@@ -1,18 +1,14 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.model._Car;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.model._Company;
 import com.work.oblikpodorojlist.model._Order;
 import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;
-import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.AddCarController;
-import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.CarsHandbookController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -23,7 +19,7 @@ import java.util.Map;
 
 public class AddOrderController extends WindowController {
     private MainPage mainPage ;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
 
     public AddOrderController(){}
 
@@ -37,7 +33,7 @@ public class AddOrderController extends WindowController {
             }
         }
         else {
-            dbManager = DBManager.getInstance();
+            dbUtil = DBUtil.getInstance();
             GridPane grid = new GridPane();
 
             grid.setHgap(10);
@@ -57,8 +53,15 @@ public class AddOrderController extends WindowController {
             });
             datePickerOrderDate.setValue(LocalDate.now());
             TextField orderNumberField = new TextField();
+            orderNumberField.setText(dbUtil.getNextOrderNumber(datePickerOrderDate.getValue()));
 
-            List<_Worker> validWorkers = dbManager.getValidWorkers();
+            datePickerOrderDate.valueProperty().addListener((obs, oldV, newV) -> {
+                if(newV != null) {
+                    orderNumberField.setText(dbUtil.getNextOrderNumber(newV));
+                }
+            });
+
+            List<_Worker> validWorkers = dbUtil.getValidWorkers();
 
             ComboBox<String> worker = new ComboBox<>();
             Map<String, Integer> workersT = new HashMap<>();
@@ -75,7 +78,7 @@ public class AddOrderController extends WindowController {
             worker.setOnAction(e -> {
                 String selectedWorker = worker.getValue();
                 if (selectedWorker != null) {
-                    positionField.setText(dbManager.getWorkerPosition(true, workersT.get(selectedWorker)));
+                    positionField.setText(dbUtil.getWorkerPosition(true, workersT.get(selectedWorker)));
                 }
             });
 
@@ -104,8 +107,10 @@ public class AddOrderController extends WindowController {
                     return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
                 }
             });
-            TextField routeField = new TextField();
-            TextField moneyField = new TextField();
+            TextArea routeField = new TextArea();
+            routeField.setWrapText(true); // перенос слів
+            routeField.setPrefRowCount(4);
+                        TextField moneyField = new TextField();
             TextField goalField = new TextField();
 
             ComboBox<String> headType = new ComboBox<>();
@@ -117,7 +122,7 @@ public class AddOrderController extends WindowController {
             headType.setOnAction(e -> {
                 String selectedOption = headType.getValue();
                 if (selectedOption == "директор") {
-                    _Company _company = dbManager.getCompanyInfo();
+                    _Company _company = dbUtil.getCompanyInfo();
                     headField.setText(_company.getCeo());
                     headField.setDisable(true);
                 }
@@ -128,7 +133,7 @@ public class AddOrderController extends WindowController {
             });
 
             if(selectedOrder != null) {
-                _Company _company = dbManager.getCompanyInfo();
+                _Company _company = dbUtil.getCompanyInfo();
                 datePickerOrderDate.setValue(selectedOrder.getOrderDate());
                 datePickerStart.setValue(selectedOrder.getStartDate());
                 datePickerEnd.setValue(selectedOrder.getEndDate());
@@ -176,7 +181,7 @@ public class AddOrderController extends WindowController {
                         worker.getValue() == null || datePickerStart.getValue() == null ||
                         datePickerEnd.getValue() == null || isEmptyOrWhitespace(moneyField.getText()) || isEmptyOrWhitespace(routeField.getText()) ||
                         isEmptyOrWhitespace(goalField.getText())) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
@@ -193,17 +198,17 @@ public class AddOrderController extends WindowController {
                                 headField.getText()
                         );
 
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Додати наказ");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Додати наказ");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                if(dbManager.addOrder(newOrder)) {
+                                if(dbUtil.addOrder(newOrder)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
                                 controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }

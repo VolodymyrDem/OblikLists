@@ -1,13 +1,6 @@
 package com.work.oblikpodorojlist.pages;
 
-import java.awt.Desktop;
-
-import com.work.oblikpodorojlist.MonthYearSpinnerValueFactory;
-import com.work.oblikpodorojlist.QuarterYearSpinnerValueFactory;
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
+import com.work.oblikpodorojlist.utils.*;
 import com.work.oblikpodorojlist.model.*;
 import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.CarsHandbookController;
 import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Positions.PositionsHandbookController;
@@ -18,35 +11,20 @@ import com.work.oblikpodorojlist.pages.windowControllers.Journals.Reports.Report
 import com.work.oblikpodorojlist.pages.windowControllers.Registers.Fuel.FuelRegisterController;
 import com.work.oblikpodorojlist.pages.windowControllers.Registers.Lists.ListsRegisterController;
 import com.work.oblikpodorojlist.pages.windowControllers.Registers.Orders.OrdersRegisterController;
-import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.event.EventHandler;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import javafx.collections.ObservableList;
-import javafx.util.StringConverter;
-import org.controlsfx.control.CheckComboBox;
 import javafx.stage.WindowEvent;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.DecimalFormat;
-import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.logging.Logger;
 
 public class MainPage {
     private static MainPage instance;
@@ -56,24 +34,11 @@ public class MainPage {
     public Map<String, StackPane> openWindows = new HashMap<>();
     private static final int RESIZE_MARGIN = 5;
     private StackPane maximizedWindow = null;
-    private DBManager dbManager;
-    private ObservableList<_Order> filteredOrders;
-    private ObservableList<FuelUsage> FilteredFuelUsage = FXCollections.observableArrayList();
-    private ObservableList<_List> FilteredLists = FXCollections.observableArrayList();
-    private PeriodParameters parametersOrders = new PeriodParameters();
-    private PeriodParameters parametersLists = new PeriodParameters();
-    private PeriodParameters parametersFuelUsage = new PeriodParameters();
-    DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-    DocumentsManager dM = DocumentsManager.getInstance();
-    List<String> numbersG;
+    private DBUtil dbUtil;
+    DocumentsUtil dM = DocumentsUtil.getInstance();
     private static final String LIGHT_THEME = "/css/styleWhite.css";
     private static final String DARK_THEME = "/css/styleDark.css";
-
-
-    private DatePicker datePickerStartGL = new DatePicker();
-    private DatePicker datePickerEndGL = new DatePicker();
-    private DatePicker datePickerStartOR = new DatePicker();
-    private DatePicker datePickerEndOR = new DatePicker();
+    private static final Logger logger = LoggerUtil.getLogger();
 
     private MainPage(){}
 
@@ -94,15 +59,15 @@ public class MainPage {
     }
 
     public void StartMainPage(Stage primaryStage) {
-
-        dbManager = DBManager.getInstance();
-        dbManager.deleteOldBackups();
-        dM.createFolders(dbManager.getCompany());
+        dbUtil = DBUtil.getInstance();
+        dbUtil.deleteOldBackups();
+        dbUtil.Migrate();
+        dM.createFolders(dbUtil.getCompany());
         VBox root = new VBox();
         Scene scene = new Scene(root, 500, 400);
 
-        String _companyName = dbManager.getCompany();
-        String _username = dbManager.getUsername();
+        String _companyName = dbUtil.getCompany();
+        String _username = dbUtil.getUsername();
 
         MenuBar menuBar = new MenuBar();
         switchTheme(scene, LIGHT_THEME);
@@ -128,11 +93,11 @@ public class MainPage {
             primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
                 @Override
                 public void handle(WindowEvent event) {}});
-            Alert al= Alerts.ConfirmAlert("Створити резервну копію?","Підвердіть створення резервної копії");
+            Alert al= AlertsUtil.ConfirmAlert("Створити резервну копію?","Підвердіть створення резервної копії");
             al.showAndWait().ifPresent(response -> {
                 if (response == ButtonType.OK) {
-                    dbManager.createBackup();
-                    dbManager.deleteOldBackups();
+                    dbUtil.createBackup();
+                    dbUtil.deleteOldBackups();
                 }
             });
             CompanyPage cp = new CompanyPage();
@@ -177,7 +142,7 @@ public class MainPage {
 
         menuBar.getMenus().addAll(handbookMenu, JournalMenu, RegisterMenu);
 
-        if(dbManager.getUsername().equals("root")) {
+        if(dbUtil.getUsername().equals("root")) {
             Menu adminTools = new Menu("Адміністрування");
 
             MenuItem createCompany = new MenuItem("Додати компанію");
@@ -197,10 +162,10 @@ public class MainPage {
 
             MenuItem deleteCompany = new MenuItem("Видалити компанію");
             deleteCompany.setOnAction(e->{
-                Alert a = Alerts.ConfirmAlert("Підтеврдіть операцію", "Видалити компанію");
+                Alert a = AlertsUtil.ConfirmAlert("Підтеврдіть операцію", "Видалити компанію");
                 a.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
-                        dbManager.deleteCompany(_companyName);
+                        dbUtil.deleteCompany(_companyName);
                         CompanyPage cp = new CompanyPage();
                         instance = null;
                         cp.start(primaryStage);
@@ -211,18 +176,18 @@ public class MainPage {
 
             MenuItem updateGuestUser = new MenuItem("Оновити гостьового користувача");
             updateGuestUser.setOnAction(e->{
-                dbManager.CreateGuestUser();
+                dbUtil.CreateGuestUser();
             });
 
             MenuItem createBackup = new MenuItem("Створити резервну копію");
             createBackup.setOnAction(e->{
-                dbManager.createBackup();
-                dbManager.deleteOldBackups();
+                dbUtil.createBackup();
+                dbUtil.deleteOldBackups();
             });
 
             MenuItem loadBackup = new MenuItem("Завантажити резервну копію");
             loadBackup.setOnAction(e->{
-                dbManager.loadBackup();
+                dbUtil.loadBackup();
             });
 
             MenuItem changeHost = new MenuItem("Редагувати адресу бази даних");
@@ -247,18 +212,18 @@ public class MainPage {
 
         primaryStage.setScene(scene);
         primaryStage.setMaximized(true);
-        primaryStage.setTitle(dbManager.getCompanyInfo().getName() + ": " + _username);
+        primaryStage.setTitle(dbUtil.getCompanyInfo().getName() + ": " + _username);
         primaryStage.show();
         resizeWorkspace(primaryStage);
 
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
-                Alert al= Alerts.ConfirmAlert("Створити резервну копію?","Підвердіть створення резервної копії");
+                Alert al= AlertsUtil.ConfirmAlert("Створити резервну копію?","Підвердіть створення резервної копії");
                 al.showAndWait().ifPresent(response -> {
                     if (response == ButtonType.OK) {
-                        dbManager.createBackup();
-                        dbManager.deleteOldBackups();
+                        dbUtil.createBackup();
+                        dbUtil.deleteOldBackups();
                     }
                 });
             }
@@ -299,14 +264,14 @@ public class MainPage {
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText())) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Редагувати хост");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Редагувати хост");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.setHost(nameField.getText());
+                                dbUtil.setHost(nameField.getText());
                                 workspace.getChildren().remove(internalWindow);
                                 openWindows.remove(windowTitle);
                                 updateNavigationBar();
@@ -314,7 +279,7 @@ public class MainPage {
                         });
 
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }
@@ -353,14 +318,14 @@ public class MainPage {
 
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText())) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Додати користувача");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Додати користувача");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.createUser(nameField.getText(), passwordField.getText());
+                                dbUtil.createUser(nameField.getText(), passwordField.getText());
                                 workspace.getChildren().remove(internalWindow);
                                 openWindows.remove(windowTitle);
                                 updateNavigationBar();
@@ -368,7 +333,7 @@ public class MainPage {
                         });
 
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }
@@ -420,14 +385,14 @@ public class MainPage {
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText()) || isEmptyOrWhitespace(addressField.getText()) || isEmptyOrWhitespace(codeField.getText()) || isEmptyOrWhitespace(ceoField.getText()) ||
                         isEmptyOrWhitespace(accountantField.getText()) || isEmptyOrWhitespace(typeFullField.getText()) || isEmptyOrWhitespace(typeShortField.getText())) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Додати компанію");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Додати компанію");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.createCompany(nameField.getText(),addressField.getText(), codeField.getText(), ceoField.getText(), accountantField.getText(), typeFullField.getText(), typeShortField.getText());
+                                dbUtil.createCompany(nameField.getText(),addressField.getText(), codeField.getText(), ceoField.getText(), accountantField.getText(), typeFullField.getText(), typeShortField.getText());
                                 workspace.getChildren().remove(internalWindow);
                                 openWindows.remove(windowTitle);
                                 updateNavigationBar();
@@ -435,7 +400,7 @@ public class MainPage {
                         });
 
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }
@@ -456,7 +421,7 @@ public class MainPage {
             grid.setHgap(10);
             grid.setVgap(10);
 
-            _Company comm = dbManager.getCompanyInfo();
+            _Company comm = dbUtil.getCompanyInfo();
 
 
             TextField nameField = new TextField(comm.getName());
@@ -493,14 +458,14 @@ public class MainPage {
             saveButton.setOnAction(e ->{
                 if ( isEmptyOrWhitespace(nameField.getText()) || isEmptyOrWhitespace(addressField.getText()) || isEmptyOrWhitespace(ceoField.getText()) ||
                         isEmptyOrWhitespace(accountantField.getText()) || isEmptyOrWhitespace(typeFullField.getText()) || isEmptyOrWhitespace(typeShortField.getText())) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Редагувати компанію");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Редагувати компанію");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.changeParametersCompany(nameField.getText(),addressField.getText(), Integer.parseInt(codeField.getText()), ceoField.getText(), accountantField.getText(), typeFullField.getText(), typeShortField.getText());
+                                dbUtil.changeParametersCompany(nameField.getText(),addressField.getText(), Integer.parseInt(codeField.getText()), ceoField.getText(), accountantField.getText(), typeFullField.getText(), typeShortField.getText());
                                 workspace.getChildren().remove(internalWindow);
                                 openWindows.remove(windowTitle);
                                 updateNavigationBar();
@@ -508,7 +473,7 @@ public class MainPage {
                         });
 
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }
@@ -527,21 +492,21 @@ public class MainPage {
         }
         else {
             Button addButton = new Button("Додати користувача");
-            addButton.setGraphic(IconsManager.getPlusIcon());
+            addButton.setGraphic(IconsUtil.getPlusIcon());
 
 
             Button editPasswordButton = new Button("Редагувати пароль");
-            editPasswordButton.setGraphic(IconsManager.getPencilIcon());
+            editPasswordButton.setGraphic(IconsUtil.getPencilIcon());
             editPasswordButton.setDisable(true);
 
 
             Button removeButton = new Button("Видалити користувача");
-            removeButton.setGraphic(IconsManager.getRubbishIcon());
+            removeButton.setGraphic(IconsUtil.getRubbishIcon());
             removeButton.setDisable(true);
 
             Button updateButton = new Button();
             updateButton.getStyleClass().add("grey-button");
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
 
 
             addButton.getStyleClass().add("green-button");
@@ -550,7 +515,7 @@ public class MainPage {
 
 
             ListView<String> tableView = new ListView<>();
-            tableView.getItems().addAll(dbManager.getUsers());
+            tableView.getItems().addAll(dbUtil.getUsers());
 
 
             tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -561,12 +526,12 @@ public class MainPage {
             addButton.setOnAction(e -> {
                 openAddUserWindow();
                 tableView.getItems().clear();
-                tableView.getItems().addAll(dbManager.getUsers());
+                tableView.getItems().addAll(dbUtil.getUsers());
             });
 
             updateButton.setOnAction(e->{
                 tableView.getItems().clear();
-                tableView.getItems().addAll(dbManager.getUsers());
+                tableView.getItems().addAll(dbUtil.getUsers());
             });
 
             editPasswordButton.setOnAction(e -> {
@@ -574,19 +539,19 @@ public class MainPage {
                 if (selectedUser != null ) {
                     openEditPasswordWindow(selectedUser);
                     tableView.getItems().clear();
-                    tableView.getItems().addAll(dbManager.getUsers());
+                    tableView.getItems().addAll(dbUtil.getUsers());
                 }
             });
 
             removeButton.setOnAction(e -> {
                 String selectedUser = tableView.getSelectionModel().getSelectedItem();
                 if (selectedUser != null) {
-                    Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Видалити користувача");
+                    Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Видалити користувача");
                     confirmationAlert.showAndWait().ifPresent(response -> {
                         if (response == ButtonType.OK) {
-                            dbManager.deleteUser(selectedUser);
+                            dbUtil.deleteUser(selectedUser);
                             tableView.getItems().clear();
-                            tableView.getItems().addAll(dbManager.getUsers());
+                            tableView.getItems().addAll(dbUtil.getUsers());
                         }
                     });
                 }
@@ -636,11 +601,11 @@ public class MainPage {
 
             saveButton.setOnAction(e ->{
                     try {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Змінити пароль користувача");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Змінити пароль користувача");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.deleteUser(SelectedUser);
-                                dbManager.createUser(SelectedUser, passworField.getText());
+                                dbUtil.deleteUser(SelectedUser);
+                                dbUtil.createUser(SelectedUser, passworField.getText());
 
                                 workspace.getChildren().remove(internalWindow);
                                 openWindows.remove(windowTitle);
@@ -649,7 +614,7 @@ public class MainPage {
                         });
 
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
             });
@@ -736,11 +701,11 @@ public class MainPage {
         headerBar.getStyleClass().add("header");
 
         Button minimizeButton = new Button();
-        minimizeButton.setGraphic(IconsManager.getHideWindowIcon());
+        minimizeButton.setGraphic(IconsUtil.getHideWindowIcon());
         Button maximizeButton = new Button();
-        maximizeButton.setGraphic(IconsManager.getMaxWindowIcon());
+        maximizeButton.setGraphic(IconsUtil.getMaxWindowIcon());
         Button closeButton = new Button();
-        closeButton.setGraphic(IconsManager.getCloseWindowIcon());
+        closeButton.setGraphic(IconsUtil.getCloseWindowIcon());
         minimizeButton.setMaxHeight(25);
         minimizeButton.setMinHeight(25);
         maximizeButton.setMaxHeight(25);
@@ -947,7 +912,6 @@ public class MainPage {
     }
 
     private void updateNavigationBar() {
-        System.out.println(openWindows.keySet());
         navigationBar.getChildren().clear();
         for (String windowTitle : openWindows.keySet()) {
             Button windowButton = new Button(windowTitle);
@@ -957,9 +921,22 @@ public class MainPage {
                     window.setVisible(true);
                     window.toFront();
                 }
+
             });
             navigationBar.getChildren().add(windowButton);
         }
     }
+
+    public boolean checkOpenWindow(String windowTitle) {
+        if(openWindows.containsKey(windowTitle)) {
+            openWindows.get(windowTitle).toFront();
+            if(!openWindows.get(windowTitle).isVisible()){
+                openWindows.get(windowTitle).setVisible(true);
+            }
+            return true;
+        }
+        return false;
+    }
+
 
 }

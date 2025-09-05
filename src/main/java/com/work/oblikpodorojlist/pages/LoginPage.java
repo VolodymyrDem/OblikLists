@@ -1,7 +1,7 @@
 package com.work.oblikpodorojlist.pages;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -14,9 +14,9 @@ public class LoginPage {
     private String selectedCompany;
     private String selectedUsername;
     public void StartLoginPage(Stage loginStage) {
-        DBManager dbManager = DBManager.getInstance();
-        selectedCompany = dbManager.getCompany();
-        selectedUsername = dbManager.getUsername();
+        DBUtil dbUtil = DBUtil.getInstance();
+        selectedCompany = dbUtil.getCompany();
+        selectedUsername = dbUtil.getUsername();
 
         loginStage.setTitle(selectedCompany+": Введіть пароль до користувача " + selectedUsername);
 
@@ -25,8 +25,8 @@ public class LoginPage {
 
         passwordField.setOnKeyPressed(event -> {
             if (event.getCode().equals(javafx.scene.input.KeyCode.ENTER)) {
-                dbManager.setPassword(passwordField.getText());
-                if(dbManager.tryConnection()) {
+                dbUtil.setPassword(passwordField.getText());
+                if(dbUtil.tryConnection()) {
                     MainPage mainPage = MainPage.getInstance();
                     mainPage.StartMainPage(loginStage);
                 }
@@ -38,14 +38,14 @@ public class LoginPage {
 
         Button loginButton = new Button("Увійти");
         loginButton.setOnAction(event -> {
-            dbManager.setPassword(passwordField.getText());
-            if(dbManager.tryConnection()) {
+            dbUtil.setPassword(passwordField.getText());
+            if(dbUtil.tryConnection()) {
                 Stage stage = (Stage) loginButton.getScene().getWindow();
                 MainPage mainPage = MainPage.getInstance();
                 mainPage.StartMainPage(stage);
             }
             else {
-                Alerts.ErrorAlert("Невірний пароль", "Перевірте правильність введеня даних").showAndWait();
+                AlertsUtil.ErrorAlert("Невірний пароль", "Перевірте правильність введеня даних").showAndWait();
                 StartLoginPage(loginStage);
             }
         });

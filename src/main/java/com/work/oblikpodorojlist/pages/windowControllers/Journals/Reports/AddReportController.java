@@ -1,15 +1,12 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Reports;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.model.*;
 import com.work.oblikpodorojlist.pages.MainPage;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists.AddListController;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists.ListsJournalController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -17,12 +14,11 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class AddReportController extends WindowController {
 
     private MainPage mainPage;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
 
     public AddReportController(){}
 
@@ -38,9 +34,9 @@ public class AddReportController extends WindowController {
             }
         }
         else {
-            dbManager = DBManager.getInstance();
+            dbUtil = DBUtil.getInstance();
 
-            List<_Order> validOrders = dbManager.getOpenOrders();
+            List<_Order> validOrders = dbUtil.getOpenOrders();
             Map<String, Integer> ordersT = new HashMap<>();
 
             GridPane grid = new GridPane();
@@ -72,26 +68,26 @@ public class AddReportController extends WindowController {
             goalField.setWrapText(true);
 
             for(_Order d  : validOrders) {
-                ordersT.put(d.getOrderNumber(), d.getIdOrder());
+                ordersT.put(d.getOrderNumber(), d.getId());
                 order.getItems().add(d.getOrderNumber());
             }
 
             if(idOrder != -1) {
-                order.setValue(dbManager.getOrderNumber(idOrder));
-                workerField.setText(dbManager.getOrderWorkerName(idOrder));
-                positionField.setText(dbManager.getWorkerPosition(true, dbManager.getOrderIdWorker(idOrder)));
-                goalField.setText(dbManager.getOrderGoal(idOrder));
-                headField.setText(dbManager.getOrderHead(idOrder));
+                order.setValue(dbUtil.getOrderNumber(idOrder));
+                workerField.setText(dbUtil.getOrderWorkerName(idOrder));
+                positionField.setText(dbUtil.getWorkerPosition(true, dbUtil.getOrderIdWorker(idOrder)));
+                goalField.setText(dbUtil.getOrderGoal(idOrder));
+                headField.setText(dbUtil.getOrderHead(idOrder));
             }
 
             order.setOnAction(e->{
                 String slectedOrder = order.getValue();
                 if(slectedOrder != null) {
                     int selectedORderID = ordersT.get(slectedOrder);
-                    workerField.setText(dbManager.getOrderWorkerName(selectedORderID));
-                    positionField.setText(dbManager.getWorkerPosition(true, dbManager.getOrderIdWorker(selectedORderID)));
-                    goalField.setText( dbManager.getOrderGoal(selectedORderID));
-                    headField.setText(dbManager.getOrderHead(selectedORderID));
+                    workerField.setText(dbUtil.getOrderWorkerName(selectedORderID));
+                    positionField.setText(dbUtil.getWorkerPosition(true, dbUtil.getOrderIdWorker(selectedORderID)));
+                    goalField.setText( dbUtil.getOrderGoal(selectedORderID));
+                    headField.setText(dbUtil.getOrderHead(selectedORderID));
                 }
             });
 
@@ -126,14 +122,14 @@ public class AddReportController extends WindowController {
 
             saveButton.setOnAction(e ->{
                 if ( order.getValue() == null) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
-                    Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Додати звіт");
+                    Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Додати звіт");
                     confirmationAlert.showAndWait().ifPresent(response -> {
                         if (response == ButtonType.OK) {
                             _Report rep = new _Report(ordersT.get(order.getValue()), commentsField.getText(), datePicker.getValue());
-                            if(dbManager.addReport(rep)) {
+                            if(dbUtil.addReport(rep)) {
                                 mainPage.closeInternalWindow(windowTitle);
                             }
                             if(controller != null) {

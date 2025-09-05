@@ -1,7 +1,7 @@
 package com.work.oblikpodorojlist.pages;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -13,12 +13,12 @@ import java.util.List;
 
 public class AccountPage {
     public void StartSelectAccountPage(Stage accountStage) {
-        DBManager dbManager = DBManager.getInstance();
-        String selectedCompany = dbManager.getCompany();
+        DBUtil dbUtil = DBUtil.getInstance();
+        String selectedCompany = dbUtil.getCompany();
 
         accountStage.setTitle("Оберіть користувача: " + selectedCompany);
 
-        List<String> users = dbManager.getUsers();
+        List<String> users = dbUtil.getUsers();
         users.add("Адміністратор");
         ListView<String> accountListView = new ListView<>();
         accountListView.getItems().addAll(users);
@@ -29,7 +29,7 @@ public class AccountPage {
                 if(selectedUsername.equals("Адміністратор")) {
                     selectedUsername="root";
                 }
-                dbManager.setUsername(selectedUsername);
+                dbUtil.setUsername(selectedUsername);
                 LoginPage nextPage = new LoginPage();
                 nextPage.StartLoginPage(accountStage);
             }
@@ -42,7 +42,7 @@ public class AccountPage {
                     if(selectedUsername.equals("Адміністратор")) {
                         selectedUsername="root";
                     }
-                    dbManager.setUsername(selectedUsername);
+                    dbUtil.setUsername(selectedUsername);
                     LoginPage nextPage = new LoginPage();
                     nextPage.StartLoginPage(accountStage);
                 }
@@ -59,13 +59,13 @@ public class AccountPage {
                 if(selectedUsername.equals("Адміністратор")) {
                     selectedUsername="root";
                 }
-                dbManager.setUsername(selectedUsername);
+                dbUtil.setUsername(selectedUsername);
                 Stage stage = (Stage) selectAccountButton.getScene().getWindow();
                 LoginPage nextPage = new LoginPage();
                 nextPage.StartLoginPage(stage);
 
             } else {
-                Alert a = Alerts.ErrorAlert("Не обраний користувач", "Оберіть користувача, щоб продовжити");
+                Alert a = AlertsUtil.ErrorAlert("Не обраний користувач", "Оберіть користувача, щоб продовжити");
                 a.showAndWait();
             }
         });

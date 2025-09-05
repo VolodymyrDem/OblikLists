@@ -1,7 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Lists;
 
-import com.work.oblikpodorojlist.managers.*;
-import com.work.oblikpodorojlist.model.PeriodParameters;
+import com.work.oblikpodorojlist.utils.*;
 import com.work.oblikpodorojlist.model._List;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -31,8 +30,8 @@ import java.util.stream.Collectors;
 
 public class ListsRegisterController extends WindowController {
     private MainPage mainPage;
-    private DBManager dbManager;
-    private DocumentsManager documentsManager;
+    private DBUtil dbUtil;
+    private DocumentsUtil documentsUtil;
     private CheckComboBox<String> carField = new CheckComboBox<>();
     private List<String> validCars = new ArrayList<>();
     private ListPeriodController listPeriodController;
@@ -62,10 +61,10 @@ public class ListsRegisterController extends WindowController {
         }
         else {
             listPeriodController = new ListPeriodController();
-            documentsManager = DocumentsManager.getInstance();
-            dbManager = DBManager.getInstance();
+            documentsUtil = DocumentsUtil.getInstance();
+            dbUtil = DBUtil.getInstance();
 
-            validCars = dbManager.getUniqueCarsNumbers();
+            validCars = dbUtil.getUniqueCarsNumbers();
 
             datePickerStart.setConverter(new StringConverter<LocalDate>() {
                 @Override
@@ -128,16 +127,16 @@ public class ListsRegisterController extends WindowController {
             Label timeLabel = new Label("Період: з ");
             Label timeLabel2 = new Label("по");
             Button filterButton = new Button("Застосувати фільтр");
-            filterButton.setGraphic(IconsManager.getFilterIcon());
+            filterButton.setGraphic(IconsUtil.getFilterIcon());
             Button saveButton = new Button("Зберегти реєстр");
-            saveButton.setGraphic(IconsManager.getTikIcon());
+            saveButton.setGraphic(IconsUtil.getTikIcon());
             saveButton.setDisable(true);
 
             Button openFolderButton = new Button("Відкрити папку");
-            openFolderButton.setGraphic(IconsManager.getFolderIcon());
+            openFolderButton.setGraphic(IconsUtil.getFolderIcon());
             openFolderButton.getStyleClass().add("grey-button");
             openFolderButton.setOnAction(e -> {
-                openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[7] + "\\");
+                openFolder(documentsUtil.getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + documentsUtil.getFolders()[7] + "\\");
             });
 
 
@@ -153,13 +152,13 @@ public class ListsRegisterController extends WindowController {
                 }
             });
 
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
 
             updateButton.setOnAction(e->{
                 updateValues();
             });
 
-            settingsButton.setGraphic(IconsManager.getClockIcon());
+            settingsButton.setGraphic(IconsUtil.getClockIcon());
 
             settingsButton.setOnAction(event -> {
                 updateButton.setDisable(true);
@@ -177,7 +176,7 @@ public class ListsRegisterController extends WindowController {
             filterButton.setOnAction(e -> {
                 if (datePickerStart.getValue() == null) {
                     updateButton.setDisable(true);
-                    Alerts.ErrorAlert("Помилка вводу", "Введіть усі дані").showAndWait();
+                    AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі дані").showAndWait();
                 } else {
                     updateValues();
                     updateButton.setDisable(false);
@@ -187,7 +186,7 @@ public class ListsRegisterController extends WindowController {
             });
 
             saveButton.setOnAction(e -> {
-                documentsManager.createRegisterLists(dbManager, numbersG, FilteredLists, datePickerStart.getValue(), datePickerEnd.getValue());
+                documentsUtil.createRegisterLists(dbUtil, numbersG, FilteredLists, datePickerStart.getValue(), datePickerEnd.getValue());
             });
 
             HBox buttonBox = new HBox(10, timeLabel, datePickerStart, timeLabel2, datePickerEnd,settingsButton, carLabel, carField, filterButton, updateButton, saveButton, openFolderButton);
@@ -211,7 +210,7 @@ public class ListsRegisterController extends WindowController {
 
             TableColumn<_List, String> workerCol = new TableColumn<>("ПІБ працівник");
             workerCol.setCellValueFactory(cellData -> {
-                String Name = dbManager.getWorkerName(true, cellData.getValue().getIdWorker());
+                String Name = dbUtil.getWorkerName(true, cellData.getValue().getIdWorker());
                 return new SimpleStringProperty(Name);
             });
 
@@ -246,7 +245,7 @@ public class ListsRegisterController extends WindowController {
             TableColumn<_List, String> CarNumberCol = new TableColumn<>("Номер авто");
             CarNumberCol.setCellValueFactory(cellData -> {
                 int orderNumber = cellData.getValue().getIdCar();
-                return new SimpleStringProperty(dbManager.getCarNumber(orderNumber));
+                return new SimpleStringProperty(dbUtil.getCarNumber(orderNumber));
             });
 
             TableColumn<_List, String> orderCol = new TableColumn<>("№ наказу");
@@ -255,7 +254,7 @@ public class ListsRegisterController extends WindowController {
                 if (idOrder == -1) {
                     return new SimpleStringProperty("по місту");
                 }
-                return new SimpleStringProperty(dbManager.getOrderNumber(idOrder));
+                return new SimpleStringProperty(dbUtil.getOrderNumber(idOrder));
             });
 
             TableColumn<_List, String> routeCol = new TableColumn<>("Маршрут");
@@ -372,7 +371,7 @@ public class ListsRegisterController extends WindowController {
                             .collect(Collectors.toList());
                     System.out.println(numbersG);
                 }
-                List<_List> newLists = dbManager.getListsFiltered(numbersG, datePickerStart.getValue(), datePickerEnd.getValue());
+                List<_List> newLists = dbUtil.getListsFiltered(numbersG, datePickerStart.getValue(), datePickerEnd.getValue());
                 newLists.sort(Comparator.comparingInt(_List::getNumber));
                 Platform.runLater(() -> {
                     FilteredLists.setAll(newLists);

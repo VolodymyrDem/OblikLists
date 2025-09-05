@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+       http://www.liquibase.org/xml/ns/dbchangelog
+       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <!-- Create cars table -->
+    <changeSet id="1-create-cars" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="cars"/></not>
+        </preConditions>
+        <createTable tableName="cars">
+            <column name="id-car" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="number" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="model" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="fuel-type" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="fuel-usage" type="DOUBLE"><constraints nullable="false"/></column>
+            <column name="engine-volume" type="DOUBLE"><constraints nullable="false"/></column>
+            <column name="start-date" type="DATE"><constraints nullable="false"/></column>
+            <column name="start-order-number" type="VARCHAR(45)"><constraints nullable="false"/></column>
+            <column name="end-date" type="DATE"/>
+            <column name="end-order-number" type="VARCHAR(45)"/>
+            <column name="valid" type="TINYINT"><constraints nullable="false"/></column>
+            <column name="start-fuel" type="DOUBLE"><constraints nullable="false"/></column>
+            <column name="start-mileage" type="DOUBLE"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <!-- Create lists table -->
+    <changeSet id="2-create-lists" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="lists"/></not>
+        </preConditions>
+        <createTable tableName="lists">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="number" type="INT"><constraints nullable="false"/></column>
+            <column name="id-order" type="INT"/>
+            <column name="id-car" type="INT"><constraints nullable="false"/></column>
+            <column name="start-mileage" type="DOUBLE"><constraints nullable="false"/></column>
+            <column name="start-fuel" type="DOUBLE"><constraints nullable="false"/></column>
+            <column name="end-mileage" type="DOUBLE"/>
+            <column name="end-fuel" type="DOUBLE"/>
+            <column name="refuel" type="DOUBLE"/>
+            <column name="done" type="TINYINT"><constraints nullable="false"/></column>
+            <column name="start-date" type="DATE"><constraints nullable="false"/></column>
+            <column name="end-date" type="DATE"><constraints nullable="false"/></column>
+            <column name="route" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="goal" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="id-worker" type="INT"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <!-- Create orders table -->
+    <changeSet id="3-create-orders" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="orders"/></not>
+        </preConditions>
+        <createTable tableName="orders">
+            <column name="id-order" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order-date" type="DATE"><constraints nullable="false"/></column>
+            <column name="order-number" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="id-worker" type="INT"><constraints nullable="false"/></column>
+            <column name="start-date" type="DATE"><constraints nullable="false"/></column>
+            <column name="end-date" type="DATE"><constraints nullable="false"/></column>
+            <column name="route" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="money" type="DOUBLE"><constraints nullable="false"/></column>
+            <column name="goal" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="head" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <!-- Create parameters table -->
+    <changeSet id="4-create-parameters" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="parameters"/></not>
+        </preConditions>
+        <createTable tableName="parameters">
+            <column name="idparameters" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="address" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="code" type="INT"><constraints nullable="false"/></column>
+            <column name="ceo" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="accountant" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="typeFull" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="typeShort" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <!-- Create positions table -->
+    <changeSet id="5-create-positions" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="positions"/></not>
+        </preConditions>
+        <createTable tableName="positions">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nameN" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="nameR" type="LONGTEXT"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+    <!-- Create workers table -->
+    <changeSet id="6-create-workers" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="workers"/></not>
+        </preConditions>
+        <createTable tableName="workers">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nameN" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="nameR" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="positionId" type="INT"><constraints nullable="false"/></column>
+            <column name="drivingLicence" type="MEDIUMTEXT"/>
+            <column name="start-date" type="DATE"><constraints nullable="false"/></column>
+            <column name="start-order-number" type="MEDIUMTEXT"><constraints nullable="false"/></column>
+            <column name="end-date" type="DATE"/>
+            <column name="end-order-number" type="MEDIUMTEXT"/>
+            <column name="valid" type="TINYINT"><constraints nullable="false"/></column>
+            <column name="nameD" type="MEDIUMTEXT"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Create reports table -->
+    <changeSet id="7-create-reports" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists tableName="reports"/></not>
+        </preConditions>
+        <createTable tableName="reports">
+            <column name="id" type="INT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="id-order" type="INT"><constraints nullable="false"/></column>
+            <column name="comments" type="LONGTEXT"/>
+            <column name="date" type="DATE"><constraints nullable="false"/></column>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>

@@ -1,8 +1,8 @@
-package com.work.oblikpodorojlist.managers;
+package com.work.oblikpodorojlist.utils;
 
 import javafx.scene.control.Alert;
 
-public class Alerts {
+public class AlertsUtil {
 
     public static Alert ErrorAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);

@@ -1,18 +1,13 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Reports;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
-import com.work.oblikpodorojlist.model._Order;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.utils.DocumentsUtil;
+import com.work.oblikpodorojlist.utils.IconsUtil;
 import com.work.oblikpodorojlist.model._Report;
 import com.work.oblikpodorojlist.pages.MainPage;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.AddOrderController;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.EditOrderController;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.OrdersJournalController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,8 +26,8 @@ import java.util.List;
 public class ReportsJournalController extends WindowController {
     private ObservableList<_Report> reports = FXCollections.observableArrayList();
     private MainPage mainPage;
-    private DBManager dbManager;
-    private DocumentsManager documentsManager;
+    private DBUtil dbUtil;
+    private DocumentsUtil documentsUtil;
     private AddReportController addReportController;
     private EditReportController editReportController;
     private TableView<_Report> tableView;
@@ -55,38 +50,38 @@ public class ReportsJournalController extends WindowController {
             tableView = new TableView<>();
             addReportController = new AddReportController();
             editReportController = new EditReportController();
-            documentsManager = DocumentsManager.getInstance();
-            dbManager = DBManager.getInstance();
+            documentsUtil = DocumentsUtil.getInstance();
+            dbUtil = DBUtil.getInstance();
 
             Button addButton = new Button("Додати звіт");
-            addButton.setGraphic(IconsManager.getPlusIcon());
+            addButton.setGraphic(IconsUtil.getPlusIcon());
             addButton.setOnAction(e -> {
                 addReportController.openWindow(-1, this);
             });
 
             Button editButton = new Button("Редагувати звіт");
-            editButton.setGraphic(IconsManager.getPencilIcon());
+            editButton.setGraphic(IconsUtil.getPencilIcon());
             editButton.setDisable(true);
 
             Button openFolderButton = new Button("Відкрити папку");
-            openFolderButton.setGraphic(IconsManager.getFolderIcon());
+            openFolderButton.setGraphic(IconsUtil.getFolderIcon());
             openFolderButton.getStyleClass().add("grey-button");
             openFolderButton.setOnAction(e -> {
-                openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[3] + "\\");
+                openFolder(documentsUtil.getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + documentsUtil.getFolders()[3] + "\\");
             });
 
 
             Button openFileButton = new Button("Відкрити звіт");
-            openFileButton.setGraphic(IconsManager.getFileIcon());
+            openFileButton.setGraphic(IconsUtil.getFileIcon());
             openFileButton.setDisable(true);
 
             Button deleteButton = new Button("Позначити звіт на видалення");
-            deleteButton.setGraphic(IconsManager.getRubbishIcon());
+            deleteButton.setGraphic(IconsUtil.getRubbishIcon());
             deleteButton.setDisable(true);
 
             Button updateButton = new Button();
             updateButton.getStyleClass().add("grey-button");
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
             updateButton.setOnAction(e->{
                 updateValues();
             });
@@ -107,7 +102,7 @@ public class ReportsJournalController extends WindowController {
 
             TableColumn<_Report, String> orderNumberCol = new TableColumn<>("№ наказу");
             orderNumberCol.setCellValueFactory(cellData -> {
-                String order = dbManager.getOrderNumber(cellData.getValue().getOrderId());
+                String order = dbUtil.getOrderNumber(cellData.getValue().getOrderId());
                 return new SimpleStringProperty(order);
             });
 
@@ -127,25 +122,25 @@ public class ReportsJournalController extends WindowController {
 
             TableColumn<_Report, String> workerCol = new TableColumn<>("Працівник");
             workerCol.setCellValueFactory(cellData -> {
-                String worker =  dbManager.getOrderWorkerName(cellData.getValue().getOrderId());
+                String worker =  dbUtil.getOrderWorkerName(cellData.getValue().getOrderId());
                 return new SimpleStringProperty(worker);
             });
 
             TableColumn<_Report, String> positionCol = new TableColumn<>("Посада");
             positionCol.setCellValueFactory(cellData -> {
-                String pos =  dbManager.getWorkerPosition(true, dbManager.getOrderIdWorker(cellData.getValue().getOrderId()));
+                String pos =  dbUtil.getWorkerPosition(true, dbUtil.getOrderIdWorker(cellData.getValue().getOrderId()));
                 return new SimpleStringProperty(pos);
             });
 
             TableColumn<_Report, String> goalCol = new TableColumn<>("Мета");
             goalCol.setCellValueFactory(cellData -> {
-                String goal = dbManager.getOrderGoal(cellData.getValue().getOrderId());
+                String goal = dbUtil.getOrderGoal(cellData.getValue().getOrderId());
                 return new SimpleStringProperty(goal);
             });
 
             TableColumn<_Report, String> headCol = new TableColumn<>("Керівник");
             headCol.setCellValueFactory(cellData -> {
-                String head = dbManager.getOrderHead(cellData.getValue().getOrderId());
+                String head = dbUtil.getOrderHead(cellData.getValue().getOrderId());
                 return new SimpleStringProperty(head);
             });
 
@@ -165,7 +160,7 @@ public class ReportsJournalController extends WindowController {
                 boolean isItemSelected = newSelection != null;
                 editButton.setDisable(!isItemSelected);
                 openFileButton.setDisable(!isItemSelected);
-                deleteButton.setDisable(!(newSelection != null && dbManager.getUsername().equals("root")));
+                deleteButton.setDisable(!(newSelection != null && dbUtil.getUsername().equals("root")));
             });
 
             editButton.setOnAction(e -> {
@@ -187,15 +182,15 @@ public class ReportsJournalController extends WindowController {
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
             VBox.setVgrow(tableView, Priority.ALWAYS);
             tableView.scrollTo(tableView.getItems().size() - 1);
-            if(dbManager.getUsername().equals("root")) {
+            if(dbUtil.getUsername().equals("root")) {
                 deleteButton.setText("Видалити звіт");
                 deleteButton.setOnAction(e->{
                     _Report rep = tableView.getSelectionModel().getSelectedItem();
                     if (rep != null) {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Видалити авто");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Видалити авто");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.deleteReport(rep);
+                                dbUtil.deleteReport(rep);
                             }
                         });
 
@@ -206,7 +201,7 @@ public class ReportsJournalController extends WindowController {
             openFileButton.setOnAction(e -> {
                 _Report selectedReport = tableView.getSelectionModel().getSelectedItem();
                 if (selectedReport != null) {
-                    documentsManager.createReportDocument(dbManager, selectedReport);
+                    documentsUtil.createReportDocument(dbUtil, selectedReport);
                 }
             });
 
@@ -258,11 +253,11 @@ public class ReportsJournalController extends WindowController {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
-                List<_Report> reportsNew = dbManager.getReports();
+                List<_Report> reportsNew = dbUtil.getReports();
 
                 reportsNew.sort((o1, o2) -> {
-                    int num1 = extractNumber(dbManager.getOrderNumber(o1.getOrderId()));
-                    int num2 = extractNumber(dbManager.getOrderNumber(o2.getOrderId()));
+                    int num1 = extractNumber(dbUtil.getOrderNumber(o1.getOrderId()));
+                    int num2 = extractNumber(dbUtil.getOrderNumber(o2.getOrderId()));
                     return Integer.compare(num1, num2);
                 });
 

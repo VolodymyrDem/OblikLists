@@ -1,7 +1,7 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.model._Car;
 import com.work.oblikpodorojlist.model._List;
 import com.work.oblikpodorojlist.model._Order;
@@ -10,7 +10,6 @@ import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -22,22 +21,22 @@ import java.util.Objects;
 
 public class EditListController extends WindowController {
     private MainPage mainPage ;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
 
     public EditListController(){}
 
 
 
     private List<_Order> getValidOrders() {
-        List<_Order> validOrders = dbManager.getFreeOrders();
+        List<_Order> validOrders = dbUtil.getFreeOrders();
         return validOrders;
     }
     private List<_Worker> getValidWorkers() {
-        List<_Worker> validWorkers = dbManager.getFreeWorkers();
+        List<_Worker> validWorkers = dbUtil.getFreeWorkers();
         return validWorkers;
     }
     private List<_Car> getValidCars() {
-        List<_Car> validWorkers = dbManager.getFreeCars();
+        List<_Car> validWorkers = dbUtil.getFreeCars();
         return validWorkers;
     }
 
@@ -51,17 +50,17 @@ public class EditListController extends WindowController {
             }
         }
         else {
-            dbManager = DBManager.getInstance();
+            dbUtil = DBUtil.getInstance();
             GridPane grid = new GridPane();
 
             grid.setHgap(10);
             grid.setVgap(10);
 
-            List<_Worker> validWorkers = dbManager.getFreeWorkers();
+            List<_Worker> validWorkers = dbUtil.getFreeWorkers();
             Map<String, Integer> workersT = new HashMap<>();
 
-            List<_Car> validCars = dbManager.getFreeCars();
-            validCars.add(dbManager.getCar(selectedList.getIdCar()));
+            List<_Car> validCars = dbUtil.getFreeCars();
+            validCars.add(dbUtil.getCar(selectedList.getIdCar()));
             Map<String, Integer> carsT = new HashMap<>();
 
             Map<String, Integer> ordersT = new HashMap<>();
@@ -91,7 +90,9 @@ public class EditListController extends WindowController {
                     return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
                 }
             });
-            TextField routeField = new TextField(selectedList.getRoute());
+            TextArea routeField = new TextArea(selectedList.getRoute());
+            routeField.setWrapText(true); // перенос слів
+            routeField.setPrefRowCount(4);
             TextField goalField = new TextField(selectedList.getGoal());
             ComboBox<String> carField = new ComboBox<>();
             ComboBox<String> worker = new ComboBox<>();
@@ -105,18 +106,18 @@ public class EditListController extends WindowController {
             TextField startMileageField = new TextField(String.valueOf(selectedList.getStartMileage()));
             TextField numberField = new TextField(String.valueOf(selectedList.getNumber()));
 
-            startFuelField.setDisable(!dbManager.getUsername().equals("root"));
-            endFuelField.setDisable(!dbManager.getUsername().equals("root"));
-            startMileageField.setDisable(!dbManager.getUsername().equals("root"));
-            refuelField.setDisable(!dbManager.getUsername().equals("root"));
-            endMileageField.setDisable(!dbManager.getUsername().equals("root"));
+            startFuelField.setDisable(!dbUtil.getUsername().equals("root"));
+            endFuelField.setDisable(!dbUtil.getUsername().equals("root"));
+            startMileageField.setDisable(!dbUtil.getUsername().equals("root"));
+            refuelField.setDisable(!dbUtil.getUsername().equals("root"));
+            endMileageField.setDisable(!dbUtil.getUsername().equals("root"));
 
             ordersT.clear();
             order.getItems().clear();
             List<_Order> ordersL = getValidOrders();
             for(_Order d  : ordersL) {
-                ordersT.put(d.getOrderNumber() + " - "+ dbManager.getWorkerName(true, d.getIdWorker()), d.getIdOrder());
-                order.getItems().add(d.getOrderNumber() + " - "+ dbManager.getWorkerName(true, d.getIdWorker()));
+                ordersT.put(d.getOrderNumber() + " - "+ dbUtil.getWorkerName(true, d.getIdWorker()), d.getId());
+                order.getItems().add(d.getOrderNumber() + " - "+ dbUtil.getWorkerName(true, d.getIdWorker()));
             }
 
 
@@ -124,24 +125,24 @@ public class EditListController extends WindowController {
                 workersT.put(d.getNameN(), d.getId());
                 worker.getItems().add(d.getNameN());
             }
-            workersT.put(dbManager.getWorker(selectedList.getIdWorker()).getNameN(), selectedList.getIdWorker());
-            worker.getItems().add(dbManager.getWorker(selectedList.getIdWorker()).getNameN());
+            workersT.put(dbUtil.getWorker(selectedList.getIdWorker()).getNameN(), selectedList.getIdWorker());
+            worker.getItems().add(dbUtil.getWorker(selectedList.getIdWorker()).getNameN());
             positionField.setDisable(true);
-            worker.setValue(dbManager.getWorkerName(true, selectedList.getIdWorker()));
-            positionField.setText(dbManager.getWorkerPosition(true, selectedList.getIdWorker()));
+            worker.setValue(dbUtil.getWorkerName(true, selectedList.getIdWorker()));
+            positionField.setText(dbUtil.getWorkerPosition(true, selectedList.getIdWorker()));
 
             for(_Car d  : validCars) {
-                carsT.put(d.getNumber() + " " +d.getModel(), d.getIdCar());
+                carsT.put(d.getNumber() + " " +d.getModel(), d.getId());
                 carField.getItems().add(d.getNumber() + " " +d.getModel());
             }
-            carsT.put(dbManager.getCar(selectedList.getIdCar()).getNumber() + " " + dbManager.getCar(selectedList.getIdCar()).getModel(), selectedList.getIdCar());
-            carField.getItems().add(dbManager.getCar(selectedList.getIdCar()).getNumber() + " " + dbManager.getCar(selectedList.getIdCar()).getModel());
-            carField.setValue(dbManager.getCar(selectedList.getIdCar()).getNumber() + " " + dbManager.getCar(selectedList.getIdCar()).getModel());
+            carsT.put(dbUtil.getCar(selectedList.getIdCar()).getNumber() + " " + dbUtil.getCar(selectedList.getIdCar()).getModel(), selectedList.getIdCar());
+            carField.getItems().add(dbUtil.getCar(selectedList.getIdCar()).getNumber() + " " + dbUtil.getCar(selectedList.getIdCar()).getModel());
+            carField.setValue(dbUtil.getCar(selectedList.getIdCar()).getNumber() + " " + dbUtil.getCar(selectedList.getIdCar()).getModel());
 
             ListType.getItems().add("по місту");
             ListType.getItems().add("за наказом");
             if(selectedList.getIdOrder() != -1) {
-                order.setValue(dbManager.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbManager.getWorkerName(true, selectedList.getIdWorker()));
+                order.setValue(dbUtil.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbUtil.getWorkerName(true, selectedList.getIdWorker()));
             }
 
             if (selectedList.getIdOrder() != -1) {
@@ -152,8 +153,8 @@ public class EditListController extends WindowController {
                 routeField.setDisable(true);
                 goalField.setDisable(true);
                 worker.setDisable(true);
-                ordersT.put(dbManager.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbManager.getWorkerName(true, selectedList.getIdWorker()), selectedList.getIdOrder());
-                order.getItems().add(dbManager.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbManager.getWorkerName(true, selectedList.getIdWorker()));
+                ordersT.put(dbUtil.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbUtil.getWorkerName(true, selectedList.getIdWorker()), selectedList.getIdOrder());
+                order.getItems().add(dbUtil.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbUtil.getWorkerName(true, selectedList.getIdWorker()));
             } else {
                 ListType.setValue("\"по місту\"");
                 order.setDisable(true);
@@ -173,12 +174,12 @@ public class EditListController extends WindowController {
                     order.getItems().clear();
                     List<_Order> orders = getValidOrders();
                     for(_Order d  : orders) {
-                        ordersT.put(d.getOrderNumber() + " - "+ dbManager.getWorkerName(true, d.getIdWorker()), d.getIdOrder());
-                        order.getItems().add(d.getOrderNumber() + " - "+ dbManager.getWorkerName(true, d.getIdWorker()));
+                        ordersT.put(d.getOrderNumber() + " - "+ dbUtil.getWorkerName(true, d.getIdWorker()), d.getId());
+                        order.getItems().add(d.getOrderNumber() + " - "+ dbUtil.getWorkerName(true, d.getIdWorker()));
                     }
                     if(selectedList.getIdOrder() != -1) {
-                        ordersT.put(dbManager.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbManager.getWorkerName(true, selectedList.getIdWorker()), selectedList.getIdOrder());
-                        order.getItems().add(dbManager.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbManager.getWorkerName(true, selectedList.getIdWorker()));
+                        ordersT.put(dbUtil.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbUtil.getWorkerName(true, selectedList.getIdWorker()), selectedList.getIdOrder());
+                        order.getItems().add(dbUtil.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbUtil.getWorkerName(true, selectedList.getIdWorker()));
                     }
                     order.setDisable(false);
                     datePickerStart.setDisable(true);
@@ -196,8 +197,8 @@ public class EditListController extends WindowController {
                         worker.getItems().add(d.getNameN());
                     }
                     if(selectedList.getIdOrder() == -1) {
-                        workersT.put(dbManager.getWorker(selectedList.getIdWorker()).getNameN(), selectedList.getIdWorker());
-                        worker.getItems().add(dbManager.getWorker(selectedList.getIdWorker()).getNameN());
+                        workersT.put(dbUtil.getWorker(selectedList.getIdWorker()).getNameN(), selectedList.getIdWorker());
+                        worker.getItems().add(dbUtil.getWorker(selectedList.getIdWorker()).getNameN());
                     }
 
                     order.setDisable(true);
@@ -213,26 +214,26 @@ public class EditListController extends WindowController {
             worker.setOnAction(e -> {
                 String selectedWorker = worker.getValue();
                 if (selectedWorker != null) {
-                    positionField.setText(dbManager.getWorkerPosition(true, workersT.get(selectedWorker)));
+                    positionField.setText(dbUtil.getWorkerPosition(true, workersT.get(selectedWorker)));
                 }
             });
 
             order.setOnAction(e -> {
                 String selectedOrder = order.getValue();
                 if (selectedOrder != null) {
-                    datePickerStart.setValue(dbManager.getStartOrderDate(ordersT.get(selectedOrder)));
-                    datePickerEnd.setValue(dbManager.getEndOrderDate(ordersT.get(selectedOrder)));
-                    routeField.setText(dbManager.getOrderRoute(ordersT.get(selectedOrder)));
-                    goalField.setText(dbManager.getOrderGoal(ordersT.get(selectedOrder)));
+                    datePickerStart.setValue(dbUtil.getStartOrderDate(ordersT.get(selectedOrder)));
+                    datePickerEnd.setValue(dbUtil.getEndOrderDate(ordersT.get(selectedOrder)));
+                    routeField.setText(dbUtil.getOrderRoute(ordersT.get(selectedOrder)));
+                    goalField.setText(dbUtil.getOrderGoal(ordersT.get(selectedOrder)));
                     worker.getItems().clear();
                     workersT.clear();
-                    workersT.put(dbManager.getOrderWorkerName(ordersT.get(selectedOrder)), dbManager.getOrderIdWorker(ordersT.get(selectedOrder)) );
-                    worker.getItems().add(dbManager.getOrderWorkerName(ordersT.get(selectedOrder)));
-                    worker.setValue(dbManager.getOrderWorkerName(ordersT.get(selectedOrder)));
+                    workersT.put(dbUtil.getOrderWorkerName(ordersT.get(selectedOrder)), dbUtil.getOrderIdWorker(ordersT.get(selectedOrder)) );
+                    worker.getItems().add(dbUtil.getOrderWorkerName(ordersT.get(selectedOrder)));
+                    worker.setValue(dbUtil.getOrderWorkerName(ordersT.get(selectedOrder)));
                 }
             });
             int i = 0;
-            if(dbManager.getUsername().equals("root")){
+            if(dbUtil.getUsername().equals("root")){
                 grid.add(new Label("№ листа"), 0, 0);
                 grid.add(numberField, 1, 0);
                 i++;
@@ -278,7 +279,7 @@ public class EditListController extends WindowController {
                 if ( carField.getValue() == null || ListType.getValue() == null || (ListType.getValue() == "за наказом" && order.getValue() == null) ||
                         datePickerStart.getValue() == null || datePickerEnd.getValue() == null || isEmptyOrWhitespace(routeField.getText()) ||
                         isEmptyOrWhitespace(goalField.getText()) || worker.getValue() == null || isEmptyOrWhitespace(numberField.getText()) ) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
@@ -295,7 +296,7 @@ public class EditListController extends WindowController {
                         newList.setDone(selectedList.isDone());
                         newList.setNumber(Integer.parseInt(numberField.getText()));
 
-                        if(dbManager.getUsername().equals("root")) {
+                        if(dbUtil.getUsername().equals("root")) {
                             newList.setEndMileage(Double.parseDouble(endMileageField.getText()));
                             newList.setEndFuel(Double.parseDouble(endFuelField.getText()));
                             newList.setRefuel(Double.parseDouble(refuelField.getText()));
@@ -309,10 +310,10 @@ public class EditListController extends WindowController {
                             newList.setStartMileage(selectedList.getStartMileage());
                         }
 
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Редагувати лист");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Редагувати лист");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                if(dbManager.updateList(newList)) {
+                                if(dbUtil.updateList(newList)) {
                                     mainPage.closeInternalWindow(windowTitle);
 
                                 }
@@ -324,11 +325,11 @@ public class EditListController extends WindowController {
                         carField.getItems().clear();
                         List<_Car> cars = getValidCars();
                         for(_Car d  : cars) {
-                            carsT.put(d.getNumber() + " " +d.getModel(), d.getIdCar());
+                            carsT.put(d.getNumber() + " " +d.getModel(), d.getId());
                             carField.getItems().add(d.getNumber() + " " +d.getModel());
                         }
-                        carsT.put(dbManager.getCar(selectedList.getIdCar()).getNumber() + " " + dbManager.getCar(selectedList.getIdCar()).getModel(), selectedList.getIdCar());
-                        carField.getItems().add(dbManager.getCar(selectedList.getIdCar()).getNumber() + " " + dbManager.getCar(selectedList.getIdCar()).getModel());
+                        carsT.put(dbUtil.getCar(selectedList.getIdCar()).getNumber() + " " + dbUtil.getCar(selectedList.getIdCar()).getModel(), selectedList.getIdCar());
+                        carField.getItems().add(dbUtil.getCar(selectedList.getIdCar()).getNumber() + " " + dbUtil.getCar(selectedList.getIdCar()).getModel());
 
 
                         workersT.clear();
@@ -338,22 +339,22 @@ public class EditListController extends WindowController {
                             workersT.put(d.getNameN(), d.getId());
                             worker.getItems().add(d.getNameN());
                         }
-                        workersT.put(dbManager.getWorker(selectedList.getIdWorker()).getNameN(), selectedList.getIdWorker());
-                        worker.getItems().add(dbManager.getWorker(selectedList.getIdWorker()).getNameN());
+                        workersT.put(dbUtil.getWorker(selectedList.getIdWorker()).getNameN(), selectedList.getIdWorker());
+                        worker.getItems().add(dbUtil.getWorker(selectedList.getIdWorker()).getNameN());
 
                         ordersT.clear();
                         order.getItems().clear();
                         List<_Order> orders = getValidOrders();
                         for(_Order d  : orders) {
-                            ordersT.put(d.getOrderNumber() + " "+ dbManager.getWorkerName(true, d.getIdWorker()), d.getIdOrder());
-                            order.getItems().add(d.getOrderNumber() + " "+ dbManager.getWorkerName(true, d.getIdWorker()));
+                            ordersT.put(d.getOrderNumber() + " "+ dbUtil.getWorkerName(true, d.getIdWorker()), d.getId());
+                            order.getItems().add(d.getOrderNumber() + " "+ dbUtil.getWorkerName(true, d.getIdWorker()));
                         }
                         if(selectedList.getIdOrder() != -1) {
-                            ordersT.put(dbManager.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbManager.getWorkerName(true, selectedList.getIdWorker()), selectedList.getIdOrder());
-                            order.getItems().add(dbManager.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbManager.getWorkerName(true, selectedList.getIdWorker()));
+                            ordersT.put(dbUtil.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbUtil.getWorkerName(true, selectedList.getIdWorker()), selectedList.getIdOrder());
+                            order.getItems().add(dbUtil.getOrderNumber(selectedList.getIdOrder()) + " - "+ dbUtil.getWorkerName(true, selectedList.getIdWorker()));
                         }
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }

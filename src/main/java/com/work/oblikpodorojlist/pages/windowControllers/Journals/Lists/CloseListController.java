@@ -1,29 +1,22 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.model._Car;
 import com.work.oblikpodorojlist.model._List;
-import com.work.oblikpodorojlist.model._Order;
-import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.Journals.Reports.AddReportController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 public class CloseListController extends WindowController {
     private MainPage mainPage ;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
     private AddReportController addReportController;
 
     public CloseListController(){}
@@ -42,13 +35,13 @@ public class CloseListController extends WindowController {
         }
         else {
             addReportController = new AddReportController();
-            dbManager = DBManager.getInstance();
+            dbUtil = DBUtil.getInstance();
             GridPane grid = new GridPane();
 
             grid.setHgap(10);
             grid.setVgap(10);
 
-            _Car car = dbManager.getCar(selectedList.getIdCar());
+            _Car car = dbUtil.getCar(selectedList.getIdCar());
 
 
 
@@ -77,13 +70,16 @@ public class CloseListController extends WindowController {
                     return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
                 }
             });
-            TextField routeField = new TextField(selectedList.getRoute());
+            TextArea routeField = new TextArea(selectedList.getRoute());
+            routeField.setWrapText(true); // перенос слів
+            routeField.setPrefRowCount(4);
+
             TextField goalField = new TextField(selectedList.getGoal());
             TextField carField = new TextField(car.getNumber() + " " + car.getModel());
-            TextField worker = new TextField(dbManager.getWorkerName(true, selectedList.getIdWorker()));
-            TextField positionField = new TextField(dbManager.getWorkerPosition(true, selectedList.getIdWorker()));
+            TextField worker = new TextField(dbUtil.getWorkerName(true, selectedList.getIdWorker()));
+            TextField positionField = new TextField(dbUtil.getWorkerPosition(true, selectedList.getIdWorker()));
             TextField ListType = new TextField((selectedList.getIdOrder() == -1)?"по місту":"за наказом");
-            TextField order = new TextField((selectedList.getIdOrder() == -1)?"":dbManager.getOrderNumber(selectedList.getIdOrder()));
+            TextField order = new TextField((selectedList.getIdOrder() == -1)?"": dbUtil.getOrderNumber(selectedList.getIdOrder()));
             TextField endFuelField = new TextField();
             TextField endMileageField = new TextField();
             TextField refuelField = new TextField();
@@ -133,7 +129,7 @@ public class CloseListController extends WindowController {
 
             saveButton.setOnAction(e ->{
                 if (isEmptyOrWhitespace(endFuelField.getText()) || isEmptyOrWhitespace(endMileageField.getText()) || isEmptyOrWhitespace(refuelField.getText()) ) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
@@ -143,14 +139,14 @@ public class CloseListController extends WindowController {
                         newList.setRefuel(Double.parseDouble(refuelField.getText().replace(',', '.')));
                         newList.setDone(true);
 
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Закрити лист");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Закрити лист");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                if(dbManager.updateList(newList)) {
+                                if(dbUtil.updateList(newList)) {
                                     mainPage.closeInternalWindow(windowTitle);
 
                                     if(selectedList.getIdOrder() != -1) {
-                                        Alert CreateReportAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Створити звіт про завершення виконання за наказом");
+                                        Alert CreateReportAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Створити звіт про завершення виконання за наказом");
                                         CreateReportAlert.showAndWait().ifPresent(response2 -> {
                                             if (response2 == ButtonType.OK){
                                                 addReportController.openWindow(selectedList.getIdOrder(), null);
@@ -162,7 +158,7 @@ public class CloseListController extends WindowController {
                             }
                         });
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }

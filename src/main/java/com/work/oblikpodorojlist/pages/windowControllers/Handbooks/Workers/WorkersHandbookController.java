@@ -1,10 +1,9 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Workers;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
-import com.work.oblikpodorojlist.model._Position;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.utils.DocumentsUtil;
+import com.work.oblikpodorojlist.utils.IconsUtil;
 import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -28,11 +27,9 @@ import java.util.List;
 public class WorkersHandbookController extends WindowController {
     private ObservableList<_Worker> workers = FXCollections.observableArrayList();
     private MainPage mainPage;
-    private DBManager dbManager;
-    private DocumentsManager documentsManager;
-    private AddWorkerController addWorkerController;
-    private EditWorkerController editWorkerController;
-    private RemoveWorkerController removeWorkerController;
+    private DBUtil dbUtil;
+    private DocumentsUtil documentsUtil;
+    private WorkerCardController workerCardController;
     private ComboBox<String> selectionModel;
     private TableView<_Worker> tableView;
     private Pagination pagination;
@@ -52,11 +49,9 @@ public class WorkersHandbookController extends WindowController {
         else {
             tableView = new TableView<>();
             selectionModel = new ComboBox<>();
-            dbManager = DBManager.getInstance();
-            documentsManager = DocumentsManager.getInstance();
-            addWorkerController = new AddWorkerController();
-            editWorkerController = new EditWorkerController();
-            removeWorkerController = new RemoveWorkerController();
+            dbUtil = DBUtil.getInstance();
+            documentsUtil = DocumentsUtil.getInstance();
+            workerCardController = new WorkerCardController();
 
             updateValues();
 
@@ -64,35 +59,35 @@ public class WorkersHandbookController extends WindowController {
             selectionModel.setValue("");
 
             Button createFileButton = new Button("Зберегти довідник");
-            createFileButton.setGraphic(IconsManager.getFileIcon());
+            createFileButton.setGraphic(IconsUtil.getFileIcon());
             createFileButton.getStyleClass().add("grey-button");
 
             Button addButton = new Button("Додати працівника");
-            addButton.setGraphic(IconsManager.getPlusIcon());
+            addButton.setGraphic(IconsUtil.getPlusIcon());
             addButton.getStyleClass().add("green-button");
 
             Button editButton = new Button("Редагувати працівника");
-            editButton.setGraphic(IconsManager.getPencilIcon());
+            editButton.setGraphic(IconsUtil.getPencilIcon());
             editButton.getStyleClass().add("yellow-button");
             editButton.setDisable(true);
 
             Button openFolderButton = new Button("Відкрити папку");
-            openFolderButton.setGraphic(IconsManager.getFolderIcon());
+            openFolderButton.setGraphic(IconsUtil.getFolderIcon());
             openFolderButton.getStyleClass().add("grey-button");
 
             Button removeButton = new Button("Звільнити працівника");
-            removeButton.setGraphic(IconsManager.getCrossIcon());
+            removeButton.setGraphic(IconsUtil.getCrossIcon());
             removeButton.getStyleClass().add("red-button");
             removeButton.setDisable(true);
 
             Button deleteButton = new Button("Позначити працівника на видалення");
-            deleteButton.setGraphic(IconsManager.getRubbishIcon());
+            deleteButton.setGraphic(IconsUtil.getRubbishIcon());
             deleteButton.setDisable(true);
             deleteButton.getStyleClass().add("red-button");
 
             Button updateButton = new Button();
             updateButton.getStyleClass().add("grey-button");
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
@@ -153,33 +148,33 @@ public class WorkersHandbookController extends WindowController {
                 boolean isItemSelected = newSelection != null;
                 editButton.setDisable(!isItemSelected);
                 removeButton.setDisable(!isItemSelected || !newSelection.isValid());
-                deleteButton.setDisable(!(newSelection != null && dbManager.getUsername().equals("root")));
+                deleteButton.setDisable(!(newSelection != null && dbUtil.getUsername().equals("root")));
 
             });
 
             editButton.setOnAction(e -> {
                 _Worker selectedWorker = tableView.getSelectionModel().getSelectedItem();
                 if (selectedWorker != null) {
-                    editWorkerController.openWindow(selectedWorker, this);
+                    workerCardController.openWindow(false, selectedWorker, this);
                 }
             });
             removeButton.setOnAction(e -> {
                 _Worker selectedWorker = tableView.getSelectionModel().getSelectedItem();
                 if (selectedWorker != null) {
-                    removeWorkerController.openWindow(selectedWorker, this);
+                    workerCardController.openWindow(true, selectedWorker, this);
                 }
             });
             updateButton.setOnAction(e->{
                 updateValues();
             });
             openFolderButton.setOnAction(e -> {
-                openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[1] + "\\");
+                openFolder(documentsUtil.getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + documentsUtil.getFolders()[1] + "\\");
             });
             addButton.setOnAction(e -> {
-                addWorkerController.openWindow(this);
+                workerCardController.openWindow(false, null, this);
             });
             createFileButton.setOnAction(e -> {
-                documentsManager.createWorkersHandbook(dbManager, workers);
+                documentsUtil.createWorkersHandbook(dbUtil, workers);
             });
             selectionModel.setOnAction(event -> {
                 updateValues();
@@ -229,15 +224,15 @@ public class WorkersHandbookController extends WindowController {
                 }
             });
 
-            if(dbManager.getUsername().equals("root")) {
+            if(dbUtil.getUsername().equals("root")) {
                 deleteButton.setText("Видалити працівника");
                 deleteButton.setOnAction(e->{
                     _Worker selectedWorker = tableView.getSelectionModel().getSelectedItem();
                     if (selectedWorker != null) {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Видалити лист");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Видалити лист");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.deleteWorker(selectedWorker);
+                                dbUtil.deleteWorker(selectedWorker);
                             }
                         });
 
@@ -259,11 +254,11 @@ public class WorkersHandbookController extends WindowController {
                 List<_Worker> newWorkers;
                 String selected = selectionModel.getValue();
                 if(selected.equals("актуальні")) {
-                    newWorkers = dbManager.getValidWorkers();
+                    newWorkers = dbUtil.getValidWorkers();
                 } else if(selected.equals("неактуальні")) {
-                    newWorkers = dbManager.getUnValidWorkers();
+                    newWorkers = dbUtil.getUnValidWorkers();
                 } else {
-                    newWorkers = dbManager.getWorkers();
+                    newWorkers = dbUtil.getWorkers();
                 }
                 newWorkers.sort(Comparator.comparing(_Worker::getNameN));
                 Platform.runLater(() -> {

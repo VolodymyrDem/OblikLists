@@ -1,7 +1,7 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.model._Company;
 import com.work.oblikpodorojlist.model._Order;
 import com.work.oblikpodorojlist.model._Worker;
@@ -9,7 +9,6 @@ import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -20,7 +19,7 @@ import java.util.Map;
 
 public class EditOrderController extends WindowController {
     private MainPage mainPage ;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
     private static EditOrderController instance;
 
     public EditOrderController(){}
@@ -35,7 +34,7 @@ public class EditOrderController extends WindowController {
             }
         }
         else {
-            dbManager = DBManager.getInstance();
+            dbUtil = DBUtil.getInstance();
 
             GridPane grid = new GridPane();
 
@@ -56,8 +55,8 @@ public class EditOrderController extends WindowController {
             });
             TextField orderNumberField = new TextField(selectedOrder.getOrderNumber());
 
-            List<_Worker> validWorkers = dbManager.getValidWorkers();
-            validWorkers.add(dbManager.getWorker(selectedOrder.getIdWorker()));
+            List<_Worker> validWorkers = dbUtil.getValidWorkers();
+            validWorkers.add(dbUtil.getWorker(selectedOrder.getIdWorker()));
 
             ComboBox<String> worker = new ComboBox<>();
             Map<String, Integer> workersT = new HashMap<>();
@@ -67,17 +66,17 @@ public class EditOrderController extends WindowController {
                 worker.getItems().add(d.getNameN());
             }
 
-            worker.setValue(dbManager.getWorkerName(true, selectedOrder.getIdWorker()));
+            worker.setValue(dbUtil.getWorkerName(true, selectedOrder.getIdWorker()));
 
             TextField positionField = new TextField();
             positionField.setDisable(true);
 
-            positionField.setText(dbManager.getWorkerPosition(true, selectedOrder.getIdWorker()));
+            positionField.setText(dbUtil.getWorkerPosition(true, selectedOrder.getIdWorker()));
 
             worker.setOnAction(e -> {
                 String selectedWorker = worker.getValue();
                 if (selectedWorker != null) {
-                    positionField.setText(dbManager.getWorkerPosition(true, workersT.get(selectedWorker)));
+                    positionField.setText(dbUtil.getWorkerPosition(true, workersT.get(selectedWorker)));
                 }
             });
 
@@ -105,7 +104,11 @@ public class EditOrderController extends WindowController {
                     return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
                 }
             });
-            TextField routeField = new TextField(selectedOrder.getRoute());
+            TextArea routeField = new TextArea(selectedOrder.getRoute());
+            routeField.setWrapText(true); // перенос слів
+            routeField.setPrefRowCount(4);
+            
+
             TextField moneyField = new TextField(String.valueOf(selectedOrder.getMoney()));
             TextField goalField = new TextField(selectedOrder.getGoal());
 
@@ -114,7 +117,7 @@ public class EditOrderController extends WindowController {
             headType.getItems().add("тимчасово виконуючий обов'язки");
             TextField headField = new TextField();
 
-            if(selectedOrder.getHead().equals(dbManager.getCompanyInfo().getCeo())){
+            if(selectedOrder.getHead().equals(dbUtil.getCompanyInfo().getCeo())){
                 headType.setValue("директор");
                 headField.setDisable(true);
             } else {
@@ -126,7 +129,7 @@ public class EditOrderController extends WindowController {
             headType.setOnAction(e -> {
                 String selectedOption = headType.getValue();
                 if (selectedOption == "директор") {
-                    _Company _company = dbManager.getCompanyInfo();
+                    _Company _company = dbUtil.getCompanyInfo();
                     headField.setText(_company.getCeo());
                     headField.setDisable(true);
                 }
@@ -173,13 +176,13 @@ public class EditOrderController extends WindowController {
                         worker.getValue() == null || datePickerStart.getValue() == null ||
                         datePickerEnd.getValue() == null || isEmptyOrWhitespace(moneyField.getText()) || isEmptyOrWhitespace(routeField.getText()) ||
                         isEmptyOrWhitespace(goalField.getText())) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
                         double money = Double.parseDouble(moneyField.getText().replace(',', '.'));
                         _Order newOrder = new _Order(
-                                selectedOrder.getIdOrder(),
+                                selectedOrder.getId(),
                                 datePickerOrderDate.getValue(),
                                 orderNumberField.getText(),
                                 workersT.get(worker.getValue()),
@@ -191,17 +194,17 @@ public class EditOrderController extends WindowController {
                                 headField.getText()
                         );
 
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Редагувати наказ");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Редагувати наказ");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                if(dbManager.changeOrder(newOrder)) {
+                                if(dbUtil.changeOrder(newOrder)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
                                 controller.updateValues();
                             }
                         });
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }

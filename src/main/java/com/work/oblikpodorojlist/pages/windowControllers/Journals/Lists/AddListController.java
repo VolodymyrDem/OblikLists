@@ -1,15 +1,12 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.model.*;
 import com.work.oblikpodorojlist.pages.MainPage;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.AddOrderController;
-import com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders.OrdersJournalController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -21,22 +18,22 @@ import java.util.Objects;
 
 public class AddListController extends WindowController {
     private MainPage mainPage ;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
 
     public AddListController(){}
 
 
 
     private List<_Order> getValidOrders() {
-        List<_Order> validOrders = dbManager.getFreeOrders();
+        List<_Order> validOrders = dbUtil.getFreeOrders();
         return validOrders;
     }
     private List<_Worker> getValidWorkers() {
-        List<_Worker> validWorkers = dbManager.getFreeWorkers();
+        List<_Worker> validWorkers = dbUtil.getFreeWorkers();
         return validWorkers;
     }
     private List<_Car> getValidCars() {
-        List<_Car> validWorkers = dbManager.getFreeCars();
+        List<_Car> validWorkers = dbUtil.getFreeCars();
         return validWorkers;
     }
 
@@ -50,16 +47,16 @@ public class AddListController extends WindowController {
             }
         }
         else {
-            dbManager = DBManager.getInstance();
+            dbUtil = DBUtil.getInstance();
             GridPane grid = new GridPane();
 
             grid.setHgap(10);
             grid.setVgap(10);
 
-            List<_Worker> validWorkers = dbManager.getValidWorkers();
+            List<_Worker> validWorkers = dbUtil.getValidWorkers();
             Map<String, Integer> workersT = new HashMap<>();
 
-            List<_Car> validCars = dbManager.getFreeCars();
+            List<_Car> validCars = dbUtil.getFreeCars();
             Map<String, Integer> carsT = new HashMap<>();
 
             Map<String, Integer> ordersT = new HashMap<>();
@@ -88,7 +85,9 @@ public class AddListController extends WindowController {
                     return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
                 }
             });
-            TextField routeField = new TextField();
+            TextArea routeField = new TextArea();
+            routeField.setWrapText(true); // перенос слів
+            routeField.setPrefRowCount(4);
             TextField goalField = new TextField();
             ComboBox<String> carField = new ComboBox<>();
             ComboBox<String> worker = new ComboBox<>();
@@ -104,7 +103,7 @@ public class AddListController extends WindowController {
 
 
             for(_Car d  : validCars) {
-                carsT.put(d.getNumber() + " " +d.getModel(), d.getIdCar());
+                carsT.put(d.getNumber() + " " +d.getModel(), d.getId());
                 carField.getItems().add(d.getNumber() + " " +d.getModel());
             }
 
@@ -121,8 +120,8 @@ public class AddListController extends WindowController {
                     order.getItems().clear();
                     List<_Order> orders = getValidOrders();
                     for(_Order d  : orders) {
-                        ordersT.put(d.getOrderNumber() + " "+ dbManager.getWorkerName(true, d.getIdWorker()), d.getIdOrder());
-                        order.getItems().add(d.getOrderNumber() + " "+ dbManager.getWorkerName(true, d.getIdWorker()));
+                        ordersT.put(d.getOrderNumber() + " "+ dbUtil.getWorkerName(true, d.getIdWorker()), d.getId());
+                        order.getItems().add(d.getOrderNumber() + " "+ dbUtil.getWorkerName(true, d.getIdWorker()));
                     }
                     order.setDisable(false);
                     datePickerStart.setDisable(true);
@@ -134,7 +133,7 @@ public class AddListController extends WindowController {
                 else {
                     workersT.clear();
                     worker.getItems().clear();
-                    List<_Worker> workers = dbManager.getValidWorkers();
+                    List<_Worker> workers = dbUtil.getValidWorkers();
                     for(_Worker d  : workers) {
                         workersT.put(d.getNameN(), d.getId());
                         worker.getItems().add(d.getNameN());
@@ -152,22 +151,22 @@ public class AddListController extends WindowController {
             worker.setOnAction(e -> {
                 String selectedWorker = worker.getValue();
                 if (selectedWorker != null) {
-                    positionField.setText(dbManager.getWorkerPosition(true, workersT.get(selectedWorker)));
+                    positionField.setText(dbUtil.getWorkerPosition(true, workersT.get(selectedWorker)));
                 }
             });
 
             order.setOnAction(e -> {
                 String selectedOrder = order.getValue();
                 if (selectedOrder != null) {
-                    datePickerStart.setValue(dbManager.getStartOrderDate(ordersT.get(selectedOrder)));
-                    datePickerEnd.setValue(dbManager.getEndOrderDate(ordersT.get(selectedOrder)));
-                    routeField.setText(dbManager.getOrderRoute(ordersT.get(selectedOrder)));
-                    goalField.setText(dbManager.getOrderGoal(ordersT.get(selectedOrder)));
+                    datePickerStart.setValue(dbUtil.getStartOrderDate(ordersT.get(selectedOrder)));
+                    datePickerEnd.setValue(dbUtil.getEndOrderDate(ordersT.get(selectedOrder)));
+                    routeField.setText(dbUtil.getOrderRoute(ordersT.get(selectedOrder)));
+                    goalField.setText(dbUtil.getOrderGoal(ordersT.get(selectedOrder)));
                     worker.getItems().clear();
                     workersT.clear();
-                    workersT.put(dbManager.getOrderWorkerName(ordersT.get(selectedOrder)), dbManager.getOrderIdWorker(ordersT.get(selectedOrder)) );
-                    worker.getItems().add(dbManager.getOrderWorkerName(ordersT.get(selectedOrder)));
-                    worker.setValue(dbManager.getOrderWorkerName(ordersT.get(selectedOrder)));
+                    workersT.put(dbUtil.getOrderWorkerName(ordersT.get(selectedOrder)), dbUtil.getOrderIdWorker(ordersT.get(selectedOrder)) );
+                    worker.getItems().add(dbUtil.getOrderWorkerName(ordersT.get(selectedOrder)));
+                    worker.setValue(dbUtil.getOrderWorkerName(ordersT.get(selectedOrder)));
                 }
             });
 
@@ -201,7 +200,7 @@ public class AddListController extends WindowController {
                 if ( carField.getValue() == null || ListType.getValue() == null || (ListType.getValue() == "за наказом" && order.getValue() == null) ||
                         datePickerStart.getValue() == null || datePickerEnd.getValue() == null || isEmptyOrWhitespace(routeField.getText()) ||
                         isEmptyOrWhitespace(goalField.getText()) || worker.getValue() == null ) {
-                    Alert alert = Alerts.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
+                    Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі необхідні дані");
                     alert.showAndWait();
                 } else {
                     try {
@@ -215,10 +214,10 @@ public class AddListController extends WindowController {
                                 goalField.getText()
                         );
 
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Додати лист");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Додати лист");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                if(dbManager.addList(newList)) {
+                                if(dbUtil.addList(newList)) {
                                     mainPage.closeInternalWindow(windowTitle);
                                 }
                                 controller.updateValues();
@@ -230,7 +229,7 @@ public class AddListController extends WindowController {
                         carField.getItems().clear();
                         List<_Car> cars = getValidCars();
                         for(_Car d  : cars) {
-                            carsT.put(d.getNumber() + " " +d.getModel(), d.getIdCar());
+                            carsT.put(d.getNumber() + " " +d.getModel(), d.getId());
                             carField.getItems().add(d.getNumber() + " " +d.getModel());
                         }
 
@@ -246,12 +245,12 @@ public class AddListController extends WindowController {
                         order.getItems().clear();
                         List<_Order> orders = getValidOrders();
                         for(_Order d  : orders) {
-                            ordersT.put(d.getOrderNumber() + " "+ dbManager.getWorkerName(true, d.getIdWorker()), d.getIdOrder());
-                            order.getItems().add(d.getOrderNumber() + " "+ dbManager.getWorkerName(true, d.getIdWorker()));
+                            ordersT.put(d.getOrderNumber() + " "+ dbUtil.getWorkerName(true, d.getIdWorker()), d.getId());
+                            order.getItems().add(d.getOrderNumber() + " "+ dbUtil.getWorkerName(true, d.getIdWorker()));
                         }
 
                     } catch (NumberFormatException ex) {
-                        Alert alert = Alerts.ErrorAlert("Помилка вводу", "Неправильні введені дані");
+                        Alert alert = AlertsUtil.ErrorAlert("Помилка вводу", "Неправильні введені дані");
                         alert.showAndWait();
                     }
                 }

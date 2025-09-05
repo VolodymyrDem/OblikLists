@@ -67,7 +67,7 @@ public class _Order {
         this.position = position;
     }
 
-    public int getIdOrder() {
+    public int getId() {
         return idOrder;
     }
 

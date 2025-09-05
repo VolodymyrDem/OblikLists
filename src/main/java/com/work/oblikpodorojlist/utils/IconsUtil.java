@@ -1,8 +1,8 @@
-package com.work.oblikpodorojlist.managers;
+package com.work.oblikpodorojlist.utils;
 
 import javafx.scene.shape.SVGPath;
 
-public class IconsManager {
+public class IconsUtil {
     private static String plusIconString = "M12 4.5v15m7.5-7.5h-15";
     private static String closeWindowString = "M -5 -4 L -4 -5 L 0 -1 L 4 -5 L 5 -4 L 1 0 L 5 4 L 4 5 L 0 1 L -4 5 L -5 4 L -1 0 Z";
     private static String HideWindowString = "M -5 0 L 5 0 L 5 1 L -5 1 Z";

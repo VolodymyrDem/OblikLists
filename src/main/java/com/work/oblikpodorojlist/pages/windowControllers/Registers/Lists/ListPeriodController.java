@@ -2,9 +2,8 @@ package com.work.oblikpodorojlist.pages.windowControllers.Registers.Lists;
 
 import com.work.oblikpodorojlist.MonthYearSpinnerValueFactory;
 import com.work.oblikpodorojlist.QuarterYearSpinnerValueFactory;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.pages.MainPage;
-import com.work.oblikpodorojlist.pages.windowControllers.Registers.Fuel.FuelRegisterController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -17,7 +16,7 @@ import java.time.Year;
 
 public class ListPeriodController extends WindowController {
     private MainPage mainPage;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
 
     public ListPeriodController() {
     }
@@ -25,7 +24,7 @@ public class ListPeriodController extends WindowController {
     public void openWindow(ListsRegisterController controller){
         String windowTitle = "Реєстр подорожніх листів: Параметри періоду";
         mainPage = MainPage.getInstance();
-        dbManager = DBManager.getInstance();
+        dbUtil = DBUtil.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
             mainPage.openWindows.get(windowTitle).toFront();
             if(!mainPage.openWindows.get(windowTitle).isVisible()){

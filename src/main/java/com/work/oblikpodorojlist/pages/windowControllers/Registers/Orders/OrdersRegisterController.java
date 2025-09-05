@@ -1,14 +1,12 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Orders;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.utils.DocumentsUtil;
+import com.work.oblikpodorojlist.utils.IconsUtil;
 import com.work.oblikpodorojlist.model._Order;
-import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
-import eu.hansolo.tilesfx.colors.Wan;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -27,8 +25,8 @@ import java.util.List;
 
 public class OrdersRegisterController extends WindowController {
     private MainPage mainPage;
-    private DBManager dbManager;
-    private DocumentsManager documentsManager;
+    private DBUtil dbUtil;
+    private DocumentsUtil documentsUtil;
     ComboBox<String> workerField = new ComboBox<>();
     private OrdersPeriodController ordersPeriodController;
     private ObservableList<_Order> filteredOrders = FXCollections.observableArrayList();
@@ -54,15 +52,15 @@ public class OrdersRegisterController extends WindowController {
             }
         }
         else {
-            documentsManager = DocumentsManager.getInstance();
-            dbManager = DBManager.getInstance();
+            documentsUtil = DocumentsUtil.getInstance();
+            dbUtil = DBUtil.getInstance();
             ordersPeriodController = new OrdersPeriodController();
             GridPane grid = new GridPane();
 
             grid.setHgap(10);
             grid.setVgap(10);
 
-            List<String> validWorkers = dbManager.getUniqueWorkersNames();
+            List<String> validWorkers = dbUtil.getUniqueWorkersNames();
 
             datePickerStart.setConverter(new StringConverter<LocalDate>() {
                 @Override
@@ -92,28 +90,28 @@ public class OrdersRegisterController extends WindowController {
             Label timeLabel = new Label("Період: з ");
             Label timeLabel2 = new Label("по");
             Button filterButton = new Button("Застосувати фільтр");
-            filterButton.setGraphic(IconsManager.getFilterIcon());
+            filterButton.setGraphic(IconsUtil.getFilterIcon());
             Button saveButton = new Button("Зберегти реєстр");
-            saveButton.setGraphic(IconsManager.getTikIcon());
+            saveButton.setGraphic(IconsUtil.getTikIcon());
             saveButton.setDisable(true);
 
             Button settingsButton = new Button();
-            settingsButton.setGraphic(IconsManager.getClockIcon());
+            settingsButton.setGraphic(IconsUtil.getClockIcon());
 
 
             Button updateButton = new Button();
             updateButton.setDisable(true);
             updateButton.getStyleClass().add("grey-button");
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
             updateButton.setOnAction(e->{
                 updateValues();
             });
 
             Button openFolderButton = new Button("Відкрити папку");
-            openFolderButton.setGraphic(IconsManager.getFolderIcon());
+            openFolderButton.setGraphic(IconsUtil.getFolderIcon());
             openFolderButton.getStyleClass().add("grey-button");
             openFolderButton.setOnAction(e -> {
-                openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[5] + "\\");
+                openFolder(documentsUtil.getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + documentsUtil.getFolders()[5] + "\\");
             });
 
 
@@ -131,7 +129,7 @@ public class OrdersRegisterController extends WindowController {
             filterButton.setOnAction(e -> {
                 if (datePickerStart.getValue() == null) {
                     updateButton.setDisable(true);
-                    Alerts.ErrorAlert("Помилка вводу", "Введіть дату початку").showAndWait();
+                    AlertsUtil.ErrorAlert("Помилка вводу", "Введіть дату початку").showAndWait();
                 } else {
                     updateButton.setDisable(false);
                     updateValues();
@@ -141,7 +139,7 @@ public class OrdersRegisterController extends WindowController {
             });
 
             saveButton.setOnAction(e -> {
-                documentsManager.createRegisterOrders(dbManager, filteredOrders, workerField.getValue(), datePickerStart.getValue(), datePickerEnd.getValue());
+                documentsUtil.createRegisterOrders(dbUtil, filteredOrders, workerField.getValue(), datePickerStart.getValue(), datePickerEnd.getValue());
             });
 
             for(String d  : validWorkers) {
@@ -188,7 +186,7 @@ public class OrdersRegisterController extends WindowController {
 
             TableColumn<_Order, String> workerCol = new TableColumn<>("ПІБ працівник");
             workerCol.setCellValueFactory(cellData -> {
-                String Name = dbManager.getWorkerName(true, cellData.getValue().getIdWorker());
+                String Name = dbUtil.getWorkerName(true, cellData.getValue().getIdWorker());
                 return new SimpleStringProperty(Name);
             });
 
@@ -286,7 +284,7 @@ public class OrdersRegisterController extends WindowController {
                     datePickerEnd.setValue(LocalDate.now());
                 }
                 String tempWorkerName = (workerField.getValue() == null)?"-1":workerField.getValue();
-                List<_Order> newOrders = dbManager.getOrdersFiltered(tempWorkerName, datePickerStart.getValue(), datePickerEnd.getValue());
+                List<_Order> newOrders = dbUtil.getOrdersFiltered(tempWorkerName, datePickerStart.getValue(), datePickerEnd.getValue());
                 newOrders.sort(Comparator.comparing(_Order::getOrderDate));
                 newOrders.sort((o1, o2) -> {
                     int num1 = extractNumber(o1.getOrderNumber());

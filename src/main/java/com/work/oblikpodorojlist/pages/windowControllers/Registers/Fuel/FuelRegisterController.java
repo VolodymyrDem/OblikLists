@@ -1,12 +1,11 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Fuel;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.utils.DocumentsUtil;
+import com.work.oblikpodorojlist.utils.IconsUtil;
 import com.work.oblikpodorojlist.model.FuelUsage;
 import com.work.oblikpodorojlist.model.PeriodParameters;
-import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.application.Platform;
@@ -36,8 +35,8 @@ public class FuelRegisterController extends WindowController {
     public PeriodParameters parametersFuelUsage = new PeriodParameters();
     private MainPage mainPage;
     private ComboBox<String> podilField = new ComboBox<>();
-    private DBManager dbManager;
-    private DocumentsManager documentsManager;
+    private DBUtil dbUtil;
+    private DocumentsUtil documentsUtil;
     private CheckComboBox<String> carField = new CheckComboBox<>();
     private List<String> validCars = new ArrayList<>();
     private FuelPeriodController fuelPeriodController;
@@ -64,10 +63,10 @@ public class FuelRegisterController extends WindowController {
             datePickerStart = new DatePicker();
             datePickerEnd = new DatePicker();
             fuelPeriodController = new FuelPeriodController();
-            documentsManager = DocumentsManager.getInstance();
-            dbManager = DBManager.getInstance();
+            documentsUtil = DocumentsUtil.getInstance();
+            dbUtil = DBUtil.getInstance();
 
-            validCars = dbManager.getUniqueCarsNumbers();
+            validCars = dbUtil.getUniqueCarsNumbers();
 
             datePickerStart.setConverter(new StringConverter<LocalDate>() {
                 @Override
@@ -104,18 +103,18 @@ public class FuelRegisterController extends WindowController {
             Label timeLabel2 = new Label("по");
             Label podilLabel = new Label("Групувати");
             Button filterButton = new Button("Застосувати фільтр");
-            filterButton.setGraphic(IconsManager.getFilterIcon());
+            filterButton.setGraphic(IconsUtil.getFilterIcon());
             Button saveButton = new Button("Зберегти реєстр");
-            saveButton.setGraphic(IconsManager.getTikIcon());
+            saveButton.setGraphic(IconsUtil.getTikIcon());
             saveButton.setDisable(true);
             podilField.getItems().addAll("По днях", "По тижнях", "По місяцях", "По кварталах", "По роках", "По листах");
             podilField.setValue("По листах");
 
             Button openFolderButton = new Button("Відкрити папку");
-            openFolderButton.setGraphic(IconsManager.getFolderIcon());
+            openFolderButton.setGraphic(IconsUtil.getFolderIcon());
             openFolderButton.getStyleClass().add("grey-button");
             openFolderButton.setOnAction(e -> {
-                openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[6] + "\\");
+                openFolder(documentsUtil.getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + documentsUtil.getFolders()[6] + "\\");
             });
 
 
@@ -132,14 +131,14 @@ public class FuelRegisterController extends WindowController {
                 }
             });
 
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
             updateButton.setOnAction(e->{
                 updateValues();
             });
 
 
 
-            settingsButton.setGraphic(IconsManager.getClockIcon());
+            settingsButton.setGraphic(IconsUtil.getClockIcon());
             settingsButton.setOnAction(event -> {
                 updateButton.setDisable(true);
                 fuelPeriodController.openWindow(this);
@@ -159,7 +158,7 @@ public class FuelRegisterController extends WindowController {
             filterButton.setOnAction(e -> {
                 if (datePickerStart.getValue() == null) {
                     updateButton.setDisable(true);
-                    Alerts.ErrorAlert("Помилка вводу", "Введіть усі дані").showAndWait();
+                    AlertsUtil.ErrorAlert("Помилка вводу", "Введіть усі дані").showAndWait();
                 } else {
                     updateButton.setDisable(false);
                     updateValues();
@@ -168,7 +167,7 @@ public class FuelRegisterController extends WindowController {
             });
 
             saveButton.setOnAction(e -> {
-                documentsManager.createRegisterFuel(dbManager, numbersG, FilteredFuelUsage, datePickerStart.getValue(), datePickerEnd.getValue(), parametersFuelUsage.getPeriod());
+                documentsUtil.createRegisterFuel(dbUtil, numbersG, FilteredFuelUsage, datePickerStart.getValue(), datePickerEnd.getValue(), parametersFuelUsage.getPeriod());
             });
 
             HBox buttonBox = new HBox(10, timeLabel, datePickerStart, timeLabel2, datePickerEnd,settingsButton, carLabel, carField, podilLabel, podilField, filterButton, updateButton, saveButton, openFolderButton);
@@ -369,7 +368,7 @@ public class FuelRegisterController extends WindowController {
                 parametersFuelUsage.setStartDate(datePickerStart.getValue());
                 parametersFuelUsage.setEndDate(datePickerEnd.getValue());
 
-                List<FuelUsage> newUsage = dbManager.getListsFuelFiltered(numbersG, parametersFuelUsage);
+                List<FuelUsage> newUsage = dbUtil.getListsFuelFiltered(numbersG, parametersFuelUsage);
                 Platform.runLater(() -> {
                     FilteredFuelUsage.setAll(newUsage);
                     int pageCount = (int) Math.ceil((double) FilteredFuelUsage.size() / rowsPerPage);

@@ -1,16 +1,11 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
-import com.work.oblikpodorojlist.managers.DocumentsManager;
-import com.work.oblikpodorojlist.managers.IconsManager;
-import com.work.oblikpodorojlist.model._Car;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.utils.DocumentsUtil;
+import com.work.oblikpodorojlist.utils.IconsUtil;
 import com.work.oblikpodorojlist.model._Order;
 import com.work.oblikpodorojlist.pages.MainPage;
-import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.AddCarController;
-import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.CarsHandbookController;
-import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.EditCarController;
-import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.RemoveCarController;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -32,8 +27,8 @@ import java.util.List;
 public class OrdersJournalController extends WindowController {
     private ObservableList<_Order> orders = FXCollections.observableArrayList();
     private MainPage mainPage;
-    private DBManager dbManager;
-    private DocumentsManager documentsManager;
+    private DBUtil dbUtil;
+    private DocumentsUtil documentsUtil;
     private AddOrderController addOrderController;
     private EditOrderController editOrderController;
     private TableView<_Order> tableView;
@@ -55,40 +50,40 @@ public class OrdersJournalController extends WindowController {
             tableView = new TableView<>();
             addOrderController = new AddOrderController();
             editOrderController = new EditOrderController();
-            documentsManager = DocumentsManager.getInstance();
-            dbManager = DBManager.getInstance();
+            documentsUtil = DocumentsUtil.getInstance();
+            dbUtil = DBUtil.getInstance();
 
             Button addButton = new Button("Додати наказ");
-            addButton.setGraphic(IconsManager.getPlusIcon());
+            addButton.setGraphic(IconsUtil.getPlusIcon());
             addButton.getStyleClass().add("green-button");
 
             Button editButton = new Button("Редагувати наказ");
-            editButton.setGraphic(IconsManager.getPencilIcon());
+            editButton.setGraphic(IconsUtil.getPencilIcon());
             editButton.setDisable(true);
             editButton.getStyleClass().add("yellow-button");
 
             Button copyButton = new Button("Копіювати наказ");
-            copyButton.setGraphic(IconsManager.getCopyIcon());
+            copyButton.setGraphic(IconsUtil.getCopyIcon());
             copyButton.setDisable(true);
             copyButton.getStyleClass().add("grey-button");
 
             Button openFolderButton = new Button("Відкрити папку");
-            openFolderButton.setGraphic(IconsManager.getFolderIcon());
+            openFolderButton.setGraphic(IconsUtil.getFolderIcon());
             openFolderButton.getStyleClass().add("grey-button");
 
             Button openFileButton = new Button("Відкрити наказ");
-            openFileButton.setGraphic(IconsManager.getFileIcon());
+            openFileButton.setGraphic(IconsUtil.getFileIcon());
             openFileButton.setDisable(true);
             openFileButton.getStyleClass().add("grey-button");
 
             Button deleteButton = new Button("Позначити наказ на видалення");
-            deleteButton.setGraphic(IconsManager.getRubbishIcon());
+            deleteButton.setGraphic(IconsUtil.getRubbishIcon());
             deleteButton.setDisable(true);
             deleteButton.getStyleClass().add("red-button");
 
             Button updateButton = new Button();
             updateButton.getStyleClass().add("grey-button");
-            updateButton.setGraphic(IconsManager.getUpdateIcon());
+            updateButton.setGraphic(IconsUtil.getUpdateIcon());
 
 
             TableColumn<_Order, LocalDate> orderDateCol = new TableColumn<>("Дата наказу");
@@ -116,12 +111,12 @@ public class OrdersJournalController extends WindowController {
 
             TableColumn<_Order, String> workerCol = new TableColumn<>("ПІБ працівник");
             workerCol.setCellValueFactory(cellData -> {
-                return new SimpleStringProperty(dbManager.getWorkerName(true, cellData.getValue().getIdWorker()));
+                return new SimpleStringProperty(dbUtil.getWorkerName(true, cellData.getValue().getIdWorker()));
             });
 
             TableColumn<_Order, String> positionCol = new TableColumn<>("Посада");
             positionCol.setCellValueFactory(cellData -> {
-                return new SimpleStringProperty(dbManager.getWorkerPosition(true, cellData.getValue().getIdWorker()));
+                return new SimpleStringProperty(dbUtil.getWorkerPosition(true, cellData.getValue().getIdWorker()));
             });
 
             TableColumn<_Order, LocalDate> startDateCol = new TableColumn<>("Виїзд: дата");
@@ -166,7 +161,7 @@ public class OrdersJournalController extends WindowController {
 
             TableColumn<_Order, String> validCol = new TableColumn<>("Актуальність");
             validCol.setCellValueFactory(cellData -> {
-                return new SimpleStringProperty(dbManager.isOrderModifiable(cellData.getValue().getIdOrder()) ? "Невиконаний" : "Виконаний");
+                return new SimpleStringProperty(dbUtil.isOrderModifiable(cellData.getValue().getId()) ? "Невиконаний" : "Виконаний");
             });
 
             tableView.getColumns().addAll( orderDateCol, orderNumberCol, workerCol,positionCol, startDateCol,
@@ -180,10 +175,10 @@ public class OrdersJournalController extends WindowController {
 
 
             tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-                editButton.setDisable(newSelection == null || (!dbManager.isOrderModifiable(newSelection.getIdOrder()) && !dbManager.getUsername().equals("root")));
+                editButton.setDisable(newSelection == null || (!dbUtil.isOrderModifiable(newSelection.getId()) && !dbUtil.getUsername().equals("root")));
                 copyButton.setDisable(newSelection == null);
                 openFileButton.setDisable(newSelection == null);
-                deleteButton.setDisable(!(newSelection != null && dbManager.getUsername().equals("root")));
+                deleteButton.setDisable(!(newSelection != null && dbUtil.getUsername().equals("root")));
             });
 
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -195,7 +190,7 @@ public class OrdersJournalController extends WindowController {
                 MenuItem editItem = new MenuItem("Редагувати");
                 editItem.setOnAction(event -> {
                     _Order selectedOrder = row.getItem();
-                    if (selectedOrder != null && dbManager.isOrderModifiable(selectedOrder.getIdOrder())) {
+                    if (selectedOrder != null && dbUtil.isOrderModifiable(selectedOrder.getId())) {
                         editOrderController.openWindow(selectedOrder, this);
                     }
                 });
@@ -204,7 +199,7 @@ public class OrdersJournalController extends WindowController {
                 openItem.setOnAction(event -> {
                     _Order selectedOrder = row.getItem();
                     if (selectedOrder != null) {
-                        documentsManager.createOrderDocument(dbManager, selectedOrder);
+                        documentsUtil.createOrderDocument(dbUtil, selectedOrder);
                     }
                 });
 
@@ -212,7 +207,7 @@ public class OrdersJournalController extends WindowController {
                     if (event.getClickCount() == 2 && !row.isEmpty()) {
                         _Order selectedOrder = row.getItem();
                         if (selectedOrder != null) {
-                            documentsManager.createOrderDocument(dbManager, selectedOrder);
+                            documentsUtil.createOrderDocument(dbUtil, selectedOrder);
                         }
                     }
                 });
@@ -221,7 +216,7 @@ public class OrdersJournalController extends WindowController {
                     rowMenu.getItems().clear();
                     if (newItem != null ) {
                         rowMenu.getItems().add(openItem);
-                        if(dbManager.isOrderModifiable(newItem.getIdOrder())) {
+                        if(dbUtil.isOrderModifiable(newItem.getId())) {
                             rowMenu.getItems().add(editItem);
                         }
                     }
@@ -241,13 +236,13 @@ public class OrdersJournalController extends WindowController {
             });
 
             openFolderButton.setOnAction(e -> {
-                openFolder(documentsManager.getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + documentsManager.getFolders()[2] + "\\");
+                openFolder(documentsUtil.getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + documentsUtil.getFolders()[2] + "\\");
             });
 
             openFileButton.setOnAction(e -> {
                 _Order selectedOrder = tableView.getSelectionModel().getSelectedItem();
                 if (selectedOrder != null) {
-                    documentsManager.createOrderDocument(dbManager, selectedOrder);
+                    documentsUtil.createOrderDocument(dbUtil, selectedOrder);
                 }
             });
 
@@ -274,15 +269,15 @@ public class OrdersJournalController extends WindowController {
             buttonBox.getStyleClass().add("buttonBox");
             buttonBox.setAlignment(Pos.CENTER_LEFT);
 
-            if(dbManager.getUsername().equals("root")) {
+            if(dbUtil.getUsername().equals("root")) {
                 deleteButton.setText("Видалити Наказ");
                 deleteButton.setOnAction(e->{
                     _Order selectedOrder = tableView.getSelectionModel().getSelectedItem();
                     if (selectedOrder != null) {
-                        Alert confirmationAlert = Alerts.ConfirmAlert("Підтвердіть операцію", "Видалити наказ");
+                        Alert confirmationAlert = AlertsUtil.ConfirmAlert("Підтвердіть операцію", "Видалити наказ");
                         confirmationAlert.showAndWait().ifPresent(response -> {
                             if (response == ButtonType.OK) {
-                                dbManager.deleteOrder(selectedOrder);
+                                dbUtil.deleteOrder(selectedOrder);
                                 updateValues();
                                 tableView.sort();
                             }
@@ -357,7 +352,7 @@ public class OrdersJournalController extends WindowController {
         Task<Void> task = new Task<>() {
             @Override
             protected Void call() {
-                List<_Order> newOrders = dbManager.getOrders();
+                List<_Order> newOrders = dbUtil.getOrders();
                 newOrders.sort((o1, o2) -> {
                     int num1 = extractNumber(o1.getOrderNumber());
                     int num2 = extractNumber(o2.getOrderNumber());

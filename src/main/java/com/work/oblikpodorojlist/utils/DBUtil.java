@@ -1,20 +1,24 @@
-package com.work.oblikpodorojlist.managers;
+package com.work.oblikpodorojlist.utils;
 
 import java.awt.*;
 import java.io.*;
+import java.nio.file.Path;
 import java.sql.Date;
 import com.work.oblikpodorojlist.model.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
+import liquibase.Contexts;
+import liquibase.LabelExpression;
+import liquibase.Liquibase;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import liquibase.resource.CompositeResourceAccessor;
+import liquibase.resource.FileSystemResourceAccessor;
 
-import javax.swing.*;
 import java.io.File;
 import java.net.URL;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.text.DateFormatter;
 import java.sql.*;
-import java.text.SimpleDateFormat;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
@@ -23,7 +27,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class DBManager {
+public class DBUtil {
 
     private String host;
     private String URL = "jdbc:mysql://"+host+":3306/";
@@ -32,28 +36,51 @@ public class DBManager {
     private String company;
     private String username;
     private String password;
-    private static DBManager instance;
+    private static DBUtil instance;
 
-    private DBManager() {
+    private DBUtil() {
         getHost();
     }
 
-    public static DBManager getInstance() {
+    public void Migrate() {
+        // отримуємо папку з ресурсами (IDE чи JAR)
+        Path resources = ResourceUtils.getResourcesFolder();
+
+        // будуємо CompositeResourceAccessor, щоб спрацювало і в dev, і в JAR
+        CompositeResourceAccessor ra = new CompositeResourceAccessor(
+                new FileSystemResourceAccessor(resources.toFile()),      // файлова ресурси
+                new ClassLoaderResourceAccessor(getClass().getClassLoader()) // ресурси з classpath
+        );
+
+        try (Connection conn = Connect()) {
+            Liquibase lb = new Liquibase(
+                    "db/changelog/db.changelog-master.xml", // шлях відносно папки ресурсів / classpath root
+                    ra,
+                    new JdbcConnection(conn)
+            );
+            lb.update(new Contexts(), new LabelExpression());
+        } catch (Exception e) {
+            throw new RuntimeException("Error during DB migration: " + e.getMessage(), e);
+        }
+    }
+
+
+    public static DBUtil getInstance() {
         if(instance == null) {
-            instance = new DBManager();
+            instance = new DBUtil();
         }
         return instance;
     }
 
     public String getHost() {
-        host = ConfigManager.loadIpAddress();
+        host = ConfigUtil.loadIpAddress();
         URL = "jdbc:mysql://"+host+":3306/";
         return host;
     }
 
     public void setHost(String host) {
         URL = "jdbc:mysql://"+host+":3306/";
-        ConfigManager.saveIpAddress(host);
+        ConfigUtil.saveIpAddress(host);
         this.host = host;
     }
 
@@ -257,7 +284,7 @@ public class DBManager {
     }
 
     private String getBackupFolderPath() {
-        URL resource = DBManager.class.getClassLoader().getResource("config");
+        URL resource = DBUtil.class.getClassLoader().getResource("config");
         if (resource != null) {
             String resourcePath = resource.getPath();
             return new File(resourcePath).getParent() + File.separator + "backups";
@@ -473,7 +500,7 @@ public class DBManager {
             java.sql.DriverManager.getConnection(URL, username, password);
             return true;
         } catch (SQLException e) {
-            Alert a = Alerts.ErrorAlert(e.toString(), e.getMessage());
+            Alert a = AlertsUtil.ErrorAlert(e.toString(), e.getMessage());
             a.showAndWait();
             throw new RuntimeException(e);
         }
@@ -1173,7 +1200,7 @@ public class DBManager {
     }
 
     public void deleteCar(_Car car) {
-        String deletelist = "DELETE FROM `cars` WHERE (`id-car` = '"+car.getIdCar()+"');";
+        String deletelist = "DELETE FROM `cars` WHERE (`id-car` = '"+car.getId()+"');";
         try (Connection connection = Connect();
              CallableStatement deletelistStmt = connection.prepareCall(deletelist)) {
             deletelistStmt.executeUpdate();
@@ -1213,7 +1240,7 @@ public class DBManager {
     }
 
     public void deleteOrder(_Order order) {
-        String deletelist = "DELETE FROM `orders` WHERE (`id-order` = '"+order.getIdOrder()+"');";
+        String deletelist = "DELETE FROM `orders` WHERE (`id-order` = '"+order.getId()+"');";
         try (Connection connection = Connect();
              CallableStatement deletelistStmt = connection.prepareCall(deletelist)) {
             deletelistStmt.executeUpdate();
@@ -1447,6 +1474,30 @@ public class DBManager {
         }
     }
 
+    public String getNextOrderNumber(LocalDate targetDate) {
+        String query = "SELECT MAX(CAST(SUBSTRING_INDEX(`order-number`, '-', 1) AS UNSIGNED)) AS max_num " +
+                "FROM orders WHERE YEAR(`order-date`) = YEAR(?)";
+
+        Integer maxNumber = null;
+        try (Connection connection = Connect();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setDate(1, java.sql.Date.valueOf(targetDate));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    int value = rs.getInt("max_num");
+                    if (!rs.wasNull()) {
+                        maxNumber = value;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        int next = (maxNumber == null || maxNumber == 0) ? 1 : maxNumber + 1;
+        return String.valueOf(next) + "-вд";
+    }
+
     public boolean changeOrder(_Order order) {
         String sql = "UPDATE `orders` SET" +
                 " `order-date` = '" + order.getOrderDate() + "'," +
@@ -1458,7 +1509,7 @@ public class DBManager {
                 " `money` = '" + order.getMoney() + "'," +
                 " `goal` = '" + order.getGoal() + "'," +
                 " `head` = '" + order.getHead() + "'" +
-                " WHERE `id-order` = '" + order.getIdOrder() + "';";
+                " WHERE `id-order` = '" + order.getId() + "';";
 
         String updateListsSQL = "UPDATE `lists` SET " +
                 "`start-date` = ?, `end-date` = ?, `route` = ?, `goal` = ?, `id-worker` = ? " +
@@ -1474,7 +1525,7 @@ public class DBManager {
             updateListsStmt.setString(3, order.getRoute());
             updateListsStmt.setString(4, order.getGoal());
             updateListsStmt.setInt(5, order.getIdWorker());
-            updateListsStmt.setInt(6, order.getIdOrder());
+            updateListsStmt.setInt(6, order.getId());
 
             updateListsStmt.executeUpdate();
             return true;
@@ -1486,7 +1537,8 @@ public class DBManager {
 
     public boolean changeReport(_Report report) {
         String sql = "UPDATE `reports` SET" +
-                " `comments` = '" + report.getComments() + "'" +
+                " `comments` = '" + report.getComments() + "', " +
+                " `date`  = '" + report.getDate() + "'" +
                 " WHERE `id` = '" + report.getId() + "';";
 
         try (Connection connection = Connect();
@@ -1807,7 +1859,7 @@ public class DBManager {
 
             preparedStatement.setDate(1, java.sql.Date.valueOf(car.getEndDate()));
             preparedStatement.setString(2, car.getEndOrderNumber());
-            preparedStatement.setInt(3, car.getIdCar());
+            preparedStatement.setInt(3, car.getId());
 
             int rowsAffected = preparedStatement.executeUpdate();
             return rowsAffected > 0;
@@ -1834,7 +1886,7 @@ public class DBManager {
                     " `start-fuel` = '" + car.getStartFuel() + "'," +
                     " `start-mileage` = '" + car.getStartMileage() + "'," +
                     " `valid` = '1' " +
-                    " WHERE `id-car` = '" + car.getIdCar() + "';";
+                    " WHERE `id-car` = '" + car.getId() + "';";
         } else {
             sql = "UPDATE `cars` SET" +
                     " `number` = '" + car.getNumber() + "'," +
@@ -1849,7 +1901,7 @@ public class DBManager {
                     " `end-date` = '" + car.getEndDate() + "'," +
                     " `end-order-number` = '" + car.getEndOrderNumber() + "'," +
                     " `valid` = '0' " +
-                    " WHERE `id-car` = '" + car.getIdCar() + "';";
+                    " WHERE `id-car` = '" + car.getId() + "';";
         }
 
         try (Connection connection = Connect();

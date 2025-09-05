@@ -1,9 +1,9 @@
-package com.work.oblikpodorojlist.managers;
+package com.work.oblikpodorojlist.utils;
 
 import java.io.*;
 import java.util.Properties;
 
-public class ConfigManager {
+public class ConfigUtil {
     private static final String CONFIG_FILE = "config.properties";
 
     public static String loadIpAddress() {

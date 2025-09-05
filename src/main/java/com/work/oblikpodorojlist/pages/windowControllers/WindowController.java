@@ -3,7 +3,9 @@ package com.work.oblikpodorojlist.pages.windowControllers;
 import com.work.oblikpodorojlist.model.FuelUsage;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.scene.Node;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.GridPane;
 
 import java.awt.*;
 import java.io.File;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 public abstract class WindowController {
     protected final int rowsPerPage = 25;
     protected DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+
     protected void openFolder(String path) {
 
         Task<Void> task = new Task<>() {
@@ -37,6 +40,20 @@ public abstract class WindowController {
             }
         };
         new Thread(task).start();
+    }
+
+    public static GridPane buildGridDouble(Node... elements) {
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+
+        for (int i = 0; i < elements.length; i++) {
+            int row = i / 2;
+            int col = i % 2;
+            grid.add(elements[i], col, row);
+        }
+
+        return grid;
     }
 
 

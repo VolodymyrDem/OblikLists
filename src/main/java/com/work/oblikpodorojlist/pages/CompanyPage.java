@@ -1,7 +1,7 @@
 package com.work.oblikpodorojlist.pages;
 
-import com.work.oblikpodorojlist.managers.Alerts;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.AlertsUtil;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,7 +15,7 @@ import javafx.stage.Stage;
 
 
 public class CompanyPage extends Application {
-    DBManager dbManager;
+    DBUtil dbUtil;
     ObservableList<String> databases = FXCollections.observableArrayList();
 
     public static void main(String[] args) {
@@ -25,7 +25,7 @@ public class CompanyPage extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.getIcons().add(new javafx.scene.image.Image("/icon.png"));
-        dbManager = DBManager.getInstance();
+        dbUtil = DBUtil.getInstance();
         primaryStage.setTitle("Компанія");
         TableView<String> tableView = new TableView<>();
         tableView.setEditable(false);
@@ -48,11 +48,11 @@ public class CompanyPage extends Application {
             if(event.getCode() == KeyCode.ENTER) {
                 String selectedCompany = tableView.getSelectionModel().getSelectedItem();
                 if (selectedCompany != null) {
-                    dbManager.setCompany(selectedCompany.split("\\s+")[0]);
+                    dbUtil.setCompany(selectedCompany.split("\\s+")[0]);
                     AccountPage nextPage = new AccountPage();
                     nextPage.StartSelectAccountPage(primaryStage);
                 } else {
-                    Alert a = Alerts.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
+                    Alert a = AlertsUtil.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
                     a.showAndWait();
                 }
             }
@@ -66,11 +66,11 @@ public class CompanyPage extends Application {
                 if (event.getClickCount() == 2 && !row.isEmpty()) {
                     String selectedCompany = row.getItem();
                     if (selectedCompany != null) {
-                        dbManager.setCompany(selectedCompany.split("\\s+")[0]);
+                        dbUtil.setCompany(selectedCompany.split("\\s+")[0]);
                         AccountPage nextPage = new AccountPage();
                         nextPage.StartSelectAccountPage(primaryStage);
                     } else {
-                        Alert a = Alerts.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
+                        Alert a = AlertsUtil.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
                         a.showAndWait();
                     }
                 }
@@ -83,19 +83,19 @@ public class CompanyPage extends Application {
         selectDatabaseButton.setOnAction(e -> {
             String selectedCompany = tableView.getSelectionModel().getSelectedItem();
             if (selectedCompany != null) {
-                dbManager.setCompany(selectedCompany.split("\\s+")[0]);
+                dbUtil.setCompany(selectedCompany.split("\\s+")[0]);
                 Stage stage = (Stage) selectDatabaseButton.getScene().getWindow();
                 AccountPage nextPage = new AccountPage();
                 nextPage.StartSelectAccountPage(stage);
             } else {
-                Alert a = Alerts.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
+                Alert a = AlertsUtil.ErrorAlert("Не обрана компанія", "Оберіть компанію, щоб продовжити");
                 a.showAndWait();
             }
         });
 
         RootLogin.setOnAction(e->{
             String selectedUsername = "root";
-            dbManager.setUsername(selectedUsername);
+            dbUtil.setUsername(selectedUsername);
             LoginPage nextPage = new LoginPage();
             nextPage.StartLoginPage(primaryStage);
         });
@@ -113,11 +113,11 @@ public class CompanyPage extends Application {
 
         changeHost.setOnAction(event -> {
             vbox.getChildren().addAll(hostField, save);
-            hostField.setText(dbManager.getHost());
+            hostField.setText(dbUtil.getHost());
         });
 
         save.setOnAction(event -> {
-            dbManager.setHost(hostField.getText());
+            dbUtil.setHost(hostField.getText());
             vbox.getChildren().removeAll(hostField, save);
             databases.clear();
             getCompanies();
@@ -135,7 +135,7 @@ public class CompanyPage extends Application {
 
     private void getCompanies() {
         try {
-            databases.addAll(dbManager.getCompanies());
+            databases.addAll(dbUtil.getCompanies());
         }
         catch (Exception e) {
             e.printStackTrace();

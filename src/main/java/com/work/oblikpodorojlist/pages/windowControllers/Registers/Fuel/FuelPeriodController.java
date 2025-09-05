@@ -2,12 +2,11 @@ package com.work.oblikpodorojlist.pages.windowControllers.Registers.Fuel;
 
 import com.work.oblikpodorojlist.MonthYearSpinnerValueFactory;
 import com.work.oblikpodorojlist.QuarterYearSpinnerValueFactory;
-import com.work.oblikpodorojlist.managers.DBManager;
+import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 
@@ -17,7 +16,7 @@ import java.time.Year;
 
 public class FuelPeriodController extends WindowController {
     private MainPage mainPage;
-    private DBManager dbManager;
+    private DBUtil dbUtil;
 
     public FuelPeriodController() {
     }
@@ -25,7 +24,7 @@ public class FuelPeriodController extends WindowController {
     public void openWindow(FuelRegisterController controller){
         String windowTitle = "Реєстр палива: Параметри періоду";
         mainPage = MainPage.getInstance();
-        dbManager = DBManager.getInstance();
+        dbUtil = DBUtil.getInstance();
         if(mainPage.openWindows.containsKey(windowTitle)) {
             mainPage.openWindows.get(windowTitle).toFront();
             if(!mainPage.openWindows.get(windowTitle).isVisible()){

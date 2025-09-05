@@ -1,4 +1,4 @@
-package com.work.oblikpodorojlist.managers;
+package com.work.oblikpodorojlist.utils;
 import com.work.oblikpodorojlist.model.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Font;
@@ -24,14 +24,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 
-public class DocumentsManager {
-    private static DocumentsManager instance;
+public class DocumentsUtil {
+    private static DocumentsUtil instance;
 
-    private DocumentsManager(){}
+    private DocumentsUtil(){}
 
-    public static DocumentsManager getInstance() {
+    public static DocumentsUtil getInstance() {
         if(instance == null){
-            instance = new DocumentsManager();
+            instance = new DocumentsUtil();
         }
         return instance;
     }
@@ -84,7 +84,7 @@ public class DocumentsManager {
 
     public String getDocsFolderPath() {
 
-        URL resource = DBManager.class.getClassLoader().getResource("config");
+        URL resource = DBUtil.class.getClassLoader().getResource("config");
         if (resource != null) {
             String resourcePath = resource.getPath();
             return new File(resourcePath).getParent() + File.separator;
@@ -164,11 +164,11 @@ public class DocumentsManager {
         }
     }
 
-    public void createOrderDocument(DBManager dbManager, _Order order) {
+    public void createOrderDocument(DBUtil dbUtil, _Order order) {
         try {
-            _Company _company = dbManager.getCompanyInfo();
+            _Company _company = dbUtil.getCompanyInfo();
 
-            _Worker _worker = dbManager.getWorker(order.getIdWorker());
+            _Worker _worker = dbUtil.getWorker(order.getIdWorker());
             LocalDate departureDate = order.getStartDate();
             LocalDate arrivalDate = order.getEndDate();
             LocalDate currentDate = order.getOrderDate();
@@ -192,7 +192,7 @@ public class DocumentsManager {
 
             JFileChooser fileChooser = new JFileChooser();
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[2] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[2] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 fileChooser.setCurrentDirectory(defaultDirectory);
@@ -351,7 +351,7 @@ public class DocumentsManager {
                 body1Run.setFontFamily("Times New Roman");
                 body1Run.setText(
                         "1. Відрядити "+ _worker.getNameR() +
-                        ", "+dbManager.getWorkerPosition(false, _worker.getId())+", у відрядження до міст: "+
+                        ", "+ dbUtil.getWorkerPosition(false, _worker.getId())+", у відрядження до міст: "+
                                 path +
                         " на " + days + DAYS +
                         " з "+ departureDate.format(formatter) +
@@ -504,7 +504,7 @@ public class DocumentsManager {
                 rightTab = tabs.addNewTab();
                 rightTab.setVal(STTabJc.RIGHT);
                 rightTab.setPos(BigInteger.valueOf(9000));
-                addWrappedText(worker, capitalizeFirstLetter(dbManager.getWorkerPosition(true, _worker.getId())), 31);
+                addWrappedText(worker, capitalizeFirstLetter(dbUtil.getWorkerPosition(true, _worker.getId())), 31);
 
                 XWPFRun workerRun = worker.createRun();
                 workerRun.setFontFamily("Times New Roman");
@@ -557,7 +557,7 @@ public class DocumentsManager {
         }
     }
 
-    public void createList(DBManager dbManager, _List  list) {
+    public void createList(DBUtil dbUtil, _List  list) {
         try {
             _Company _company = _Company.getInstance();
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -565,7 +565,7 @@ public class DocumentsManager {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[4] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[4] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 
@@ -586,10 +586,10 @@ public class DocumentsManager {
 
                 try (XSSFWorkbook workbook = new XSSFWorkbook()) {
 
-                    _Car car = dbManager.getCar(list.getIdCar());
-                    _Worker worker = dbManager.getWorker(list.getIdWorker());
+                    _Car car = dbUtil.getCar(list.getIdCar());
+                    _Worker worker = dbUtil.getWorker(list.getIdWorker());
 
-                    Sheet sheet = workbook.createSheet(dbManager.getCarNumber(list.getIdCar()));
+                    Sheet sheet = workbook.createSheet(dbUtil.getCarNumber(list.getIdCar()));
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
@@ -779,7 +779,7 @@ public class DocumentsManager {
                     Row currentRow = sheet.createRow(0);
                     Cell currentCell  = currentRow.createCell(0);
                     currentCell.setCellStyle(overStyle);
-                    currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
+                    currentCell.setCellValue(dbUtil.getCompanyInfo().getTypeShort() + "\"" + dbUtil.getCompanyInfo().getName()+"\"");
 
 
                     currentRow = sheet.createRow(2);
@@ -1236,7 +1236,7 @@ public class DocumentsManager {
         }
     }
 
-    public void createRegisterOrders(DBManager dbManager, List<_Order> orders, String WorkerName, LocalDate startDate, LocalDate endDate) {
+    public void createRegisterOrders(DBUtil dbUtil, List<_Order> orders, String WorkerName, LocalDate startDate, LocalDate endDate) {
         try {
             _Company _company = _Company.getInstance();
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -1244,7 +1244,7 @@ public class DocumentsManager {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[5] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[5] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 
@@ -1383,7 +1383,7 @@ public class DocumentsManager {
                         currentCell.setCellStyle(dateCellInsideStyle);
 
                         currentCell = currentRow.createCell(3);
-                        currentCell.setCellValue(dbManager.getWorkerName(true, order.getIdWorker()));
+                        currentCell.setCellValue(dbUtil.getWorkerName(true, order.getIdWorker()));
                         currentCell.setCellStyle(Inside);
 
                         currentCell = currentRow.createCell(4);
@@ -1418,7 +1418,7 @@ public class DocumentsManager {
 
                     currentRow = sheet.createRow(0);
                     currentCell  = currentRow.createCell(0);
-                    currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
+                    currentCell.setCellValue(dbUtil.getCompanyInfo().getTypeShort() + "\"" + dbUtil.getCompanyInfo().getName()+"\"");
                     currentCell.setCellStyle(CompanyStyle);
 
                     currentRow = sheet.createRow(2);
@@ -1453,26 +1453,26 @@ public class DocumentsManager {
         }
     }
 
-    public void createReportDocument(DBManager dbManager, _Report report) {
+    public void createReportDocument(DBUtil dbUtil, _Report report) {
         try {
-            _Company _company = dbManager.getCompanyInfo();
+            _Company _company = dbUtil.getCompanyInfo();
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-            String orderNumber =  dbManager.getOrderNumber(report.getOrderId());
-            String worker =  dbManager.getOrderWorkerName(report.getOrderId());
-            String position =  dbManager.getWorkerPosition(true, dbManager.getOrderIdWorker(report.getOrderId()));
-            String goal = dbManager.getOrderGoal(report.getOrderId());
+            String orderNumber =  dbUtil.getOrderNumber(report.getOrderId());
+            String worker =  dbUtil.getOrderWorkerName(report.getOrderId());
+            String position =  dbUtil.getWorkerPosition(true, dbUtil.getOrderIdWorker(report.getOrderId()));
+            String goal = dbUtil.getOrderGoal(report.getOrderId());
             String comments = report.getComments();
             String date = report.getDate().format(formatter);
-            String orderDate = dbManager.getOrderDate(report.getOrderId()).format(formatter);
-            String head = dbManager.getOrderHead(report.getOrderId());
+            String orderDate = dbUtil.getOrderDate(report.getOrderId()).format(formatter);
+            String head = dbUtil.getOrderHead(report.getOrderId());
 
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Word Document");
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[3] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[3] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 
@@ -1667,7 +1667,7 @@ public class DocumentsManager {
         }
     }
 
-    public void createRegisterFuel(DBManager dbManager, List<String> numbers, List<FuelUsage> usages, LocalDate startDate, LocalDate endDate, Period period) {
+    public void createRegisterFuel(DBUtil dbUtil, List<String> numbers, List<FuelUsage> usages, LocalDate startDate, LocalDate endDate, Period period) {
         try {
             _Company _company = _Company.getInstance();
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -1675,7 +1675,7 @@ public class DocumentsManager {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[6] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[6] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 
@@ -1949,7 +1949,7 @@ public class DocumentsManager {
 
                     currentRow = sheet.createRow(0);
                     currentCell  = currentRow.createCell(0);
-                    currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
+                    currentCell.setCellValue(dbUtil.getCompanyInfo().getTypeShort() + "\"" + dbUtil.getCompanyInfo().getName()+"\"");
                     currentCell.setCellStyle(CompanyStyle);
 
                     currentRow = sheet.createRow(2);
@@ -2004,7 +2004,7 @@ public class DocumentsManager {
         }
     }
 
-    public void createRegisterLists(DBManager dbManager, List<String> numbers, List<_List> lists, LocalDate startDate, LocalDate endDate) {
+    public void createRegisterLists(DBUtil dbUtil, List<String> numbers, List<_List> lists, LocalDate startDate, LocalDate endDate) {
         try {
             _Company _company = _Company.getInstance();
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -2012,7 +2012,7 @@ public class DocumentsManager {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[7] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[7] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 
@@ -2171,7 +2171,7 @@ public class DocumentsManager {
                         currentCell.setCellStyle(Inside);
 
                         currentCell = currentRow.createCell(2);
-                        currentCell.setCellValue(dbManager.getWorkerName(true, list.getIdWorker()));
+                        currentCell.setCellValue(dbUtil.getWorkerName(true, list.getIdWorker()));
                         currentCell.setCellStyle(Inside);
 
                         currentCell = currentRow.createCell(3);
@@ -2183,14 +2183,14 @@ public class DocumentsManager {
                         currentCell.setCellStyle(dateCellInsideStyle);
 
                         currentCell = currentRow.createCell(5);
-                        currentCell.setCellValue(dbManager.getCarNumber(list.getIdCar()));
+                        currentCell.setCellValue(dbUtil.getCarNumber(list.getIdCar()));
                         currentCell.setCellStyle(Inside);
 
                         currentCell = currentRow.createCell(6);
                         if(list.getIdOrder() == -1) {
                             currentCell.setCellValue("По місту");
                         } else {
-                            currentCell.setCellValue(dbManager.getOrderNumber(list.getIdOrder()));
+                            currentCell.setCellValue(dbUtil.getOrderNumber(list.getIdOrder()));
                         }
                         currentCell.setCellStyle(Inside);
 
@@ -2238,7 +2238,7 @@ public class DocumentsManager {
 
                     currentRow = sheet.createRow(0);
                     currentCell  = currentRow.createCell(0);
-                    currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
+                    currentCell.setCellValue(dbUtil.getCompanyInfo().getTypeShort() + "\"" + dbUtil.getCompanyInfo().getName()+"\"");
                     currentCell.setCellStyle(CompanyStyle);
 
                     currentRow = sheet.createRow(2);
@@ -2267,7 +2267,7 @@ public class DocumentsManager {
     }
 
 
-    public void createCarsHandbook(DBManager dbManager, List<_Car> cars) {
+    public void createCarsHandbook(DBUtil dbUtil, List<_Car> cars) {
         try {
             _Company _company = _Company.getInstance();
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -2275,7 +2275,7 @@ public class DocumentsManager {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[0] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[0] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 
@@ -2465,7 +2465,7 @@ public class DocumentsManager {
 
                     currentRow = sheet.createRow(0);
                     currentCell  = currentRow.createCell(0);
-                    currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
+                    currentCell.setCellValue(dbUtil.getCompanyInfo().getTypeShort() + "\"" + dbUtil.getCompanyInfo().getName()+"\"");
                     currentCell.setCellStyle(CompanyStyle);
 
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
@@ -2488,7 +2488,7 @@ public class DocumentsManager {
         }
     }
 
-    public void createWorkersHandbook(DBManager dbManager, List<_Worker> workers) {
+    public void createWorkersHandbook(DBUtil dbUtil, List<_Worker> workers) {
         try {
             _Company _company = _Company.getInstance();
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -2496,7 +2496,7 @@ public class DocumentsManager {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setDialogTitle("Save Excel File");
 
-            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbManager.getCompany() + "\\" + folders[1] + "\\");
+            File defaultDirectory = new File(getDocsFolderPath() + "DocFiles\\"+ dbUtil.getCompany() + "\\" + folders[1] + "\\");
             
             if (defaultDirectory.exists() && defaultDirectory.isDirectory()) {
                 
@@ -2670,7 +2670,7 @@ public class DocumentsManager {
 
                     currentRow = sheet.createRow(0);
                     currentCell  = currentRow.createCell(0);
-                    currentCell.setCellValue(dbManager.getCompanyInfo().getTypeShort() + "\"" + dbManager.getCompanyInfo().getName()+"\"");
+                    currentCell.setCellValue(dbUtil.getCompanyInfo().getTypeShort() + "\"" + dbUtil.getCompanyInfo().getName()+"\"");
                     currentCell.setCellStyle(CompanyStyle);
 
                     try (FileOutputStream out = new FileOutputStream(fileToSave)) {
