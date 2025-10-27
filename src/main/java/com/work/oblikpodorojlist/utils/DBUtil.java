@@ -313,6 +313,14 @@ public class DBUtil {
         String backupFilePath = backupFolderPath + "\\backup_(" + today.format(formatter) + ")_" + formattedTime + ".sql";
         String mysqlDumpPath = findMySQLDump();
 
+        // Перевірка: чи знайдено mysqldump
+        if (mysqlDumpPath == null) {
+            System.err.println("УВАГА: mysqldump не знайдено на системі!");
+            System.out.println("Спроба використати Docker для резервного копіювання...");
+            createBackupUsingDocker(backupFilePath);
+            return;
+        }
+
         List<String> commandList = new ArrayList<>();
         commandList.add(mysqlDumpPath);
 
@@ -363,6 +371,92 @@ public class DBUtil {
 
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Створює резервну копію за допомогою Docker (якщо MySQL запущений в Docker контейнері)
+     */
+    private void createBackupUsingDocker(String backupFilePath) {
+        try {
+            // Спроба знайти Docker контейнер з MySQL
+            String containerName = "oblik-mysql";
+            
+            // Перевірка, чи працює Docker
+            ProcessBuilder checkDocker = new ProcessBuilder("docker", "ps", "--format", "{{.Names}}");
+            Process checkProcess = checkDocker.start();
+            BufferedReader checkReader = new BufferedReader(new InputStreamReader(checkProcess.getInputStream()));
+            
+            boolean containerFound = false;
+            String line;
+            while ((line = checkReader.readLine()) != null) {
+                if (line.contains(containerName)) {
+                    containerFound = true;
+                    break;
+                }
+            }
+            checkProcess.waitFor();
+
+            if (!containerFound) {
+                System.err.println("Docker контейнер '" + containerName + "' не знайдено або не запущений.");
+                System.out.println("Запустіть MySQL через Docker: docker-compose up -d");
+                Alert alert = AlertsUtil.ErrorAlert(
+                    "Резервне копіювання недоступне",
+                    "MySQL не знайдено ні локально, ні в Docker.\n" +
+                    "Встановіть MySQL локально або запустіть Docker контейнер."
+                );
+                alert.showAndWait();
+                return;
+            }
+
+            // Виконання mysqldump через Docker
+            String[] dockerCommand = new String[]{
+                "docker", "exec", containerName,
+                "mysqldump",
+                "-u", username,
+                "-p" + password,
+                company
+            };
+
+            System.out.println("Виконується Docker команда: " + Arrays.toString(dockerCommand));
+
+            ProcessBuilder processBuilder = new ProcessBuilder(dockerCommand);
+            processBuilder.redirectErrorStream(false);
+            Process process = processBuilder.start();
+
+            // Зчитування виводу і запис у файл
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                 BufferedWriter writer = new BufferedWriter(new FileWriter(backupFilePath))) {
+                
+                while ((line = reader.readLine()) != null) {
+                    writer.write(line);
+                    writer.newLine();
+                }
+            }
+
+            // Перевірка на помилки
+            try (BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                while ((line = errorReader.readLine()) != null) {
+                    System.err.println("Docker помилка: " + line);
+                }
+            }
+
+            int exitCode = process.waitFor();
+            
+            if (exitCode == 0) {
+                System.out.println("✓ Бекап успішно створено через Docker: " + backupFilePath);
+            } else {
+                System.err.println("✗ Помилка при створенні бекапу через Docker. Код: " + exitCode);
+            }
+
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Помилка при створенні бекапу через Docker: " + e.getMessage());
+            e.printStackTrace();
+            Alert alert = AlertsUtil.ErrorAlert(
+                "Помилка резервного копіювання",
+                "Не вдалося створити бекап:\n" + e.getMessage()
+            );
+            alert.showAndWait();
         }
     }
 
@@ -427,10 +521,18 @@ public class DBUtil {
         fileDialog.dispose();
         System.out.println("Обрано файл: " + backupFilePath);
 
-        String mysqlDumpPath = findMySQLDump();
+        String mysqlPath = findMySQL();
+
+        // Перевірка: чи знайдено mysql
+        if (mysqlPath == null) {
+            System.err.println("УВАГА: mysql не знайдено на системі!");
+            System.out.println("Спроба використати Docker для відновлення...");
+            loadBackupUsingDocker(backupFilePath);
+            return;
+        }
 
         String[] command = new String[]{
-                mysqlDumpPath,
+                mysqlPath,
                 "-u", username,
                 "-p" + password,
                 company,
@@ -463,6 +565,131 @@ public class DBUtil {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * Відновлює БД з резервної копії за допомогою Docker
+     */
+    private void loadBackupUsingDocker(String backupFilePath) {
+        try {
+            String containerName = "oblik-mysql";
+            
+            // Перевірка, чи працює Docker контейнер
+            ProcessBuilder checkDocker = new ProcessBuilder("docker", "ps", "--format", "{{.Names}}");
+            Process checkProcess = checkDocker.start();
+            BufferedReader checkReader = new BufferedReader(new InputStreamReader(checkProcess.getInputStream()));
+            
+            boolean containerFound = false;
+            String line;
+            while ((line = checkReader.readLine()) != null) {
+                if (line.contains(containerName)) {
+                    containerFound = true;
+                    break;
+                }
+            }
+            checkProcess.waitFor();
+
+            if (!containerFound) {
+                System.err.println("Docker контейнер '" + containerName + "' не знайдено або не запущений.");
+                Alert alert = AlertsUtil.ErrorAlert(
+                    "Відновлення недоступне",
+                    "MySQL не знайдено ні локально, ні в Docker.\n" +
+                    "Встановіть MySQL локально або запустіть Docker контейнер."
+                );
+                alert.showAndWait();
+                return;
+            }
+
+            // Копіювання файлу бекапу в контейнер
+            String containerBackupPath = "/tmp/restore_backup.sql";
+            String[] copyCommand = new String[]{
+                "docker", "cp", backupFilePath, containerName + ":" + containerBackupPath
+            };
+
+            System.out.println("Копіювання бекапу в контейнер: " + Arrays.toString(copyCommand));
+            ProcessBuilder copyBuilder = new ProcessBuilder(copyCommand);
+            Process copyProcess = copyBuilder.start();
+            copyProcess.waitFor();
+
+            // Виконання відновлення через Docker
+            String[] dockerCommand = new String[]{
+                "docker", "exec", "-i", containerName,
+                "mysql",
+                "-u", username,
+                "-p" + password,
+                company,
+                "-e", "source " + containerBackupPath
+            };
+
+            System.out.println("Виконується Docker команда відновлення: " + Arrays.toString(dockerCommand));
+
+            ProcessBuilder processBuilder = new ProcessBuilder(dockerCommand);
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+
+            int exitCode = process.waitFor();
+            
+            if (exitCode == 0) {
+                System.out.println("✓ БД успішно відновлена через Docker!");
+            } else {
+                System.err.println("✗ Помилка при відновленні БД через Docker. Код: " + exitCode);
+            }
+
+            // Видалення тимчасового файлу з контейнера
+            String[] cleanupCommand = new String[]{
+                "docker", "exec", containerName,
+                "rm", containerBackupPath
+            };
+            new ProcessBuilder(cleanupCommand).start().waitFor();
+
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Помилка при відновленні через Docker: " + e.getMessage());
+            e.printStackTrace();
+            Alert alert = AlertsUtil.ErrorAlert(
+                "Помилка відновлення",
+                "Не вдалося відновити БД:\n" + e.getMessage()
+            );
+            alert.showAndWait();
+        }
+    }
+
+    /**
+     * Шукає mysql клієнт на системі
+     */
+    private String findMySQL() {
+        String path = System.getenv("PATH");
+        if (path != null) {
+            for (String dir : path.split(";")) {
+                File file = new File(dir, "mysql.exe");
+                if (file.exists()) {
+                    return file.getAbsolutePath();
+                }
+            }
+        }
+
+        String[] commonPaths = {
+                "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysql.exe",
+                "C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysql.exe",
+                "C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysql.exe",
+                "C:\\Program Files\\MySQL\\MySQL Server 5.6\\bin\\mysql.exe",
+                "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.7\\bin\\mysql.exe",
+                "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.6\\bin\\mysql.exe"
+        };
+
+        for (String pathOption : commonPaths) {
+            File file = new File(pathOption);
+            if (file.exists()) {
+                return file.getAbsolutePath();
+            }
+        }
+
+        return null;
     }
 
     private String findMySQLDump() {
