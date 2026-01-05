@@ -1,9 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
-import com.work.oblikpodorojlist.utils.DocumentsUtil;
-import com.work.oblikpodorojlist.utils.IconsUtil;
+import com.work.oblikpodorojlist.utils.*;
 import com.work.oblikpodorojlist.model._List;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -25,7 +22,9 @@ import org.controlsfx.control.CheckComboBox;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ListsJournalController extends WindowController {
@@ -41,7 +40,12 @@ public class ListsJournalController extends WindowController {
     private CloseListController closeListController;
     private TableView<_List> tableView;
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
+    private ComboBox<String> yearFilter = new ComboBox<>();
+    private String selectedYear = "Всі роки";
+    private boolean isUpdating = false; // Флаг для запобігання рекурсивних оновлень
+
     public ListsJournalController(){}
 
 
@@ -88,6 +92,17 @@ public class ListsJournalController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            paginationUtil = new PaginationUtil(pagination);
+
+            // Налаштування фільтру по року
+            yearFilter.getItems().add("Всі роки");
+            yearFilter.setValue("Всі роки");
+            yearFilter.setOnAction(e -> {
+                if (!isUpdating) { // Запобігаємо рекурсивним викликам
+                    selectedYear = yearFilter.getValue();
+                    updateValues();
+                }
+            });
 
             updateButton.setOnAction(e->{
                 updateValues();
@@ -248,7 +263,7 @@ public class ListsJournalController extends WindowController {
                 }
             });
 
-            HBox buttonBox = new HBox(10, updateButton, addButton, editButton, new Label("Фільтрувати по авто:"), carField, removeButton, openFileButton, openFolderButton, deleteButton);
+            HBox buttonBox = new HBox(10, updateButton, addButton, editButton, new Label("Рік:"), yearFilter, new Label("Фільтрувати по авто:"), carField, removeButton, openFileButton, openFolderButton, deleteButton);
             buttonBox.setAlignment(Pos.CENTER_LEFT);
 
             tableView.getColumns().addAll( listNumberCol, orderCol, workerCol, CarNumberCol,startDateCol, startMCol, startFCol,
@@ -380,7 +395,10 @@ public class ListsJournalController extends WindowController {
             tableContainer = new VBox(tableView);
             VBox.setVgrow(tableContainer, Priority.ALWAYS);
 
-            table.getChildren().addAll(buttonBox,tableContainer, pagination);
+            // Створення панелі управління пагінацією
+            HBox paginationControls = paginationUtil.createPaginationControls();
+
+            table.getChildren().addAll(buttonBox,tableContainer, pagination, paginationControls);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
@@ -401,9 +419,68 @@ public class ListsJournalController extends WindowController {
                 }
 
                 List<_List> newLists = dbUtil.getListsForCars(numbersGL);
+
+                // Оновлення списку років в ComboBox (з УСІХ даних, не тільки відфільтрованих!)
+                java.util.Set<String> years = newLists.stream()
+                        .flatMap(list -> {
+                            java.util.Set<Integer> listYears = new java.util.HashSet<>();
+                            if (list.getStartDate() != null) listYears.add(list.getStartDate().getYear());
+                            if (list.getEndDate() != null) listYears.add(list.getEndDate().getYear());
+                            return listYears.stream();
+                        })
+                        .map(String::valueOf)
+                        .collect(Collectors.toSet());
+
+                // Фільтрація по року (ПІСЛЯ того як взяли всі роки)
+                if (!selectedYear.equals("Всі роки")) {
+                    int year = Integer.parseInt(selectedYear);
+                    newLists = newLists.stream()
+                            .filter(list -> {
+                                boolean startMatch = list.getStartDate() != null && list.getStartDate().getYear() == year;
+                                boolean endMatch = list.getEndDate() != null && list.getEndDate().getYear() == year;
+                                return startMatch || endMatch;
+                            })
+                            .collect(Collectors.toList());
+                }
+
                 Platform.runLater(() -> {
+                    ListsJournalController.this.isUpdating = true; // Блокуємо onAction під час оновлення
+                    try {
+                        String currentSelection = yearFilter.getValue();
+                        yearFilter.getItems().clear();
+                        yearFilter.getItems().add("Всі роки");
+                        yearFilter.getItems().addAll(years.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList()));
+                        if (yearFilter.getItems().contains(currentSelection)) {
+                            yearFilter.setValue(currentSelection);
+                        } else {
+                            yearFilter.setValue("Всі роки");
+                            ListsJournalController.this.selectedYear = "Всі роки";
+                        }
+                    } finally {
+                        ListsJournalController.this.isUpdating = false; // Розблокуємо після завершення
+                    }
+                });
+
+                // Сортування
+                if (selectedYear.equals("Всі роки")) {
+                    // Групування за роками (від старіших до новіших) та сортування всередині року
+                    newLists.sort(Comparator
+                            .comparing((_List list) -> {
+                                // Беремо мінімальний рік з дат
+                                int year = 9999;
+                                if (list.getStartDate() != null) year = Math.min(year, list.getStartDate().getYear());
+                                if (list.getEndDate() != null) year = Math.min(year, list.getEndDate().getYear());
+                                return year;
+                            })
+                            .thenComparing(_List::getNumber));
+                } else {
+                    // Якщо обрано конкретний рік - просто сортуємо за номером
                     newLists.sort(Comparator.comparing(_List::getNumber));
-                    lists.setAll(newLists);
+                }
+
+                List<_List> finalLists = newLists;
+                Platform.runLater(() -> {
+                    lists.setAll(finalLists);
                     int pageCount = (int) Math.ceil((double) lists.size() / rowsPerPage);
                     pagination.setPageCount(Math.max(pageCount, 1));
                     int lastPage = Math.max(pageCount - 1, 0);

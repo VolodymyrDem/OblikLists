@@ -147,4 +147,62 @@
         </createTable>
     </changeSet>
 
+    <!-- Add indexes for performance optimization -->
+    <changeSet id="9-add-performance-indexes" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="lists"/>
+            <tableExists tableName="cars"/>
+            <tableExists tableName="orders"/>
+            <tableExists tableName="workers"/>
+        </preConditions>
+
+        <!-- Indexes for lists table -->
+        <createIndex indexName="idx_lists_id_car" tableName="lists">
+            <column name="id-car"/>
+        </createIndex>
+        <createIndex indexName="idx_lists_id_order" tableName="lists">
+            <column name="id-order"/>
+        </createIndex>
+        <createIndex indexName="idx_lists_done" tableName="lists">
+            <column name="done"/>
+        </createIndex>
+        <createIndex indexName="idx_lists_end_date" tableName="lists">
+            <column name="end-date"/>
+        </createIndex>
+        <createIndex indexName="idx_lists_start_date" tableName="lists">
+            <column name="start-date"/>
+        </createIndex>
+
+        <!-- Composite index for common query patterns -->
+        <createIndex indexName="idx_lists_car_done_date" tableName="lists">
+            <column name="id-car"/>
+            <column name="done"/>
+            <column name="end-date"/>
+        </createIndex>
+
+        <!-- Indexes for cars table -->
+        <createIndex indexName="idx_cars_number" tableName="cars">
+            <column name="number(100)"/>
+        </createIndex>
+        <createIndex indexName="idx_cars_valid" tableName="cars">
+            <column name="valid"/>
+        </createIndex>
+
+        <!-- Indexes for orders table -->
+        <createIndex indexName="idx_orders_id_worker" tableName="orders">
+            <column name="id-worker"/>
+        </createIndex>
+        <createIndex indexName="idx_orders_start_date" tableName="orders">
+            <column name="start-date"/>
+        </createIndex>
+        <createIndex indexName="idx_orders_end_date" tableName="orders">
+            <column name="end-date"/>
+        </createIndex>
+
+        <!-- Indexes for workers table -->
+        <createIndex indexName="idx_workers_position_id" tableName="workers">
+            <column name="positionId"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

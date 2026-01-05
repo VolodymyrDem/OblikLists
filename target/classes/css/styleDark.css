@@ -507,3 +507,57 @@
 .uniform-button {
     -fx-pref-height: 32px;
 }
+
+/* Модерна пагінація */
+.pagination-button {
+    -fx-min-width: 35px;
+    -fx-pref-width: 35px;
+    -fx-min-height: 30px;
+    -fx-pref-height: 30px;
+    -fx-background-color: #343639;
+    -fx-text-fill: #e8eaed;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-font-weight: bold;
+}
+
+.pagination-button:hover {
+    -fx-background-color: #5f6368;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.3), 3, 0.5, 0, 0);
+}
+
+.pagination-button:pressed {
+    -fx-background-color: #3e4043;
+}
+
+.pagination-button:disabled {
+    -fx-opacity: 0.4;
+}
+
+.pagination-field {
+    -fx-min-width: 60px;
+    -fx-max-width: 60px;
+    -fx-pref-width: 60px;
+    -fx-min-height: 30px;
+    -fx-pref-height: 30px;
+    -fx-background-color: #343639;
+    -fx-text-fill: #e8eaed;
+    -fx-border-color: #5f6368;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-alignment: center;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.pagination-field:focused {
+    -fx-border-color: #8ab4f8;
+    -fx-border-width: 2px;
+}
+
+.pagination-info {
+    -fx-text-fill: #e8eaed;
+    -fx-font-size: 13px;
+    -fx-padding: 5px;
+}

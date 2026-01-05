@@ -30,6 +30,7 @@ public class CarsHandbookController extends WindowController {
     private TableView<_Car> tableView;
     ComboBox<String> selectionModel = new ComboBox<>();
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
 
     public CarsHandbookController(){}
@@ -83,6 +84,7 @@ public class CarsHandbookController extends WindowController {
 
         pagination = new Pagination(1, 0);
         pagination.setPageFactory(this::createPage);
+        paginationUtil = new PaginationUtil(pagination);
 
         TableColumn<_Car, String> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("idCar"));
@@ -240,7 +242,10 @@ public class CarsHandbookController extends WindowController {
             });
         }
 
-        table.getChildren().addAll(buttonBox,tableContainer, pagination);
+        // Створення панелі управління пагінацією
+        HBox paginationControls = paginationUtil.createPaginationControls();
+
+        table.getChildren().addAll(buttonBox,tableContainer, pagination, paginationControls);
 
         mainPage.openInternalWindow(table, windowTitle, true);
     }

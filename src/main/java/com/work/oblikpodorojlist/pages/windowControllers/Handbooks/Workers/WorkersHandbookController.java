@@ -1,9 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Workers;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
-import com.work.oblikpodorojlist.utils.DocumentsUtil;
-import com.work.oblikpodorojlist.utils.IconsUtil;
+import com.work.oblikpodorojlist.utils.*;
 import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -33,6 +30,7 @@ public class WorkersHandbookController extends WindowController {
     private ComboBox<String> selectionModel;
     private TableView<_Worker> tableView;
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
 
     public WorkersHandbookController(){}
@@ -91,6 +89,7 @@ public class WorkersHandbookController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            paginationUtil = new PaginationUtil(pagination);
 
             TableColumn<_Worker, Integer> idCol = new TableColumn<>("ID");
             idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -241,7 +240,10 @@ public class WorkersHandbookController extends WindowController {
             }
 
 
-            table.getChildren().addAll(buttonBox,tableContainer, pagination);
+            // Створення панелі управління пагінацією
+            HBox paginationControls = paginationUtil.createPaginationControls();
+
+            table.getChildren().addAll(buttonBox,tableContainer, pagination, paginationControls);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }

@@ -1,8 +1,7 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Positions;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
-import com.work.oblikpodorojlist.utils.IconsUtil;
+import com.work.oblikpodorojlist.utils.*;
+
 import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -29,6 +28,7 @@ public class PositionsHandbookController extends WindowController {
     private PositionCardController PositionCardController;
     private TableView<_Position> tableView;
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
 
     public PositionsHandbookController(){}
@@ -65,6 +65,7 @@ public class PositionsHandbookController extends WindowController {
 
         pagination = new Pagination(1, 0);
         pagination.setPageFactory(this::createPage);
+        paginationUtil = new PaginationUtil(pagination);
 
         TableColumn<_Position, String> idCol = new TableColumn<>("ID");
         idCol.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -160,7 +161,10 @@ public class PositionsHandbookController extends WindowController {
         HBox buttonBox = new HBox(10,updateButton, addButton, editButton, deleteButton);
         buttonBox.setAlignment(Pos.CENTER_LEFT);
 
-        table.getChildren().addAll(buttonBox,tableContainer, pagination);
+        // Створення панелі управління пагінацією
+        HBox paginationControls = paginationUtil.createPaginationControls();
+
+        table.getChildren().addAll(buttonBox,tableContainer, pagination, paginationControls);
 
         mainPage.openInternalWindow(table, windowTitle, true);
 

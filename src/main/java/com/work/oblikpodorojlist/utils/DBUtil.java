@@ -5,6 +5,8 @@ import java.io.*;
 import java.nio.file.Path;
 import java.sql.Date;
 import com.work.oblikpodorojlist.model.*;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
@@ -37,6 +39,13 @@ public class DBUtil {
     private String username;
     private String password;
     private static DBUtil instance;
+    private HikariDataSource dataSource;
+    private HikariDataSource guestDataSource;
+
+    // Кеші для покращення продуктивності
+    private Map<Integer, String> workerNameCache = new HashMap<>();
+    private Map<Integer, String> carNumberCache = new HashMap<>();
+    private Map<Integer, String> orderNumberCache = new HashMap<>();
 
     private DBUtil() {
         getHost();
@@ -90,6 +99,18 @@ public class DBUtil {
 
     public void setCompany(String company) {
         this.company = company;
+        // Очищаємо кеш та закриваємо старий пул при зміні компанії
+        clearCaches();
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+            dataSource = null;
+        }
+    }
+
+    private void clearCaches() {
+        workerNameCache.clear();
+        carNumberCache.clear();
+        orderNumberCache.clear();
     }
 
     public String getUsername() {
@@ -98,6 +119,11 @@ public class DBUtil {
 
     public void setUsername(String username) {
         this.username = username;
+        // Закриваємо старий пул при зміні користувача
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+            dataSource = null;
+        }
     }
 
     public void deleteUser(String selectedUser) {
@@ -116,14 +142,39 @@ public class DBUtil {
 
     public void setPassword(String password) {
         this.password = password;
+        // Закриваємо старий пул при зміні пароля
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+            dataSource = null;
+        }
     }
 
     public Connection GuestConnect() {
         try {
-            return java.sql.DriverManager.getConnection(URL, GuestUSERNAME, GuestUSERNAME);
+            if (guestDataSource == null || guestDataSource.isClosed()) {
+                initGuestDataSource();
+            }
+            return guestDataSource.getConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void initGuestDataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://" + host + ":3306/");
+        config.setUsername(GuestUSERNAME);
+        config.setPassword(GuestPASSWORD);
+        config.setMaximumPoolSize(5);
+        config.setMinimumIdle(1);
+        config.setConnectionTimeout(10000);
+        config.setIdleTimeout(300000);
+        config.setMaxLifetime(600000);
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+
+        guestDataSource = new HikariDataSource(config);
     }
 
     public void CreateGuestUser() {
@@ -174,9 +225,49 @@ public class DBUtil {
 
     public Connection Connect() {
         try {
-            return java.sql.DriverManager.getConnection(URL+(company == null? "" :company),username, password);
+            if (dataSource == null || dataSource.isClosed()) {
+                initDataSource();
+            }
+            return dataSource.getConnection();
         } catch (SQLException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private void initDataSource() {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:mysql://" + host + ":3306/" + (company == null ? "" : company) +
+                         "?useServerPrepStmts=true&rewriteBatchedStatements=true&cachePrepStmts=true&useLocalSessionState=true&useLocalTransactionState=true");
+        config.setUsername(username);
+        config.setPassword(password);
+        config.setMaximumPoolSize(20); // Збільшено для кращої паралельності
+        config.setMinimumIdle(5); // Більше готових з'єднань
+        config.setConnectionTimeout(30000);
+        config.setIdleTimeout(600000);
+        config.setMaxLifetime(1800000);
+        config.setLeakDetectionThreshold(60000); // Виявлення витоків з'єднань
+
+        // Оптимізація кешування prepared statements
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "500");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "4096");
+        config.addDataSourceProperty("useServerPrepStmts", "true");
+        config.addDataSourceProperty("useLocalSessionState", "true");
+        config.addDataSourceProperty("rewriteBatchedStatements", "true");
+        config.addDataSourceProperty("cacheResultSetMetadata", "true");
+        config.addDataSourceProperty("cacheServerConfiguration", "true");
+        config.addDataSourceProperty("elideSetAutoCommits", "true");
+        config.addDataSourceProperty("maintainTimeStats", "false");
+
+        dataSource = new HikariDataSource(config);
+    }
+
+    public void closeDataSources() {
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
+        }
+        if (guestDataSource != null && !guestDataSource.isClosed()) {
+            guestDataSource.close();
         }
     }
 
@@ -972,137 +1063,162 @@ public class DBUtil {
     }
 
     public List<_List> getListsFiltered(List<String> Numbers, LocalDate startDate, LocalDate endDate) {
+        if (Numbers == null || Numbers.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         List<_List> listsAll = new ArrayList<>();
 
-        String sql = "SELECT l.*, c.number, c.`id-car` "
-                + "FROM lists l "
-                + "JOIN cars c ON l.`id-car` = c.`id-car` "
-                + "WHERE c.number = ? "
-                + "AND l.done = TRUE "
-                + "AND l.`end-date` BETWEEN ? AND ?";
+        // Створюємо плейсхолдери для IN clause
+        String placeholders = String.join(",", Numbers.stream().map(n -> "?").toArray(String[]::new));
 
-        for (String carNumber : Numbers) {
-            List<_List> carLists = new ArrayList<>();
-            try (Connection connection = Connect();
-                 PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, carNumber);
-                statement.setDate(2, Date.valueOf(startDate));
-                statement.setDate(3, Date.valueOf(endDate));
+        String sql = "SELECT l.*, " +
+                    "c.number as car_number, c.`id-car`, " +
+                    "o.`order-number`, o.`start-date` as order_start_date, o.`end-date` as order_end_date, " +
+                    "o.route as order_route, o.goal as order_goal, o.`id-worker` as order_worker_id " +
+                    "FROM lists l " +
+                    "JOIN cars c ON l.`id-car` = c.`id-car` " +
+                    "LEFT JOIN orders o ON l.`id-order` = o.`id-order` " +
+                    "WHERE c.number IN (" + placeholders + ") " +
+                    "AND l.done = TRUE " +
+                    "AND l.`end-date` BETWEEN ? AND ?";
 
-                ResultSet resultSet = statement.executeQuery();
-                while (resultSet.next()) {
-                    int id = resultSet.getInt("id");
-                    int number = resultSet.getInt("number");
-                    int idCar = resultSet.getInt("id-car");
-                    int idOrder = resultSet.getInt("id-order");
-                    double startM = resultSet.getDouble("start-mileage");
-                    double startF = resultSet.getDouble("start-fuel");
-                    boolean done = resultSet.getBoolean("done");
+        try (Connection connection = Connect();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
-                    _List list = new _List(id, number, idOrder, idCar, startM, startF, done);
-
-                    if (done) {
-                        double endM = resultSet.getDouble("end-mileage");
-                        double endF = resultSet.getDouble("end-fuel");
-                        double refuel = resultSet.getDouble("refuel");
-                        list.setEndFuel(endF);
-                        list.setEndMileage(endM);
-                        list.setRefuel(refuel);
-                    }
-
-                    if (idOrder == -1) {
-                        LocalDate startData = resultSet.getDate("start-date").toLocalDate();
-                        LocalDate endData = resultSet.getDate("end-date").toLocalDate();
-                        String route = resultSet.getString("route");
-                        String goal = resultSet.getString("goal");
-                        int workerId = resultSet.getInt("id-worker");
-                        list.setStartDate(startData);
-                        list.setEndDate(endData);
-                        list.setRoute(route);
-                        list.setGoal(goal);
-                        list.setIdWorker(workerId);
-                        list.setIdOrder(-1);
-                    } else {
-                        list.setIdOrder(idOrder);
-                        list.setStartDate(getStartOrderDate(idOrder));
-                        list.setEndDate(getEndOrderDate(idOrder));
-                        list.setRoute(getOrderRoute(idOrder));
-                        list.setGoal(getOrderGoal(idOrder));
-                        list.setIdWorker(getOrderIdWorker(idOrder));
-                    }
-                    carLists.add(list);
-                }
-            } catch (Exception e) {
-                System.err.println("Error getting list: " + e.getMessage());
+            // Встановлюємо параметри для IN clause
+            int paramIndex = 1;
+            for (String carNumber : Numbers) {
+                statement.setString(paramIndex++, carNumber);
             }
-            listsAll.addAll(carLists);
+            statement.setDate(paramIndex++, Date.valueOf(startDate));
+            statement.setDate(paramIndex, Date.valueOf(endDate));
+
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int number = resultSet.getInt("number");
+                int idCar = resultSet.getInt("id-car");
+                int idOrder = resultSet.getInt("id-order");
+                double startM = resultSet.getDouble("start-mileage");
+                double startF = resultSet.getDouble("start-fuel");
+                boolean done = resultSet.getBoolean("done");
+
+                _List list = new _List(id, number, idOrder, idCar, startM, startF, done);
+
+                if (done) {
+                    double endM = resultSet.getDouble("end-mileage");
+                    double endF = resultSet.getDouble("end-fuel");
+                    double refuel = resultSet.getDouble("refuel");
+                    list.setEndFuel(endF);
+                    list.setEndMileage(endM);
+                    list.setRefuel(refuel);
+                }
+
+                if (idOrder == -1) {
+                    LocalDate startData = resultSet.getDate("start-date").toLocalDate();
+                    LocalDate endData = resultSet.getDate("end-date").toLocalDate();
+                    String route = resultSet.getString("route");
+                    String goal = resultSet.getString("goal");
+                    int workerId = resultSet.getInt("id-worker");
+                    list.setStartDate(startData);
+                    list.setEndDate(endData);
+                    list.setRoute(route);
+                    list.setGoal(goal);
+                    list.setIdWorker(workerId);
+                    list.setIdOrder(-1);
+                } else {
+                    list.setIdOrder(idOrder);
+                    Date orderStartDate = resultSet.getDate("order_start_date");
+                    Date orderEndDate = resultSet.getDate("order_end_date");
+                    list.setStartDate(orderStartDate != null ? orderStartDate.toLocalDate() : null);
+                    list.setEndDate(orderEndDate != null ? orderEndDate.toLocalDate() : null);
+                    list.setRoute(resultSet.getString("order_route"));
+                    list.setGoal(resultSet.getString("order_goal"));
+                    list.setIdWorker(resultSet.getInt("order_worker_id"));
+                }
+                listsAll.add(list);
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting filtered lists: " + e.getMessage());
+            e.printStackTrace();
         }
         return listsAll;
     }
 
     public List<FuelUsage> getListsFuelFiltered(List<String> Numbers, PeriodParameters params) {
+        if (Numbers == null || Numbers.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         List<FuelUsage> fuelUsages = new ArrayList<>();
 
-        String sql = "SELECT l.*, c.number, c.`id-car` "
-                + "FROM lists l "
-                + "JOIN cars c ON l.`id-car` = c.`id-car` "
-                + "WHERE c.number = ? "
-                + "AND l.done = TRUE "
-                + "AND l.`end-date` BETWEEN ? AND ?";
+        // Створюємо плейсхолдери для IN clause
+        String placeholders = String.join(",", Numbers.stream().map(n -> "?").toArray(String[]::new));
 
-        for (String carNumber : Numbers) {
-            List<_List> carLists = new ArrayList<>();
-            try (Connection connection = Connect();
-                 PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, carNumber);
-                statement.setDate(2, Date.valueOf(params.getStartDate()));
-                statement.setDate(3, Date.valueOf(params.getEndDate()));
+        String sql = "SELECT l.*, " +
+                    "c.number as car_number, c.`id-car`, c.`fuel-usage` as car_fuel_usage, " +
+                    "o.`start-date` as order_start_date, o.`end-date` as order_end_date " +
+                    "FROM lists l " +
+                    "JOIN cars c ON l.`id-car` = c.`id-car` " +
+                    "LEFT JOIN orders o ON l.`id-order` = o.`id-order` " +
+                    "WHERE c.number IN (" + placeholders + ") " +
+                    "AND l.done = TRUE " +
+                    "AND l.`end-date` BETWEEN ? AND ?";
 
-                ResultSet resultSet = statement.executeQuery();
-                while (resultSet.next()) {
-                    int id = resultSet.getInt("id");
-                    int number = resultSet.getInt("number");
-                    int idCar = resultSet.getInt("id-car");
-                    int idOrder = resultSet.getInt("id-order");
-                    double startM = resultSet.getDouble("start-mileage");
-                    double startF = resultSet.getDouble("start-fuel");
-                    boolean done = resultSet.getBoolean("done");
+        Map<String, List<_List>> carListsMap = new HashMap<>();
 
-                    if (done) {
-                        _List list = new _List(id, number, idOrder, idCar, startM, startF, done);
-                        double endM = resultSet.getDouble("end-mileage");
-                        double endF = resultSet.getDouble("end-fuel");
-                        double refuel = resultSet.getDouble("refuel");
-                        list.setEndFuel(endF);
-                        list.setEndMileage(endM);
-                        list.setRefuel(refuel);
-                        if (idOrder == -1) {
-                            LocalDate startData = resultSet.getDate("start-date").toLocalDate();
-                            LocalDate endData = resultSet.getDate("end-date").toLocalDate();
-                            String route = resultSet.getString("route");
-                            String goal = resultSet.getString("goal");
-                            int workerId = resultSet.getInt("id-worker");
-                            list.setStartDate(startData);
-                            list.setEndDate(endData);
-                            list.setRoute(route);
-                            list.setGoal(goal);
-                            list.setIdWorker(workerId);
-                            list.setIdOrder(-1);
-                        } else {
-                            list.setIdOrder(idOrder);
-                            list.setStartDate(getStartOrderDate(idOrder));
-                            list.setEndDate(getEndOrderDate(idOrder));
-                            list.setRoute(getOrderRoute(idOrder));
-                            list.setGoal(getOrderGoal(idOrder));
-                            list.setIdWorker(getOrderIdWorker(idOrder));
-                        }
-                        carLists.add(list);
-                    }
+        try (Connection connection = Connect();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
-                }
-            } catch (Exception e) {
-                System.err.println("Error getting list: " + e.getMessage());
+            int paramIndex = 1;
+            for (String carNumber : Numbers) {
+                statement.setString(paramIndex++, carNumber);
             }
+            statement.setDate(paramIndex++, Date.valueOf(params.getStartDate()));
+            statement.setDate(paramIndex, Date.valueOf(params.getEndDate()));
+
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int number = resultSet.getInt("number");
+                int idCar = resultSet.getInt("id-car");
+                int idOrder = resultSet.getInt("id-order");
+                double startM = resultSet.getDouble("start-mileage");
+                double startF = resultSet.getDouble("start-fuel");
+                double endM = resultSet.getDouble("end-mileage");
+                double endF = resultSet.getDouble("end-fuel");
+                double refuel = resultSet.getDouble("refuel");
+                String carNumber = resultSet.getString("car_number");
+
+                _List list = new _List(id, number, idOrder, idCar, startM, startF, true);
+                list.setEndFuel(endF);
+                list.setEndMileage(endM);
+                list.setRefuel(refuel);
+
+                if (idOrder == -1) {
+                    LocalDate startData = resultSet.getDate("start-date").toLocalDate();
+                    LocalDate endData = resultSet.getDate("end-date").toLocalDate();
+                    list.setStartDate(startData);
+                    list.setEndDate(endData);
+                } else {
+                    Date orderStartDate = resultSet.getDate("order_start_date");
+                    Date orderEndDate = resultSet.getDate("order_end_date");
+                    list.setStartDate(orderStartDate != null ? orderStartDate.toLocalDate() : null);
+                    list.setEndDate(orderEndDate != null ? orderEndDate.toLocalDate() : null);
+                }
+
+                carListsMap.computeIfAbsent(carNumber, k -> new ArrayList<>()).add(list);
+            }
+        } catch (Exception e) {
+            System.err.println("Error getting fuel filtered lists: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Обробка кожного автомобіля
+        for (String carNumber : Numbers) {
+            List<_List> carLists = carListsMap.getOrDefault(carNumber, new ArrayList<>());
+
             if (params.getPeriod().equals(Period.ofYears(2))) {
                 // "По листах" — кожен лист окремо
                 for (_List list : carLists) {
@@ -1187,67 +1303,82 @@ public class DBUtil {
     }
 
     public List<_List> getListsForCars(List<String> Numbers) {
+        if (Numbers == null || Numbers.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         List<_List> ListsCars = new ArrayList<>();
 
-        String sql = "SELECT l.*, c.number, c.`id-car` "
-                + "FROM lists l "
-                + "JOIN cars c ON l.`id-car` = c.`id-car` "
-                + "WHERE c.number = ? ";
+        // Створюємо плейсхолдери для IN clause
+        String placeholders = String.join(",", Numbers.stream().map(n -> "?").toArray(String[]::new));
 
-        for (String carNumber : Numbers) {
-            List<_List> carLists = new ArrayList<>();
-            try (Connection connection = Connect();
-                 PreparedStatement statement = connection.prepareStatement(sql)) {
-                statement.setString(1, carNumber);
+        String sql = "SELECT l.*, " +
+                    "c.number as car_number, c.`id-car`, " +
+                    "o.`order-number`, o.`start-date` as order_start_date, o.`end-date` as order_end_date, " +
+                    "o.route as order_route, o.goal as order_goal, o.`id-worker` as order_worker_id " +
+                    "FROM lists l " +
+                    "JOIN cars c ON l.`id-car` = c.`id-car` " +
+                    "LEFT JOIN orders o ON l.`id-order` = o.`id-order` " +
+                    "WHERE c.number IN (" + placeholders + ")";
 
-                ResultSet resultSet = statement.executeQuery();
-                while (resultSet.next()) {
-                    int id = resultSet.getInt("id");
-                    int number = resultSet.getInt("number");
-                    int idCar = resultSet.getInt("id-car");
-                    int idOrder = resultSet.getInt("id-order");
-                    double startM = resultSet.getDouble("start-mileage");
-                    double startF = resultSet.getDouble("start-fuel");
-                    boolean done = resultSet.getBoolean("done");
+        try (Connection connection = Connect();
+             PreparedStatement statement = connection.prepareStatement(sql)) {
 
-                    _List list = new _List(id, number, idOrder, idCar, startM, startF, done);
+            // Встановлюємо параметри для IN clause
+            for (int i = 0; i < Numbers.size(); i++) {
+                statement.setString(i + 1, Numbers.get(i));
+            }
 
-                    if (done) {
-                        double endM = resultSet.getDouble("end-mileage");
-                        double endF = resultSet.getDouble("end-fuel");
-                        double refuel = resultSet.getDouble("refuel");
-                        list.setEndFuel(endF);
-                        list.setEndMileage(endM);
-                        list.setRefuel(refuel);
-                    }
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                int number = resultSet.getInt("number");
+                int idCar = resultSet.getInt("id-car");
+                int idOrder = resultSet.getInt("id-order");
+                double startM = resultSet.getDouble("start-mileage");
+                double startF = resultSet.getDouble("start-fuel");
+                boolean done = resultSet.getBoolean("done");
 
-                    if (idOrder == -1) {
-                        LocalDate startData = resultSet.getDate("start-date").toLocalDate();
-                        LocalDate endData = resultSet.getDate("end-date").toLocalDate();
-                        String route = resultSet.getString("route");
-                        String goal = resultSet.getString("goal");
-                        int workerId = resultSet.getInt("id-worker");
-                        list.setStartDate(startData);
-                        list.setEndDate(endData);
-                        list.setRoute(route);
-                        list.setGoal(goal);
-                        list.setIdWorker(workerId);
-                        list.setIdOrder(-1);
-                    } else {
-                        list.setIdOrder(idOrder);
-                        list.setStartDate(getStartOrderDate(idOrder));
-                        list.setEndDate(getEndOrderDate(idOrder));
-                        list.setRoute(getOrderRoute(idOrder));
-                        list.setGoal(getOrderGoal(idOrder));
-                        list.setIdWorker(getOrderIdWorker(idOrder));
-                    }
-                    carLists.add(list);
+                _List list = new _List(id, number, idOrder, idCar, startM, startF, done);
+
+                if (done) {
+                    double endM = resultSet.getDouble("end-mileage");
+                    double endF = resultSet.getDouble("end-fuel");
+                    double refuel = resultSet.getDouble("refuel");
+                    list.setEndFuel(endF);
+                    list.setEndMileage(endM);
+                    list.setRefuel(refuel);
                 }
 
-                ListsCars.addAll(carLists);
-            } catch (Exception e) {
-                System.err.println("Error getting list: " + e.getMessage());
+                if (idOrder == -1) {
+                    // Дані безпосередньо з таблиці lists
+                    LocalDate startData = resultSet.getDate("start-date").toLocalDate();
+                    LocalDate endData = resultSet.getDate("end-date").toLocalDate();
+                    String route = resultSet.getString("route");
+                    String goal = resultSet.getString("goal");
+                    int workerId = resultSet.getInt("id-worker");
+                    list.setStartDate(startData);
+                    list.setEndDate(endData);
+                    list.setRoute(route);
+                    list.setGoal(goal);
+                    list.setIdWorker(workerId);
+                    list.setIdOrder(-1);
+                } else {
+                    // Дані з JOIN з таблицею orders
+                    list.setIdOrder(idOrder);
+                    Date orderStartDate = resultSet.getDate("order_start_date");
+                    Date orderEndDate = resultSet.getDate("order_end_date");
+                    list.setStartDate(orderStartDate != null ? orderStartDate.toLocalDate() : null);
+                    list.setEndDate(orderEndDate != null ? orderEndDate.toLocalDate() : null);
+                    list.setRoute(resultSet.getString("order_route"));
+                    list.setGoal(resultSet.getString("order_goal"));
+                    list.setIdWorker(resultSet.getInt("order_worker_id"));
+                }
+                ListsCars.add(list);
             }
+        } catch (Exception e) {
+            System.err.println("Error getting lists for cars: " + e.getMessage());
+            e.printStackTrace();
         }
         return ListsCars;
     }
@@ -1276,7 +1407,11 @@ public class DBUtil {
 
 
     public List<_List> getLists() {
-        String sql = "SELECT * FROM lists";
+        String sql = "SELECT l.*, " +
+                    "o.`order-number`, o.`start-date` as order_start_date, o.`end-date` as order_end_date, " +
+                    "o.route as order_route, o.goal as order_goal, o.`id-worker` as order_worker_id " +
+                    "FROM lists l " +
+                    "LEFT JOIN orders o ON l.`id-order` = o.`id-order`";
         ObservableList<_List> lists = FXCollections.observableArrayList();
 
         try (Connection connection = Connect();
@@ -1317,16 +1452,19 @@ public class DBUtil {
                     list.setIdOrder(-1);
                 } else {
                     list.setIdOrder(idOrder);
-                    list.setStartDate(getStartOrderDate(idOrder));
-                    list.setEndDate(getEndOrderDate(idOrder));
-                    list.setRoute(getOrderRoute(idOrder));
-                    list.setGoal(getOrderGoal(idOrder));
-                    list.setIdWorker(getOrderIdWorker(idOrder));
+                    Date orderStartDate = resultSet.getDate("order_start_date");
+                    Date orderEndDate = resultSet.getDate("order_end_date");
+                    list.setStartDate(orderStartDate != null ? orderStartDate.toLocalDate() : null);
+                    list.setEndDate(orderEndDate != null ? orderEndDate.toLocalDate() : null);
+                    list.setRoute(resultSet.getString("order_route"));
+                    list.setGoal(resultSet.getString("order_goal"));
+                    list.setIdWorker(resultSet.getInt("order_worker_id"));
                 }
                 lists.add(list);
             }
 
         } catch (Exception e) {
+            System.err.println("Error getting all lists: " + e.getMessage());
             e.printStackTrace();
         }
         return lists;
@@ -1800,19 +1938,30 @@ public class DBUtil {
     }
 
     public String getOrderNumber(int id) {
-        String sql = "select `order-number` from orders where `id-order` = " + String.valueOf(id);
+        // Перевірка кешу
+        if (orderNumberCache.containsKey(id)) {
+            return orderNumberCache.get(id);
+        }
+
+        String sql = "SELECT `order-number` FROM orders WHERE `id-order` = ?";
         String orderNumber = "";
         try (Connection connection = Connect();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
                 orderNumber = resultSet.getString("order-number");
             }
 
         } catch (Exception e) {
+            System.err.println("Error getting order number: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // Зберігаємо в кеш
+        orderNumberCache.put(id, orderNumber);
         return orderNumber;
     }
 
@@ -2627,20 +2776,32 @@ public class DBUtil {
     }
 
     public String getWorkerName(boolean isN, int workerId) {
-        String sql = "SELECT * FROM workers WHERE `id` = "+workerId+";";
+        // Перевірка кешу
+        int cacheKey = workerId * 10 + (isN ? 1 : 0); // Унікальний ключ для N/R
+        if (workerNameCache.containsKey(cacheKey)) {
+            return workerNameCache.get(cacheKey);
+        }
+
+        String sql = "SELECT * FROM workers WHERE `id` = ?";
 
         String name="";
         try (Connection connection = Connect();
-             PreparedStatement statement = connection.prepareStatement(sql);
-             ResultSet resultSet = statement.executeQuery()) {
+             PreparedStatement statement = connection.prepareStatement(sql)) {
+
+            statement.setInt(1, workerId);
+            ResultSet resultSet = statement.executeQuery();
 
             if (resultSet.next()) {
                 name = resultSet.getString(isN?"nameN":"nameR");
             }
 
         } catch (Exception e) {
+            System.err.println("Error getting worker name: " + e.getMessage());
             e.printStackTrace();
         }
+
+        // Зберігаємо в кеш
+        workerNameCache.put(cacheKey, name);
         return name;
     }
 

@@ -1,9 +1,7 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
-import com.work.oblikpodorojlist.utils.DocumentsUtil;
-import com.work.oblikpodorojlist.utils.IconsUtil;
+import com.work.oblikpodorojlist.utils.*;
+
 import com.work.oblikpodorojlist.model._Order;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -22,7 +20,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class OrdersJournalController extends WindowController {
     private ObservableList<_Order> orders = FXCollections.observableArrayList();
@@ -33,7 +35,11 @@ public class OrdersJournalController extends WindowController {
     private EditOrderController editOrderController;
     private TableView<_Order> tableView;
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
+    private ComboBox<String> yearFilter = new ComboBox<>();
+    private String selectedYear = "Всі роки";
+    private boolean isUpdating = false; // Флаг для запобігання рекурсивних оновлень
 
     public OrdersJournalController(){}
 
@@ -265,7 +271,17 @@ public class OrdersJournalController extends WindowController {
                 }
             });
 
-            HBox buttonBox = new HBox(10, updateButton, addButton, copyButton, editButton, openFileButton, openFolderButton ,deleteButton);
+            // Налаштування фільтру по року
+            yearFilter.getItems().add("Всі роки");
+            yearFilter.setValue("Всі роки");
+            yearFilter.setOnAction(e -> {
+                if (!isUpdating) { // Запобігаємо рекурсивним викликам
+                    selectedYear = yearFilter.getValue();
+                    updateValues();
+                }
+            });
+
+            HBox buttonBox = new HBox(10, updateButton, addButton, copyButton, editButton, new Label("Рік:"), yearFilter, openFileButton, openFolderButton ,deleteButton);
             buttonBox.getStyleClass().add("buttonBox");
             buttonBox.setAlignment(Pos.CENTER_LEFT);
 
@@ -289,6 +305,7 @@ public class OrdersJournalController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            paginationUtil = new PaginationUtil(pagination);
 
             VBox.setVgrow(tableView, Priority.ALWAYS);
 
@@ -328,7 +345,10 @@ public class OrdersJournalController extends WindowController {
                 }
             });
 
-            table.getChildren().addAll(buttonBox,tableContainer, pagination);
+            // Створення панелі управління пагінацією
+            HBox paginationControls = paginationUtil.createPaginationControls();
+
+            table.getChildren().addAll(buttonBox,tableContainer, pagination, paginationControls);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
@@ -353,14 +373,71 @@ public class OrdersJournalController extends WindowController {
             @Override
             protected Void call() {
                 List<_Order> newOrders = dbUtil.getOrders();
-                newOrders.sort((o1, o2) -> {
-                    int num1 = extractNumber(o1.getOrderNumber());
-                    int num2 = extractNumber(o2.getOrderNumber());
-                    return Integer.compare(num1, num2);
-                });
+
+                // Оновлення списку років в ComboBox (з УСІХ даних, не тільки відфільтрованих!)
+                Set<String> years = newOrders.stream()
+                        .flatMap(order -> {
+                            Set<Integer> orderYears = new HashSet<>();
+                            if (order.getOrderDate() != null) orderYears.add(order.getOrderDate().getYear());
+                            if (order.getStartDate() != null) orderYears.add(order.getStartDate().getYear());
+                            if (order.getEndDate() != null) orderYears.add(order.getEndDate().getYear());
+                            return orderYears.stream();
+                        })
+                        .map(String::valueOf)
+                        .collect(Collectors.toSet());
+
+                // Фільтрація по року (ПІСЛЯ того як взяли всі роки)
+                if (!selectedYear.equals("Всі роки")) {
+                    int year = Integer.parseInt(selectedYear);
+                    newOrders = newOrders.stream()
+                            .filter(order -> {
+                                boolean orderDateMatch = order.getOrderDate() != null && order.getOrderDate().getYear() == year;
+                                boolean startMatch = order.getStartDate() != null && order.getStartDate().getYear() == year;
+                                boolean endMatch = order.getEndDate() != null && order.getEndDate().getYear() == year;
+                                return orderDateMatch || startMatch || endMatch;
+                            })
+                            .collect(Collectors.toList());
+                }
 
                 Platform.runLater(() -> {
-                    orders.setAll(newOrders);
+                    isUpdating = true; // Блокуємо onAction під час оновлення
+                    try {
+                        String currentSelection = yearFilter.getValue();
+                        yearFilter.getItems().clear();
+                        yearFilter.getItems().add("Всі роки");
+                        yearFilter.getItems().addAll(years.stream().sorted(Comparator.reverseOrder()).collect(Collectors.toList()));
+                        if (yearFilter.getItems().contains(currentSelection)) {
+                            yearFilter.setValue(currentSelection);
+                        } else {
+                            yearFilter.setValue("Всі роки");
+                            selectedYear = "Всі роки";
+                        }
+                    } finally {
+                        isUpdating = false; // Розблокуємо після завершення
+                    }
+                });
+
+                // Сортування
+                if (selectedYear.equals("Всі роки")) {
+                    // Групування за роками (від старіших до новіших) та сортування всередині року за номером наказу
+                    newOrders.sort(Comparator
+                            .comparing((_Order order) -> {
+                                // Беремо мінімальний рік з дат
+                                int year = 9999;
+                                if (order.getOrderDate() != null) year = Math.min(year, order.getOrderDate().getYear());
+                                if (order.getStartDate() != null) year = Math.min(year, order.getStartDate().getYear());
+                                if (order.getEndDate() != null) year = Math.min(year, order.getEndDate().getYear());
+                                return year;
+                            })
+                            .thenComparing(order -> extractNumber(order.getOrderNumber())));
+                } else {
+                    // Якщо обрано конкретний рік - просто сортуємо за номером наказу
+                    newOrders.sort(Comparator.comparing(order -> extractNumber(order.getOrderNumber())));
+                }
+
+                List<_Order> finalOrders = newOrders;
+                Platform.runLater(() -> {
+                    orders.setAll(finalOrders);
 
                     int pageCount = (int) Math.ceil((double) orders.size() / rowsPerPage);
                     pagination.setPageCount(Math.max(pageCount, 1));

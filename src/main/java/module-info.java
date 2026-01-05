@@ -13,6 +13,7 @@ module com.work.oblikpodorojlist {
     requires javafx.swing;
     requires org.kordamp.ikonli.fontawesome5;
     requires liquibase.core;
+    requires com.zaxxer.hikari;
 
     opens com.work.oblikpodorojlist to javafx.fxml;
     exports com.work.oblikpodorojlist;

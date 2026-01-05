@@ -41,6 +41,7 @@ public class ListsRegisterController extends WindowController {
     public DatePicker datePickerEnd;
     private TableView<_List> tableView;
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
     private static final Logger logger = LoggerUtil.getLogger();
 
@@ -301,6 +302,7 @@ public class ListsRegisterController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            paginationUtil = new PaginationUtil(pagination);
 
             tableView.getColumns().addAll( listNumberCol, orderCol, workerCol, CarNumberCol,startDateCol, startMCol, startFCol,
                     endDateCol, endMCol, endFCol, reFCol, routeCol, goalCol);
@@ -346,7 +348,10 @@ public class ListsRegisterController extends WindowController {
                 }
             });
 
-            table.getChildren().addAll(buttonBox,tableContainer, pagination);
+            // Створення панелі управління пагінацією
+            HBox paginationControls = paginationUtil.createPaginationControls();
+
+            table.getChildren().addAll(buttonBox,tableContainer, pagination, paginationControls);
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }
