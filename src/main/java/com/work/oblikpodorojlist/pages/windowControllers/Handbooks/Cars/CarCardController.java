@@ -92,9 +92,6 @@ public class CarCardController extends WindowController {
             }
         }
 
-        startMileageField.setDisable(!dbUtil.getUsername().equals("root"));
-        startFuelField.setDisable(!dbUtil.getUsername().equals("root"));
-
         if(isRemoving) {
             numberField.setDisable(true);
             modelField.setDisable(true);
