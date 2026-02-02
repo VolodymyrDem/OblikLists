@@ -1,4 +1,4 @@
-name: Build Windows EXE Installer
+name: Build Windows EXE Wrapper
 
 on:
   push:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-windows:
-    name: Build Windows Installer
+    name: Build Windows EXE
     runs-on: windows-latest
 
     steps:
@@ -26,25 +26,19 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build JAR with Maven
+      - name: Build JAR and EXE with Maven
         run: mvn clean package -DskipTests
-
-      - name: Create Runtime Image with jlink
-        run: mvn javafx:jlink
-
-      - name: Create Windows EXE Installer
-        run: mvn jpackage:jpackage
 
       - name: List build artifacts
         run: |
           echo "Build artifacts:"
-          dir target\dist
+          dir target
 
-      - name: Upload EXE Installer
+      - name: Upload EXE Wrapper
         uses: actions/upload-artifact@v4
         with:
-          name: OblikPodorojList-Windows-Installer
-          path: target/dist/*.exe
+          name: OblikPodorojList-Windows-EXE
+          path: target/OblikPodorojList.exe
           retention-days: 30
 
       - name: Upload JAR

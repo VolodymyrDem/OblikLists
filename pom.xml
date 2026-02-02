@@ -195,29 +195,45 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- jpackage для створення нативних інсталяторів -->
+            <!-- Launch4j для створення .exe wrapper навколо JAR -->
             <plugin>
-                <groupId>org.panteleyev</groupId>
-                <artifactId>jpackage-maven-plugin</artifactId>
-                <version>1.6.5</version>
-                <configuration>
-                    <name>OblikPodorojList</name>
-                    <appVersion>1.0.0</appVersion>
-                    <vendor>WorkCompany</vendor>
-                    <destination>target/dist</destination>
-                    <module>com.work.oblikpodorojlist/com.work.oblikpodorojlist.Main</module>
-                    <runtimeImage>target/app</runtimeImage>
-                    <type>EXE</type>
-                    <javaOptions>
-                        <option>-Dfile.encoding=UTF-8</option>
-                    </javaOptions>
-                    <icon>src/main/resources/icon.ico</icon>
-                    <winMenu>true</winMenu>
-                    <winDirChooser>true</winDirChooser>
-                    <winShortcut>true</winShortcut>
-                    <winPerUserInstall>false</winPerUserInstall>
-                    <winMenuGroup>OblikPodorojList</winMenuGroup>
-                </configuration>
+                <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                <artifactId>launch4j-maven-plugin</artifactId>
+                <version>2.5.0</version>
+                <executions>
+                    <execution>
+                        <id>l4j-clui</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>launch4j</goal>
+                        </goals>
+                        <configuration>
+                            <headerType>gui</headerType>
+                            <outfile>target/OblikPodorojList.exe</outfile>
+                            <jar>target/OblikPodorojList-1.0-SNAPSHOT-shaded.jar</jar>
+                            <errTitle>OblikPodorojList Error</errTitle>
+                            <classPath>
+                                <mainClass>com.work.oblikpodorojlist.Main</mainClass>
+                            </classPath>
+                            <icon>src/main/resources/icon.ico</icon>
+                            <jre>
+                                <path>%JAVA_HOME%;%PATH%</path>
+                                <minVersion>17</minVersion>
+                            </jre>
+                            <versionInfo>
+                                <fileVersion>1.0.0.0</fileVersion>
+                                <txtFileVersion>1.0.0</txtFileVersion>
+                                <fileDescription>Oblik Podorojnyx Lystiv</fileDescription>
+                                <copyright>2026</copyright>
+                                <productVersion>1.0.0.0</productVersion>
+                                <txtProductVersion>1.0.0</txtProductVersion>
+                                <productName>OblikPodorojList</productName>
+                                <internalName>OblikPodorojList</internalName>
+                                <originalFilename>OblikPodorojList.exe</originalFilename>
+                            </versionInfo>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   create-release:
-    name: Create Release with Windows Installer
+    name: Create Release with Windows EXE
     runs-on: windows-latest
 
     steps:
@@ -36,35 +36,35 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
 
-      - name: Build JAR with Maven
+      - name: Build JAR and EXE with Maven
         run: mvn clean package -DskipTests
 
-      - name: Create Runtime Image with jlink
-        run: mvn javafx:jlink
-
-      - name: Create Windows EXE Installer
-        run: mvn jpackage:jpackage
+      - name: Rename EXE with version
+        shell: bash
+        run: |
+          cp target/OblikPodorojList.exe target/OblikPodorojList-${{ steps.version.outputs.VERSION }}.exe
 
       - name: List build artifacts
         run: |
           echo "Build artifacts:"
-          dir target\dist
+          dir target
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/dist/*.exe
+            target/OblikPodorojList-${{ steps.version.outputs.VERSION }}.exe
             target/*-shaded.jar
           body: |
             ## OblikPodorojList ${{ steps.version.outputs.VERSION }}
             
             ### 📦 Файли для завантаження:
             
-            **Windows Installer (.exe):**
-            - Включає Java Runtime - не потрібно встановлювати Java окремо
-            - Розмір: ~150-200 MB
-            - Автоматичне встановлення, іконки, ярлики
+            **Windows EXE (.exe):**
+            - Простий wrapper навколо JAR файлу
+            - Розмір: ~50-70 MB
+            - Потрібна Java 17+ на комп'ютері
+            - Запуск: подвійний клік на .exe
             
             **JAR файл:**
             - Універсальний (Windows, macOS, Linux)
@@ -73,8 +73,8 @@ jobs:
             - Запуск: `java -jar OblikPodorojList-${{ steps.version.outputs.VERSION }}-shaded.jar`
             
             ### 📋 Системні вимоги:
-            - **EXE:** Windows 10/11 (64-bit)
-            - **JAR:** Java 17+ на будь-якій ОС
+            - **Java 17+** (завантажити: https://adoptium.net/)
+            - Windows 10/11, macOS, або Linux
             
             ### 🗄️ База даних:
             - MySQL 8.0 (Docker або локальна установка)
