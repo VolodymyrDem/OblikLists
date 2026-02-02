@@ -171,8 +171,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <source>22</source>
-                    <target>22</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -194,6 +194,30 @@
                         </configuration>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- jpackage для створення нативних інсталяторів -->
+            <plugin>
+                <groupId>org.panteleyev</groupId>
+                <artifactId>jpackage-maven-plugin</artifactId>
+                <version>1.6.5</version>
+                <configuration>
+                    <name>OblikPodorojList</name>
+                    <appVersion>1.0.0</appVersion>
+                    <vendor>WorkCompany</vendor>
+                    <destination>target/dist</destination>
+                    <module>com.work.oblikpodorojlist/com.work.oblikpodorojlist.Main</module>
+                    <runtimeImage>target/app</runtimeImage>
+                    <type>EXE</type>
+                    <javaOptions>
+                        <option>-Dfile.encoding=UTF-8</option>
+                    </javaOptions>
+                    <icon>src/main/resources/icon.ico</icon>
+                    <winMenu>true</winMenu>
+                    <winDirChooser>true</winDirChooser>
+                    <winShortcut>true</winShortcut>
+                    <winPerUserInstall>false</winPerUserInstall>
+                    <winMenuGroup>OblikPodorojList</winMenuGroup>
+                </configuration>
             </plugin>
         </plugins>
     </build>

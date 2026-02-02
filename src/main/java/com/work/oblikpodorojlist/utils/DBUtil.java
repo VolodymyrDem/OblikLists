@@ -784,24 +784,48 @@ public class DBUtil {
     }
 
     private String findMySQLDump() {
+        String os = System.getProperty("os.name").toLowerCase();
+        boolean isWindows = os.contains("win");
+        boolean isMac = os.contains("mac");
+        boolean isUnix = os.contains("nix") || os.contains("nux");
+
+        String executable = isWindows ? "mysqldump.exe" : "mysqldump";
+        String pathSeparator = isWindows ? ";" : ":";
+
         String path = System.getenv("PATH");
         if (path != null) {
-            for (String dir : path.split(";")) {
-                File file = new File(dir, "mysqldump.exe");
+            for (String dir : path.split(pathSeparator)) {
+                File file = new File(dir, executable);
                 if (file.exists()) {
                     return file.getAbsolutePath();
                 }
             }
         }
 
-        String[] commonPaths = {
-                "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe",
-                "C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqldump.exe",
-                "C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
-                "C:\\Program Files\\MySQL\\MySQL Server 5.6\\bin\\mysqldump.exe",
-                "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
-                "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.6\\bin\\mysqldump.exe"
-        };
+        String[] commonPaths;
+        if (isWindows) {
+            commonPaths = new String[]{
+                    "C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe",
+                    "C:\\Program Files\\MySQL\\MySQL Server 8.4\\bin\\mysqldump.exe",
+                    "C:\\Program Files\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
+                    "C:\\Program Files\\MySQL\\MySQL Server 5.6\\bin\\mysqldump.exe",
+                    "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.7\\bin\\mysqldump.exe",
+                    "C:\\Program Files (x86)\\MySQL\\MySQL Server 5.6\\bin\\mysqldump.exe"
+            };
+        } else if (isMac) {
+            commonPaths = new String[]{
+                    "/usr/local/mysql/bin/mysqldump",
+                    "/usr/local/bin/mysqldump",
+                    "/opt/homebrew/bin/mysqldump",
+                    "/usr/bin/mysqldump"
+            };
+        } else {
+            commonPaths = new String[]{
+                    "/usr/bin/mysqldump",
+                    "/usr/local/bin/mysqldump",
+                    "/usr/local/mysql/bin/mysqldump"
+            };
+        }
 
         for (String pathOption : commonPaths) {
             File file = new File(pathOption);
