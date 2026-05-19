@@ -65,6 +65,8 @@ public class PositionsHandbookController extends WindowController {
 
         pagination = new Pagination(1, 0);
         pagination.setPageFactory(this::createPage);
+        pagination.setManaged(false);
+        pagination.setVisible(false);
         paginationUtil = new PaginationUtil(pagination);
 
         TableColumn<_Position, String> idCol = new TableColumn<>("ID");

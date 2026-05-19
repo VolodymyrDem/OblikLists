@@ -4,6 +4,7 @@ import com.work.oblikpodorojlist.utils.AlertsUtil;
 import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.utils.DocumentsUtil;
 import com.work.oblikpodorojlist.utils.IconsUtil;
+import com.work.oblikpodorojlist.utils.PaginationUtil;
 import com.work.oblikpodorojlist.model.FuelUsage;
 import com.work.oblikpodorojlist.model.PeriodParameters;
 import com.work.oblikpodorojlist.pages.MainPage;
@@ -44,6 +45,7 @@ public class FuelRegisterController extends WindowController {
     public DatePicker datePickerStart;
     public DatePicker datePickerEnd;
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
     private TableView<FuelUsage> tableView;
     public FuelRegisterController(){}
@@ -185,6 +187,9 @@ public class FuelRegisterController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            pagination.setManaged(false);
+            pagination.setVisible(false);
+            paginationUtil = new PaginationUtil(pagination);
 
 
             tableView = new TableView<>();
@@ -292,6 +297,20 @@ public class FuelRegisterController extends WindowController {
 
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+            tableView.setSortPolicy(tv -> {
+                java.util.Comparator<FuelUsage> comparator = tv.getComparator();
+                if (comparator != null) {
+                    FXCollections.sort(FilteredFuelUsage, comparator);
+                }
+                int pageIndex = pagination.getCurrentPageIndex();
+                int fromIndex = pageIndex * rowsPerPage;
+                int toIndex = Math.min(fromIndex + rowsPerPage, FilteredFuelUsage.size());
+                if (!FilteredFuelUsage.isEmpty() && fromIndex <= toIndex) {
+                    tv.setItems(FXCollections.observableArrayList(FilteredFuelUsage.subList(fromIndex, toIndex)));
+                }
+                return true;
+            });
+
             VBox.setVgrow(tableView, Priority.ALWAYS);
 
             VBox table = new VBox();
@@ -331,7 +350,7 @@ public class FuelRegisterController extends WindowController {
                 }
             });
 
-            table.getChildren().addAll(buttonBox,tableContainer, pagination);
+            table.getChildren().addAll(buttonBox, tableContainer, pagination, paginationUtil.createPaginationControls());
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }

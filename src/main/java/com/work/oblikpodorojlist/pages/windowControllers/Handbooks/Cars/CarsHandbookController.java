@@ -84,6 +84,8 @@ public class CarsHandbookController extends WindowController {
 
         pagination = new Pagination(1, 0);
         pagination.setPageFactory(this::createPage);
+        pagination.setManaged(false);
+        pagination.setVisible(false);
         paginationUtil = new PaginationUtil(pagination);
 
         TableColumn<_Car, String> idCol = new TableColumn<>("ID");

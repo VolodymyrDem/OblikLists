@@ -303,6 +303,8 @@ public class ListsRegisterController extends WindowController {
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
             paginationUtil = new PaginationUtil(pagination);
+            pagination.setManaged(false);
+            pagination.setVisible(false);
 
             tableView.getColumns().addAll( listNumberCol, orderCol, workerCol, CarNumberCol,startDateCol, startMCol, startFCol,
                     endDateCol, endMCol, endFCol, reFCol, routeCol, goalCol);

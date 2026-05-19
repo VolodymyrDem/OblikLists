@@ -80,6 +80,7 @@ CREATE TABLE `workers` (
   `id` int NOT NULL AUTO_INCREMENT,
   `nameN` varchar(45) NOT NULL,
   `nameR` varchar(45) NOT NULL,
+  `nameD` varchar(45) NOT NULL,
   `positionId` varchar(45) NOT NULL,
   `drivingLicence` varchar(45) DEFAULT NULL,
   `start-date` date NOT NULL,
@@ -254,8 +255,9 @@ DELIMITER ;
 DELIMITER ;;
 CREATE DEFINER=`root`@`localhost` PROCEDURE `AddWorker`(
 	IN p_nameN VARCHAR(45), 
-    IN p_nameR VARCHAR(45), 
-    IN p_positionId VARCHAR(45), 
+    IN p_nameR VARCHAR(45),
+    IN p_nameD VARCHAR(45),
+    IN p_positionId VARCHAR(45),
     IN p_drivingLicence VARCHAR(45), 
     IN p_start_date DATE, 
     IN p_start_order_number VARCHAR(45)
@@ -265,10 +267,10 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'A valid worker with the same name already exists';
 	ELSE
         INSERT INTO workers (
-            nameN, nameR, positionId, drivingLicence, 
+            nameN, nameR, nameD, positionId, drivingLicence,
             `start-date`, `start-order-number`, valid
         ) VALUES (
-            p_nameN, p_nameR, p_positionId, p_drivingLicence, 
+            p_nameN, p_nameR, p_nameD, p_positionId, p_drivingLicence,
             p_start_date, p_start_order_number, 1
         );
     END IF;

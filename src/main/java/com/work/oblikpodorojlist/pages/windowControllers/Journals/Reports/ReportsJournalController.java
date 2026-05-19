@@ -98,6 +98,8 @@ public class ReportsJournalController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            pagination.setManaged(false);
+            pagination.setVisible(false);
             paginationUtil = new PaginationUtil(pagination);
 
             // Налаштування фільтру по року

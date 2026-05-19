@@ -121,6 +121,7 @@
             </column>
             <column name="nameN" type="MEDIUMTEXT"><constraints nullable="false"/></column>
             <column name="nameR" type="LONGTEXT"><constraints nullable="false"/></column>
+            <column name="nameD" type="MEDIUMTEXT"><constraints nullable="false"/></column>
             <column name="positionId" type="INT"><constraints nullable="false"/></column>
             <column name="drivingLicence" type="MEDIUMTEXT"/>
             <column name="start-date" type="DATE"><constraints nullable="false"/></column>
@@ -128,7 +129,6 @@
             <column name="end-date" type="DATE"/>
             <column name="end-order-number" type="MEDIUMTEXT"/>
             <column name="valid" type="TINYINT"><constraints nullable="false"/></column>
-            <column name="nameD" type="MEDIUMTEXT"/>
         </createTable>
     </changeSet>
 
@@ -207,6 +207,20 @@
         <createIndex indexName="idx_workers_position_id" tableName="workers">
             <column name="positionId"/>
         </createIndex>
+    </changeSet>
+
+    <!-- Add nameD column to workers table if it doesn't exist -->
+    <changeSet id="9-add-nameD-to-workers" author="volodymyr">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="workers" columnName="nameD"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="workers">
+            <column name="nameD" type="MEDIUMTEXT" defaultValue="">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
     </changeSet>
 
 </databaseChangeLog>

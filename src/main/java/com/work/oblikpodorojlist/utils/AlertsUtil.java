@@ -19,4 +19,12 @@ public class AlertsUtil {
         alert.setContentText(message);
         return alert;
     }
+
+    public static Alert InfoAlert(String title, String s) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(s);
+        return alert;
+    }
 }

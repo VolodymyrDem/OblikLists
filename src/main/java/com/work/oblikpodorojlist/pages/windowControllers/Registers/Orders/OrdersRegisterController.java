@@ -4,6 +4,7 @@ import com.work.oblikpodorojlist.utils.AlertsUtil;
 import com.work.oblikpodorojlist.utils.DBUtil;
 import com.work.oblikpodorojlist.utils.DocumentsUtil;
 import com.work.oblikpodorojlist.utils.IconsUtil;
+import com.work.oblikpodorojlist.utils.PaginationUtil;
 import com.work.oblikpodorojlist.model._Order;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -35,6 +36,7 @@ public class OrdersRegisterController extends WindowController {
 
     private TableView<_Order> tableView;
     private Pagination pagination;
+    private PaginationUtil paginationUtil;
     private VBox tableContainer;
 
     public OrdersRegisterController(){
@@ -165,6 +167,9 @@ public class OrdersRegisterController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            pagination.setManaged(false);
+            pagination.setVisible(false);
+            paginationUtil = new PaginationUtil(pagination);
 
             TableColumn<_Order, LocalDate> orderDateCol = new TableColumn<>("Дата наказу");
             orderDateCol.setCellValueFactory(new PropertyValueFactory<>("orderDate"));
@@ -232,6 +237,20 @@ public class OrdersRegisterController extends WindowController {
 
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
+            tableView.setSortPolicy(tv -> {
+                java.util.Comparator<_Order> comparator = tv.getComparator();
+                if (comparator != null) {
+                    FXCollections.sort(filteredOrders, comparator);
+                }
+                int pageIndex = pagination.getCurrentPageIndex();
+                int fromIndex = pageIndex * rowsPerPage;
+                int toIndex = Math.min(fromIndex + rowsPerPage, filteredOrders.size());
+                if (!filteredOrders.isEmpty() && fromIndex <= toIndex) {
+                    tv.setItems(FXCollections.observableArrayList(filteredOrders.subList(fromIndex, toIndex)));
+                }
+                return true;
+            });
+
             VBox.setVgrow(tableView, Priority.ALWAYS);
 
             VBox table = new VBox();
@@ -270,7 +289,7 @@ public class OrdersRegisterController extends WindowController {
                 }
             });
 
-            table.getChildren().addAll(buttonBox,tableContainer, pagination);
+            table.getChildren().addAll(buttonBox, tableContainer, pagination, paginationUtil.createPaginationControls());
 
             mainPage.openInternalWindow(table, windowTitle, true);
         }

@@ -305,6 +305,8 @@ public class OrdersJournalController extends WindowController {
 
             pagination = new Pagination(1, 0);
             pagination.setPageFactory(this::createPage);
+            pagination.setManaged(false);
+            pagination.setVisible(false);
             paginationUtil = new PaginationUtil(pagination);
 
             VBox.setVgrow(tableView, Priority.ALWAYS);
