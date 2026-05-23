@@ -1,4 +1,4 @@
-package com.work.oblikpodorojlist;
+package com.work.oblikpodorojlist.spinner;
 
 import javafx.scene.control.SpinnerValueFactory;
 

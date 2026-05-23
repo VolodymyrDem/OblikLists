@@ -1,12 +1,12 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.util.AlertsUtil;
+import com.work.oblikpodorojlist.util.DBUtil;
 import com.work.oblikpodorojlist.model._Car;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
-import com.work.oblikpodorojlist.utils.DateUtil;
-import com.work.oblikpodorojlist.utils.LoggerUtil;
+import com.work.oblikpodorojlist.util.DateUtil;
+import com.work.oblikpodorojlist.util.LoggerUtil;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;

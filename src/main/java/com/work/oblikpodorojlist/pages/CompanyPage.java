@@ -1,7 +1,7 @@
 package com.work.oblikpodorojlist.pages;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.util.AlertsUtil;
+import com.work.oblikpodorojlist.util.DBUtil;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

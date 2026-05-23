@@ -1,10 +1,10 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Orders;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
-import com.work.oblikpodorojlist.utils.DocumentsUtil;
-import com.work.oblikpodorojlist.utils.IconsUtil;
-import com.work.oblikpodorojlist.utils.PaginationUtil;
+import com.work.oblikpodorojlist.util.AlertsUtil;
+import com.work.oblikpodorojlist.util.DBUtil;
+import com.work.oblikpodorojlist.util.DocumentsUtil;
+import com.work.oblikpodorojlist.util.IconsUtil;
+import com.work.oblikpodorojlist.util.PaginationUtil;
 import com.work.oblikpodorojlist.model._Order;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;

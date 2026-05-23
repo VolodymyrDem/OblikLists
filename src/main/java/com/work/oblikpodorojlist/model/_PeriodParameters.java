@@ -3,15 +3,15 @@ package com.work.oblikpodorojlist.model;
 import java.time.LocalDate;
 import java.time.Period;
 
-public class PeriodParameters {
+public class _PeriodParameters {
     private LocalDate startDate;
     private LocalDate endDate;
     private Period period;
 
-    public PeriodParameters() {
+    public _PeriodParameters() {
     }
 
-    public PeriodParameters(LocalDate startDate, LocalDate endDate, Period period) {
+    public _PeriodParameters(LocalDate startDate, LocalDate endDate, Period period) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.period = period;

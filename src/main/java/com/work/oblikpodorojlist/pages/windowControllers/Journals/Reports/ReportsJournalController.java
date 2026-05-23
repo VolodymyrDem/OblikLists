@@ -1,6 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Reports;
 
-import com.work.oblikpodorojlist.utils.*;
+import com.work.oblikpodorojlist.util.*;
 import com.work.oblikpodorojlist.model._Report;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -19,7 +19,6 @@ import javafx.scene.layout.VBox;
 
 import java.time.LocalDate;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;

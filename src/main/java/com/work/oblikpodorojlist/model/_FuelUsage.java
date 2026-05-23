@@ -2,7 +2,7 @@ package com.work.oblikpodorojlist.model;
 
 import java.time.LocalDate;
 
-public class FuelUsage {
+public class _FuelUsage {
     private LocalDate startDate;
     private LocalDate endDate;
     private String carNumber;
@@ -12,7 +12,7 @@ public class FuelUsage {
     private Double overUse;
     private Double underUse;
 
-    public FuelUsage(LocalDate startDate, LocalDate endDate, String carNumber, Double mileage, Double fuelFact, Double fuelNorm) {
+    public _FuelUsage(LocalDate startDate, LocalDate endDate, String carNumber, Double mileage, Double fuelFact, Double fuelNorm) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.carNumber = carNumber;

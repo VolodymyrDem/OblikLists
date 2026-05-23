@@ -1,22 +1,18 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Positions;
 
-import com.work.oblikpodorojlist.model._Car;
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.util.AlertsUtil;
+import com.work.oblikpodorojlist.util.DBUtil;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import com.work.oblikpodorojlist.model._Position;
-import com.work.oblikpodorojlist.utils.LoggerUtil;
+import com.work.oblikpodorojlist.util.LoggerUtil;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 

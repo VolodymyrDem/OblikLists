@@ -1,7 +1,7 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Workers;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.util.AlertsUtil;
+import com.work.oblikpodorojlist.util.DBUtil;
 import com.work.oblikpodorojlist.model._Position;
 import com.work.oblikpodorojlist.model._Worker;
 import com.work.oblikpodorojlist.pages.MainPage;

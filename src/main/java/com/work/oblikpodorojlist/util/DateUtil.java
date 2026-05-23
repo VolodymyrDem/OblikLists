@@ -1,4 +1,4 @@
-package com.work.oblikpodorojlist.utils;
+package com.work.oblikpodorojlist.util;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;

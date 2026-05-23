@@ -1,6 +1,6 @@
 package com.work.oblikpodorojlist.pages;
 
-import com.work.oblikpodorojlist.utils.*;
+import com.work.oblikpodorojlist.util.*;
 import com.work.oblikpodorojlist.model.*;
 import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Cars.CarsHandbookController;
 import com.work.oblikpodorojlist.pages.windowControllers.Handbooks.Positions.PositionsHandbookController;

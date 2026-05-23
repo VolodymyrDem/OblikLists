@@ -1,4 +1,4 @@
-package com.work.oblikpodorojlist.utils;
+package com.work.oblikpodorojlist.util;
 
 import java.awt.*;
 import java.io.*;
@@ -1022,12 +1022,12 @@ public class DBUtil {
         return listsAll;
     }
 
-    public List<FuelUsage> getListsFuelFiltered(List<String> Numbers, PeriodParameters params) {
+    public List<_FuelUsage> getListsFuelFiltered(List<String> Numbers, _PeriodParameters params) {
         if (Numbers == null || Numbers.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<FuelUsage> fuelUsages = new ArrayList<>();
+        List<_FuelUsage> fuelUsages = new ArrayList<>();
 
         // Створюємо плейсхолдери для IN clause
         String placeholders = String.join(",", Numbers.stream().map(n -> "?").toArray(String[]::new));
@@ -1102,7 +1102,7 @@ public class DBUtil {
                     double fuelFact = (list.getStartFuel() - list.getEndFuel()) + list.getRefuel();
                     double fuelNorm = mileage * getCarFuelUsage(list.getIdCar()) / 100;
 
-                    fuelUsages.add(new FuelUsage(
+                    fuelUsages.add(new _FuelUsage(
                             list.getStartDate(),
                             list.getEndDate(),
                             carNumber,
@@ -1119,8 +1119,8 @@ public class DBUtil {
         return fuelUsages;
     }
 
-    private List<FuelUsage> getFuelUsagesPeriodics(String carNumber, List<_List> carLists, PeriodParameters params) {
-        List<FuelUsage> fuelUsages = new ArrayList<>();
+    private List<_FuelUsage> getFuelUsagesPeriodics(String carNumber, List<_List> carLists, _PeriodParameters params) {
+        List<_FuelUsage> fuelUsages = new ArrayList<>();
         Set<_List> processedLists = new HashSet<>();
         LocalDate currentStart = params.getStartDate();
         LocalDate endDate = params.getEndDate();
@@ -1170,7 +1170,7 @@ public class DBUtil {
 
             if (totalMileage > 0) {
                 fuelNorm = totalMileage * getCarFuelUsage(carLists.get(0).getIdCar()) / 100;
-                fuelUsages.add(new FuelUsage(currentStart, currentEnd, carNumber, totalMileage, totalFuelFact, fuelNorm));
+                fuelUsages.add(new _FuelUsage(currentStart, currentEnd, carNumber, totalMileage, totalFuelFact, fuelNorm));
             }
 
             currentStart = currentStart.plus(params.getPeriod());
@@ -1259,15 +1259,15 @@ public class DBUtil {
         return ListsCars;
     }
 
-    private List<FuelUsage> getFuelUsagesByLists(String carNumber, List<_List> carLists) {
-        List<FuelUsage> usages = new ArrayList<>();
+    private List<_FuelUsage> getFuelUsagesByLists(String carNumber, List<_List> carLists) {
+        List<_FuelUsage> usages = new ArrayList<>();
         for (_List list : carLists) {
             if (list.getEndDate() != null && list.getStartDate() != null) {
                 double mileage = list.getEndMileage() - list.getStartMileage();
                 double fuelFact = (list.getStartFuel() - list.getEndFuel()) + list.getRefuel();
                 double fuelNorm = mileage * getCarFuelUsage(list.getIdCar()) / 100;
 
-                usages.add(new FuelUsage(
+                usages.add(new _FuelUsage(
                         list.getStartDate(),
                         list.getEndDate(),
                         carNumber,

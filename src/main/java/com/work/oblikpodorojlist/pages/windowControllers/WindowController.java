@@ -1,7 +1,5 @@
 package com.work.oblikpodorojlist.pages.windowControllers;
 
-import com.work.oblikpodorojlist.model.FuelUsage;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.scene.Node;
 import javafx.scene.control.TableView;
@@ -10,11 +8,7 @@ import javafx.scene.layout.GridPane;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public abstract class WindowController {
     protected final int rowsPerPage = 25;

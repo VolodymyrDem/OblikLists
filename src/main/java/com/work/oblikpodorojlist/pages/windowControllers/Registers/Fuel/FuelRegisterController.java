@@ -1,12 +1,12 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Fuel;
 
-import com.work.oblikpodorojlist.utils.AlertsUtil;
-import com.work.oblikpodorojlist.utils.DBUtil;
-import com.work.oblikpodorojlist.utils.DocumentsUtil;
-import com.work.oblikpodorojlist.utils.IconsUtil;
-import com.work.oblikpodorojlist.utils.PaginationUtil;
-import com.work.oblikpodorojlist.model.FuelUsage;
-import com.work.oblikpodorojlist.model.PeriodParameters;
+import com.work.oblikpodorojlist.util.AlertsUtil;
+import com.work.oblikpodorojlist.util.DBUtil;
+import com.work.oblikpodorojlist.util.DocumentsUtil;
+import com.work.oblikpodorojlist.util.IconsUtil;
+import com.work.oblikpodorojlist.util.PaginationUtil;
+import com.work.oblikpodorojlist.model._FuelUsage;
+import com.work.oblikpodorojlist.model._PeriodParameters;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.application.Platform;
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class FuelRegisterController extends WindowController {
-    private ObservableList<FuelUsage> FilteredFuelUsage = FXCollections.observableArrayList();
-    public PeriodParameters parametersFuelUsage = new PeriodParameters();
+    private ObservableList<_FuelUsage> filteredFuelUsage = FXCollections.observableArrayList();
+    public _PeriodParameters parametersFuelUsage = new _PeriodParameters();
     private MainPage mainPage;
     private ComboBox<String> podilField = new ComboBox<>();
     private DBUtil dbUtil;
@@ -47,7 +47,7 @@ public class FuelRegisterController extends WindowController {
     private Pagination pagination;
     private PaginationUtil paginationUtil;
     private VBox tableContainer;
-    private TableView<FuelUsage> tableView;
+    private TableView<_FuelUsage> tableView;
     public FuelRegisterController(){}
 
 
@@ -169,7 +169,7 @@ public class FuelRegisterController extends WindowController {
             });
 
             saveButton.setOnAction(e -> {
-                documentsUtil.createRegisterFuel(dbUtil, numbersG, FilteredFuelUsage, datePickerStart.getValue(), datePickerEnd.getValue(), parametersFuelUsage.getPeriod());
+                documentsUtil.createRegisterFuel(dbUtil, numbersG, filteredFuelUsage, datePickerStart.getValue(), datePickerEnd.getValue(), parametersFuelUsage.getPeriod());
             });
 
             HBox buttonBox = new HBox(10, timeLabel, datePickerStart, timeLabel2, datePickerEnd,settingsButton, carLabel, carField, podilLabel, podilField, filterButton, updateButton, saveButton, openFolderButton);
@@ -193,10 +193,10 @@ public class FuelRegisterController extends WindowController {
 
 
             tableView = new TableView<>();
-            tableView.setItems(FilteredFuelUsage);
+            tableView.setItems(filteredFuelUsage);
 
 
-            TableColumn<FuelUsage, LocalDate> startDateCol = new TableColumn<>("Дата початку");
+            TableColumn<_FuelUsage, LocalDate> startDateCol = new TableColumn<>("Дата початку");
             startDateCol.setCellValueFactory(new PropertyValueFactory<>("startDate"));
 
             startDateCol.setCellFactory(column -> new TableCell<>() {
@@ -211,7 +211,7 @@ public class FuelRegisterController extends WindowController {
                 }
             });
 
-            TableColumn<FuelUsage, LocalDate> endDateCol = new TableColumn<>("Дата кінця");
+            TableColumn<_FuelUsage, LocalDate> endDateCol = new TableColumn<>("Дата кінця");
             endDateCol.setCellValueFactory(new PropertyValueFactory<>("endDate"));
 
             endDateCol.setCellFactory(column -> new TableCell<>() {
@@ -227,13 +227,13 @@ public class FuelRegisterController extends WindowController {
             });
             DecimalFormat df = new DecimalFormat("#.##");
 
-            TableColumn<FuelUsage, String> carNumbercol = new TableColumn<>("Номер авто");
+            TableColumn<_FuelUsage, String> carNumbercol = new TableColumn<>("Номер авто");
             carNumbercol.setCellValueFactory(new PropertyValueFactory<>("carNumber"));
 
-            TableColumn<FuelUsage, String> mileageCol = new TableColumn<>("Пробіг за період");
+            TableColumn<_FuelUsage, String> mileageCol = new TableColumn<>("Пробіг за період");
             mileageCol.setCellValueFactory(new PropertyValueFactory<>("mileage"));
 
-            TableColumn<FuelUsage, Double> fuelFactCol = new TableColumn<>("Фактичне використання палива");
+            TableColumn<_FuelUsage, Double> fuelFactCol = new TableColumn<>("Фактичне використання палива");
             fuelFactCol.setCellValueFactory(new PropertyValueFactory<>("fuelFact"));
 
             fuelFactCol.setCellFactory(tc -> new TableCell<>() {
@@ -247,7 +247,7 @@ public class FuelRegisterController extends WindowController {
                     }
                 }
             });
-            TableColumn<FuelUsage, Double> fuelNormCol = new TableColumn<>("Норма використання палива");
+            TableColumn<_FuelUsage, Double> fuelNormCol = new TableColumn<>("Норма використання палива");
             fuelNormCol.setCellValueFactory(new PropertyValueFactory<>("fuelNorm"));
 
             fuelNormCol.setCellFactory(tc -> new TableCell<>() {
@@ -262,7 +262,7 @@ public class FuelRegisterController extends WindowController {
                 }
             });
 
-            TableColumn<FuelUsage, Double> overUseCol = new TableColumn<>("Перевикористання палива");
+            TableColumn<_FuelUsage, Double> overUseCol = new TableColumn<>("Перевикористання палива");
             overUseCol.setCellValueFactory(new PropertyValueFactory<>("overUse"));
 
             overUseCol.setCellFactory(tc -> new TableCell<>() {
@@ -277,7 +277,7 @@ public class FuelRegisterController extends WindowController {
                 }
             });
 
-            TableColumn<FuelUsage, Double> underUseCol = new TableColumn<>("Економія палива");
+            TableColumn<_FuelUsage, Double> underUseCol = new TableColumn<>("Економія палива");
             underUseCol.setCellValueFactory(new PropertyValueFactory<>("underUse"));
 
             underUseCol.setCellFactory(tc -> new TableCell<>() {
@@ -298,15 +298,15 @@ public class FuelRegisterController extends WindowController {
             tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
             tableView.setSortPolicy(tv -> {
-                java.util.Comparator<FuelUsage> comparator = tv.getComparator();
+                java.util.Comparator<_FuelUsage> comparator = tv.getComparator();
                 if (comparator != null) {
-                    FXCollections.sort(FilteredFuelUsage, comparator);
+                    FXCollections.sort(filteredFuelUsage, comparator);
                 }
                 int pageIndex = pagination.getCurrentPageIndex();
                 int fromIndex = pageIndex * rowsPerPage;
-                int toIndex = Math.min(fromIndex + rowsPerPage, FilteredFuelUsage.size());
-                if (!FilteredFuelUsage.isEmpty() && fromIndex <= toIndex) {
-                    tv.setItems(FXCollections.observableArrayList(FilteredFuelUsage.subList(fromIndex, toIndex)));
+                int toIndex = Math.min(fromIndex + rowsPerPage, filteredFuelUsage.size());
+                if (!filteredFuelUsage.isEmpty() && fromIndex <= toIndex) {
+                    tv.setItems(FXCollections.observableArrayList(filteredFuelUsage.subList(fromIndex, toIndex)));
                 }
                 return true;
             });
@@ -387,16 +387,16 @@ public class FuelRegisterController extends WindowController {
                 parametersFuelUsage.setStartDate(datePickerStart.getValue());
                 parametersFuelUsage.setEndDate(datePickerEnd.getValue());
 
-                List<FuelUsage> newUsage = dbUtil.getListsFuelFiltered(numbersG, parametersFuelUsage);
+                List<_FuelUsage> newUsage = dbUtil.getListsFuelFiltered(numbersG, parametersFuelUsage);
                 Platform.runLater(() -> {
-                    FilteredFuelUsage.setAll(newUsage);
-                    int pageCount = (int) Math.ceil((double) FilteredFuelUsage.size() / rowsPerPage);
+                    filteredFuelUsage.setAll(newUsage);
+                    int pageCount = (int) Math.ceil((double) filteredFuelUsage.size() / rowsPerPage);
                     pagination.setPageCount(Math.max(pageCount, 1));
                     int lastPage = Math.max(pageCount - 1, 0);
                     pagination.setCurrentPageIndex(lastPage);
                     int fromIndex = lastPage * rowsPerPage;
-                    int toIndex = Math.min(fromIndex + rowsPerPage, FilteredFuelUsage.size());
-                    tableView.setItems(FXCollections.observableArrayList(FilteredFuelUsage.subList(fromIndex, toIndex)));
+                    int toIndex = Math.min(fromIndex + rowsPerPage, filteredFuelUsage.size());
+                    tableView.setItems(FXCollections.observableArrayList(filteredFuelUsage.subList(fromIndex, toIndex)));
                     tableContainer.getChildren().setAll(tableView);
                     moveTableDown(tableView);
                 });
@@ -408,12 +408,12 @@ public class FuelRegisterController extends WindowController {
 
     private Node createPage(int pageIndex) {
         int fromIndex = pageIndex * rowsPerPage;
-        int toIndex = Math.min(fromIndex + rowsPerPage, FilteredFuelUsage.size());
+        int toIndex = Math.min(fromIndex + rowsPerPage, filteredFuelUsage.size());
 
         if (fromIndex > toIndex) {
             tableView.setItems(FXCollections.observableArrayList());
         } else {
-            tableView.setItems(FXCollections.observableArrayList(FilteredFuelUsage.subList(fromIndex, toIndex)));
+            tableView.setItems(FXCollections.observableArrayList(filteredFuelUsage.subList(fromIndex, toIndex)));
         }
 
         return new VBox();

@@ -1,6 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Lists;
 
-import com.work.oblikpodorojlist.utils.*;
+import com.work.oblikpodorojlist.util.*;
 import com.work.oblikpodorojlist.model._List;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;

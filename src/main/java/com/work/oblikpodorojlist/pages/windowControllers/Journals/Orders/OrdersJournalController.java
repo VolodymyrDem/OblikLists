@@ -1,6 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Orders;
 
-import com.work.oblikpodorojlist.utils.*;
+import com.work.oblikpodorojlist.util.*;
 
 import com.work.oblikpodorojlist.model._Order;
 import com.work.oblikpodorojlist.pages.MainPage;

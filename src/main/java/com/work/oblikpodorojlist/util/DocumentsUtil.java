@@ -1,4 +1,4 @@
-package com.work.oblikpodorojlist.utils;
+package com.work.oblikpodorojlist.util;
 import com.work.oblikpodorojlist.model.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Font;
@@ -1667,7 +1667,7 @@ public class DocumentsUtil {
         }
     }
 
-    public void createRegisterFuel(DBUtil dbUtil, List<String> numbers, List<FuelUsage> usages, LocalDate startDate, LocalDate endDate, Period period) {
+    public void createRegisterFuel(DBUtil dbUtil, List<String> numbers, List<_FuelUsage> usages, LocalDate startDate, LocalDate endDate, Period period) {
         try {
             _Company _company = _Company.getInstance();
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -1843,7 +1843,7 @@ public class DocumentsUtil {
                     double allUnderUse = 0;
 
 
-                    for(FuelUsage usage : usages) {
+                    for(_FuelUsage usage : usages) {
                         currentRow = sheet.createRow(rowIndex);
                         currentCell = currentRow.createCell(0);
                         currentCell.setCellValue(j);

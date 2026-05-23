@@ -1,6 +1,6 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Journals.Lists;
 
-import com.work.oblikpodorojlist.utils.*;
+import com.work.oblikpodorojlist.util.*;
 import com.work.oblikpodorojlist.model._List;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
@@ -22,9 +22,7 @@ import org.controlsfx.control.CheckComboBox;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ListsJournalController extends WindowController {

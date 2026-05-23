@@ -1,8 +1,8 @@
 package com.work.oblikpodorojlist.pages.windowControllers.Registers.Orders;
 
-import com.work.oblikpodorojlist.MonthYearSpinnerValueFactory;
-import com.work.oblikpodorojlist.QuarterYearSpinnerValueFactory;
-import com.work.oblikpodorojlist.utils.DBUtil;
+import com.work.oblikpodorojlist.spinner.MonthYearSpinnerValueFactory;
+import com.work.oblikpodorojlist.spinner.QuarterYearSpinnerValueFactory;
+import com.work.oblikpodorojlist.util.DBUtil;
 import com.work.oblikpodorojlist.pages.MainPage;
 import com.work.oblikpodorojlist.pages.windowControllers.WindowController;
 import javafx.scene.control.*;
